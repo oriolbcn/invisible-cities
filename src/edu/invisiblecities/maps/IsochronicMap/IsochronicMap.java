@@ -1,21 +1,20 @@
-package edu.invisiblecities.maps;
+package edu.invisiblecities.maps.IsochronicMap;
 
 import processing.core.PApplet;
 import processing.core.PFont;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
-import edu.invisiblecities.core.BaseInfovis;
+import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.utils.mathFunctions;
 
 // TODO All nodes must be connected, no independent regiment for now
-public class IsochronicMap extends BaseInfovis {
+public class IsochronicMap extends BaseMap {
 
     /**********  Basic attributes **********/
-    public PApplet parent;              // Pointer to PApplet
     public int numOfNodes;              // Total number of nodes in this map
     public float centerX, centerY;      // The center of this map
     public float radiusArray[]          // Nodes lies on concentric circles with different radiuses
-                = {0, 0, 60, 120, 180, 240, 300, 360, 420}; // for testing
+                = {0, 0, 60, 120, 180, 240, 300, 360, 420, 480, 540}; // for testing
     public boolean connections[][];     // The adjacency matrix
     public Node[] nodes = null;         // Array of nodes in this map
     public float[][] toPositions;       // New positions after selecting a new center node
@@ -108,7 +107,9 @@ public class IsochronicMap extends BaseInfovis {
     
     /********** Override methods **********/
     // Initialize attributes that are not initialized in constructor
+    @Override
     public void init() {
+        parent.size(canvasWidth, canvasHeight);
         Ani.init(parent);
         generateRandomGraph();
         selectedNode = 0;
@@ -126,19 +127,8 @@ public class IsochronicMap extends BaseInfovis {
         }
         return -1;
     }
-    
-    public void interact() {
-        int id = getSelection();
-        if (id >= 0) {
-            selectedNode = id;
-            BFS(id);
-            updateGraph();
-            for (int i=0; i<numOfNodes; ++i) {
-                nodes[i].setAni(toPositions[i][0], toPositions[i][1]);
-            }
-        }
-    }
-    
+        
+    @Override
     public void draw() {
         parent.noFill();
         parent.stroke(sred, sgreen, sblue, salpha);
@@ -161,9 +151,40 @@ public class IsochronicMap extends BaseInfovis {
             nodes[i].draw();
     }
     
+    @Override
+    public void mousePressed() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseReleased() {
+        int id = getSelection();
+        if (id >= 0) {
+            selectedNode = id;
+            BFS(id);
+            updateGraph();
+            for (int i=0; i<numOfNodes; ++i) {
+                nodes[i].setAni(toPositions[i][0], toPositions[i][1]);
+            }
+        }
+    }
+
+    @Override
+    public void keyPressed() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void keyReleased() {
+        // TODO Auto-generated method stub
+        
+    }
+    
     /********** Constructors **********/
-    public IsochronicMap(PApplet p, int non, float cx, float cy) {
-        parent = p;
+    public IsochronicMap(PApplet p, int non) {
+        super(p);
         numOfNodes = non;
         nodes = new Node[numOfNodes];
         toPositions = new float[numOfNodes][2];
@@ -173,8 +194,8 @@ public class IsochronicMap extends BaseInfovis {
         falpha = 100;
         sred = sgreen = sblue = 0;
         salpha = 50;
-        centerX = cx;
-        centerY = cy;
+        centerX = canvasWidth / 2;
+        centerY = canvasHeight / 2;
         selectedNode = 0;
     }    
     
@@ -196,7 +217,7 @@ public class IsochronicMap extends BaseInfovis {
         public PFont font;
         
         // Animation
-        public float duration = 1.5f;
+        public float duration = 0.5f;
         public Easing easing = Ani.EXPO_IN_OUT;
         
         public Node(float _x, float _y, int _id, int fr, int fg, int fb) {

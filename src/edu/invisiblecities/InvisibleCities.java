@@ -1,7 +1,10 @@
 package edu.invisiblecities;
 
 import processing.core.PApplet;
-import edu.invisiblecities.maps.IsochronicMap;
+import edu.invisiblecities.core.BaseInfovis;
+import edu.invisiblecities.maps.BaseMap;
+import edu.invisiblecities.maps.IsochronicMap.IsochronicMap;
+import edu.invisiblecities.maps.TopologicalMap.TopologicalMap;
 
 public class InvisibleCities extends PApplet{
     
@@ -9,6 +12,8 @@ public class InvisibleCities extends PApplet{
     public final static int canvasHeight = 800;
     public final static int backgroundColor = 255;
     public IsochronicMap isoMap = null;
+    public BaseInfovis infovis = null;
+    public static BaseMap showMap = null;
     
     /*
     public static InvisibleCities singleton = null;
@@ -26,22 +31,28 @@ public class InvisibleCities extends PApplet{
     
     @Override
     public void setup() {
-        size(canvasWidth, canvasHeight);
+        //showMap = new IsochronicMap(this, 20);
+        showMap = new TopologicalMap(this);
+        showMap.init();
         textAlign(CENTER);
         ellipseMode(CENTER);
-        isoMap = new IsochronicMap(this, 20, width/2, height/2);
-        isoMap.init();
+        smooth();
     }
     
     @Override
     public void draw() {
         background(backgroundColor);
-        isoMap.draw();
+        showMap.draw();
     }
     
     @Override
     public void mouseReleased() {
-        isoMap.interact();
+        showMap.mouseReleased();
+    }
+    
+    @Override
+    public void keyPressed() {
+        
     }
     
     public static void main(String args[]) {

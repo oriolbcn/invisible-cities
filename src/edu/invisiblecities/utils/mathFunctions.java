@@ -6,5 +6,7 @@ public class mathFunctions {
         return (float)java.lang.Math
                 .sqrt((double)(x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
-
+    
+    public final static float epsilon = 0.000001f;
+    
 }

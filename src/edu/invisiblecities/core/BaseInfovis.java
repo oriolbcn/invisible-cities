@@ -1,8 +1,10 @@
 package edu.invisiblecities.core;
 
-abstract public class BaseInfovis {
-    abstract public void init();
-    abstract public void draw();
-    abstract public void interact();
-    
+public interface BaseInfovis {
+    public void init();
+    public void draw();
+    public void mousePressed();
+    public void mouseReleased();
+    public void keyPressed();
+    public void keyReleased();
 }
