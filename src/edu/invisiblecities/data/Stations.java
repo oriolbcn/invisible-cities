@@ -2,6 +2,7 @@ package edu.invisiblecities.data;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ public class Stations {
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	public Station loadStation(int station_id, Route r) {
 
 		ResultSet rs = mod
@@ -46,13 +48,64 @@ public class Stations {
 			}
 			st.parent = newParentSt;
 
-			// TODO: fill frequencies, delays and ridership
+			// TODO: ridership
+			// frequencies
 			ResultSet rs2 = mod
-					.query("SELECT * FROM stop_times WHERE stop_id = "
+					.query("SELECT arrival_time FROM stop_times_routes WHERE stop_id = "
 							+ station_id
 							+ " AND route_id = '"
 							+ r.route_id
 							+ "' AND arrival_time > '05:00:00' ORDER BY arrival_time ASC");
+
+			int current_limit_hour = 6;
+			int current_i = 0;
+			while (rs2.next()) {
+				Time time = rs2.getTime("arrival_time");
+				if (time.getHours() > current_limit_hour) {
+					int aux = time.getHours();
+					current_i = current_i + (aux - current_limit_hour);
+					current_limit_hour = aux;
+				}
+				st.frequencies[current_i]++;
+			}
+
+			// delays
+			ResultSet rs3 = mod
+					.query("SELECT arrival_time, predicted_time FROM predictions WHERE stop_id = "
+							+ station_id
+							+ " AND line_id = '"
+							+ r.route_id
+							+ "' AND day = '"
+							+ mod.day
+							+ "' AND arrival_time > '05:00:00' ORDER BY arrival_time ASC");
+
+			current_limit_hour = 6;
+			current_i = 0;
+			int current_num = 0;
+			while (rs3.next()) {
+				Time arr_time = rs3.getTime("arrival_time");
+				Time pred_time = rs3.getTime("predicted_time");
+				if (arr_time.getHours() > current_limit_hour) {
+					int aux = arr_time.getHours();
+					current_i = current_i + (aux - current_limit_hour);
+					current_limit_hour = aux;
+					current_num = 0;
+				}
+				current_num++;
+				st.delays[current_i] = (st.delays[current_i]
+						* (current_num - 1) + getDiffernceSeconds(pred_time,
+							arr_time)) / current_num;
+			}
+
+			// riderhsip
+			ResultSet rs4 = mod
+					.query("SELECT rides FROM ridership WHERE station_id = "
+							+ st.parent.station_id + " AND date = '" + mod.day
+							+ "'");
+			rs4.next();
+			int rides = rs4.getInt("rides");
+			st.ridership = rides;
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -62,5 +115,9 @@ public class Stations {
 
 	public Set<Station> getStations() {
 		return stations;
+	}
+
+	public int getDiffernceSeconds(Time t1, Time t2) {
+		return (int) ((t1.getTime() - t2.getTime()) / 1000);
 	}
 }

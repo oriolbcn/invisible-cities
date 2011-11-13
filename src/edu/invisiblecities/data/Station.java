@@ -9,8 +9,8 @@ public class Station {
 	public ParentStation parent;
 
 	// Other Attributes. This is for a given day!
-	public int[] frequencies;
-	public int[] delays;
+	public int[] frequencies; // in number of trips
+	public int[] delays; // in number of seconds
 	public int ridership;
 
 	public Station(int station_id, String station_name, Route route) {
@@ -20,6 +20,11 @@ public class Station {
 
 		frequencies = new int[Constants.NUM_TIME_INTERVALS];
 		delays = new int[Constants.NUM_TIME_INTERVALS];
+
+		for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+			frequencies[i] = 0;
+			delays[i] = 0;
+		}
 	}
 
 	public Station cloneDiffRoute(Route r) {
