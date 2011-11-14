@@ -6,7 +6,7 @@ import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.maps.IsochronicMap.IsochronicMap;
 import edu.invisiblecities.maps.TopologicalMap.TopologicalMap;
 
-public class InvisibleCities extends PApplet{
+public class InvisibleCities extends PApplet {
     
     public final static int canvasWidth = 1400;
     public final static int canvasHeight = 800;
@@ -34,8 +34,9 @@ public class InvisibleCities extends PApplet{
         //showMap = new IsochronicMap(this, 20);
         showMap = new TopologicalMap(this);
         showMap.init();
-        textAlign(CENTER);
+        textAlign(LEFT);
         ellipseMode(CENTER);
+        //colorMode(HSB);
         smooth();
     }
     
@@ -49,11 +50,22 @@ public class InvisibleCities extends PApplet{
     public void mouseReleased() {
         showMap.mouseReleased();
     }
+
+    @Override
+    public void mousePressed() {
+        showMap.mousePressed();
+    }
     
     @Override
     public void keyPressed() {
-        
+        showMap.keyPressed();
     }
+    
+    @Override
+    public void keyReleased() {
+        showMap.keyReleased();
+    }
+    
     
     public static void main(String args[]) {
         PApplet.main(new String[] {"--present", "InvisibleCities"});
