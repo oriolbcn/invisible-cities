@@ -48,7 +48,6 @@ public class Stations {
 			}
 			st.parent = newParentSt;
 
-			// TODO: ridership
 			// frequencies
 			ResultSet rs2 = mod
 					.query("SELECT arrival_time FROM stop_times_routes WHERE stop_id = "
@@ -57,7 +56,7 @@ public class Stations {
 							+ r.route_id
 							+ "' AND arrival_time > '05:00:00' ORDER BY arrival_time ASC");
 
-			int current_limit_hour = 6;
+			int current_limit_hour = 5;
 			int current_i = 0;
 			while (rs2.next()) {
 				Time time = rs2.getTime("arrival_time");
@@ -79,7 +78,7 @@ public class Stations {
 							+ mod.day
 							+ "' AND arrival_time > '05:00:00' ORDER BY arrival_time ASC");
 
-			current_limit_hour = 6;
+			current_limit_hour = 5;
 			current_i = 0;
 			int current_num = 0;
 			while (rs3.next()) {
