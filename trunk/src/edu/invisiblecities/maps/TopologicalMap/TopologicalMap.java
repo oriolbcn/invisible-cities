@@ -14,7 +14,7 @@ import edu.invisiblecities.utils.mathFunctions;
 public class TopologicalMap extends BaseMap {
 
     public de.fhpotsdam.unfolding.Map map;
-    public  int numOfRoutes = 26;
+    public  int numOfRoutes = 25;
     private int mapLeftTopX = 0;
     private int mapLeftTopY = 0;
     private int mapWidth = 800;
@@ -22,8 +22,11 @@ public class TopologicalMap extends BaseMap {
     public static String mapType = GLConstants.GLGRAPHICS;
     public Route[] routes;
     public static final int INITIALCAPACITY = 100;
+    public final static int frameRate = 30;
     
-    private boolean pause;
+    public static boolean pause;
+    
+    public static long globalTimer = 0;
     
     private static int[] colors = {
             0x00A1DE, 0x00A1DE, 0xC60C30, 0xC60C30, 
@@ -35,13 +38,12 @@ public class TopologicalMap extends BaseMap {
             0x00A1DE, 0x522398};
     
     public TopologicalMap(PApplet p) {
-        
         super(p);
         routes = new Route[numOfRoutes];
-        pause = false;
-        parent.size(canvasWidth, canvasHeight, GLConstants.GLGRAPHICS);
+        pause = false;   
     }
     
+    public static boolean homeInit = false;
     //
     public Route parseData(int index) {
         System.out.println("Parsing file out" + index + ".txt");
@@ -50,6 +52,7 @@ public class TopologicalMap extends BaseMap {
         String []splt = lines[lines.length/2].split(",");
         String routeid = new String(splt[5]);
         String routename = new String(splt[5]);
+        
         map.zoomAndPanTo(new Location(Float.parseFloat(splt[1]), Float.parseFloat(splt[2])), 11);
         for (int i=0; i<lines.length; ++i) {
             if (parent.trim(lines[i]).length() == 0) continue;
@@ -62,6 +65,7 @@ public class TopologicalMap extends BaseMap {
         return route;
     }
     
+    // Get rid of redundant coordinates
     public static float[][] simplifyCoordinates(float[][] cood) {
         int p1 = 0;
         int p2 = 1;
@@ -94,37 +98,30 @@ public class TopologicalMap extends BaseMap {
     
     @Override
     public void init() {
+        parent.size(canvasWidth, canvasHeight, GLConstants.GLGRAPHICS);
+        parent.frameRate(frameRate);
         map = new de.fhpotsdam.unfolding.Map
                 (parent, mapLeftTopX, mapLeftTopY,
                  mapWidth, mapHeight,
-                 new OpenStreetMap.CloudmadeProvider("d3e0942376a3438b8d5fce7378307b58", 46657));
+                 new OpenStreetMap.CloudmadeProvider("d3e0942376a3438b8d5fce7378307b58", 15153));
         MapUtils.createDefaultEventDispatcher(parent, map);
         
         for (int i=0; i<numOfRoutes; ++i) {
             routes[i] = parseData(i);
-            Vehicle v = new Vehicle(parent, routes[i]);
+            routes[i].init();
         }
+        globalTimer = 0;
     }
 
     @Override
     public void draw() {
+        super.draw();
         map.draw();
+        ++globalTimer;
+        parent.fill(0);
+        parent.text("FPS: " + parent.frameRate, 20, 20);
         for (int i=0; i<routes.length; ++i) {
-            Route r = routes[i];
-            r.draw();
-        }
-        for (int i=0; i<routes.length; ++i) {
-            Route r = routes[i];
-            ArrayList<Vehicle> veList = r.vehicleList;
-            int vsize = veList.size();
-            for (int j=0; j<vsize; ++j) {
-                if (parent.mousePressed && pause) {
-                    veList.get(j).recalculateCurScreenPosition();
-                } else {
-                    veList.get(j).move();
-                }
-                veList.get(j).draw();
-            }
+            routes[i].draw();
         }
     }
 
@@ -145,13 +142,19 @@ public class TopologicalMap extends BaseMap {
 
     @Override
     public void keyPressed() {
-        // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void keyReleased() {
-        // TODO Auto-generated method stub
-        
+        switch(parent.keyCode) {
+        case 83: // 's'
+            System.out.println("s pressed");
+            parent.noLoop();
+            break;
+        case 82: // 'r'
+            parent.loop();
+            break;
+        }
     }
 }

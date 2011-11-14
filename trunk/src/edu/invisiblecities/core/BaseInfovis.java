@@ -1,5 +1,7 @@
 package edu.invisiblecities.core;
 
+import processing.core.PApplet;
+
 public interface BaseInfovis {
     public void init();
     public void draw();

@@ -5,7 +5,7 @@ import edu.invisiblecities.core.BaseInfovis;
 
 abstract public class BaseMap implements BaseInfovis {
 
-    protected PApplet parent;
+    public static PApplet parent = null;
     public static int canvasWidth = 1000;
     public static int canvasHeight = 800;
     
