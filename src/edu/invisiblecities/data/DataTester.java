@@ -21,22 +21,43 @@ public class DataTester extends PApplet {
 		 * st.parent.lon + " )"); i++; } }
 		 */
 
-		Set<Station> stations = mod.getStations();
-		for (Station st : stations) {
-			println(st.station_id + " || " + st.station_name);
-			println("\t frequencies: ");
-			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
-				print(st.frequencies[i] + " || ");
-			}
-			println();
+		/*
+		 * Set<Station> stations = mod.getStations(); for (Station st :
+		 * stations) { println(st.station_id + " || " + st.station_name);
+		 * println("\t frequencies: "); for (int i = 0; i <
+		 * Constants.NUM_TIME_INTERVALS; i++) { print(st.frequencies[i] +
+		 * " || "); } println();
+		 * 
+		 * println("\t delays: "); for (int i = 0; i <
+		 * Constants.NUM_TIME_INTERVALS; i++) { print(st.delays[i] + " || "); }
+		 * println();
+		 * 
+		 * println("\t riderhips: " + st.ridership); }
+		 */
 
-			println("\t delays: ");
-			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
-				print(st.delays[i] + " || ");
-			}
-			println();
+		Set<Trip> trips = mod.getTrips();
 
-			println("\t riderhips: " + st.ridership);
+		int to_show = 10;
+		int i = 0;
+		for (Trip t : trips) {
+			if (i == to_show) {
+
+				int i_station = 0;
+				Float last_lat = 0F;
+				Float lat = null;
+				Float lon = null;
+				for (int j = 0; j < t.times.size(); j++) {
+					lat = t.latitudes.get(j);
+					lon = t.longitudes.get(j);
+					if (!lat.equals(last_lat)) {
+						println(t.route.stations.get(i_station).station_name);
+						i_station++;
+						last_lat = lat;
+					}
+					println(t.times.get(j) + " || " + lat + " || " + lon);
+				}
+			}
+			i++;
 		}
 	}
 }
