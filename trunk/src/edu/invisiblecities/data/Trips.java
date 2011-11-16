@@ -85,7 +85,7 @@ public class Trips {
 				}
 				t.latitudes.add(t.route.stations.get(i_station).parent.lat);
 				t.longitudes.add(t.route.stations.get(i_station).parent.lon);
-				System.out.println(trip_id);
+
 			}
 
 		} catch (SQLException e) {
