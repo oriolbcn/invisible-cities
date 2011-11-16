@@ -19,7 +19,7 @@ public class Model {
 	private static final String DBNAME = "cs7450_invisible";
 
 	// Current day
-	public String day = "2011-11-12";
+	public String day = "2011-11-14";
 
 	// Data
 	Routes routes;
