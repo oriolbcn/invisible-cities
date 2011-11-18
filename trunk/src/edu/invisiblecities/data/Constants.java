@@ -1,6 +1,9 @@
 package edu.invisiblecities.data;
 
 public class Constants {
+	public static final int NUM_TIMEPOINTS = 2280; // (24 - ini_hour) * 120 (24
+													// - 5) *120
+
 	public static final int NUM_TIME_INTERVALS = 19;
 	public static final int T5_6 = 0;
 	public static final int T6_7 = 1;

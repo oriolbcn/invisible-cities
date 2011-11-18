@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.util.List;
 import java.util.Set;
 
@@ -26,13 +27,16 @@ public class Model {
 	Stations stations;
 	ParentStations parentStations;
 	Trips trips;
+	List<Timepoint> timepoints[];
 
+	@SuppressWarnings("unchecked")
 	public Model() {
 		conn = connect();
 		routes = new Routes(this);
 		stations = new Stations(this);
 		parentStations = new ParentStations(this);
 		trips = new Trips(this);
+		timepoints = (List<Timepoint>[]) new List[Constants.NUM_TIMEPOINTS];
 		load();
 	}
 
@@ -67,8 +71,24 @@ public class Model {
 		}
 	}
 
-	public void load() {
+	private void load() {
 		trips.load();
+		// loadTimepoints();
+	}
+
+	private void loadTimepoints() {
+
+		Set<Trip> trips = getTrips();
+		for (Trip t : trips) {
+			// Classify the timepoints of the trip
+			for (int i = 0; i < t.times.size(); i++) {
+				int point_index = getPointIndex(t.times.get(i));
+			}
+		}
+	}
+
+	private int getPointIndex(Time t) {
+		return 0;
 	}
 
 	public Station loadStation(int station_id, Route r) {

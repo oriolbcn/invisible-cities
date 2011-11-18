@@ -43,16 +43,14 @@ public class DataTester extends PApplet {
 			if (i == to_show) {
 
 				int i_station = 0;
-				Float last_lat = 0F;
 				Float lat = null;
 				Float lon = null;
 				for (int j = 0; j < t.times.size(); j++) {
 					lat = t.latitudes.get(j);
 					lon = t.longitudes.get(j);
-					if (!lat.equals(last_lat)) {
+					if (lat.equals(t.route.stations.get(i_station).parent.lat)) {
 						println(t.route.stations.get(i_station).station_name);
 						i_station++;
-						last_lat = lat;
 					}
 					println(t.times.get(j) + " || " + lat + " || " + lon);
 				}
