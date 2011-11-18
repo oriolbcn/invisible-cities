@@ -18,8 +18,10 @@ public class Trips {
 	}
 
 	public void load() {
+		System.out.println("1");
 		ResultSet rs1 = mod
-				.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC");
+				.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC LIMIT 100");
+		System.out.println("2");
 		try {
 			while (rs1.next()) {
 
@@ -61,10 +63,13 @@ public class Trips {
 					Time time = t.times.get(i);
 					Float lat = t.route.stations.get(i_station).parent.lat;
 					Float lon = t.route.stations.get(i_station).parent.lon;
+
 					t.latitudes.add(i, lat);
 					t.longitudes.add(i, lon);
 
 					Time next_time = t.times.get(i + 1);
+					Float next_lat = t.route.stations.get(i_station + 1).parent.lat;
+					Float next_lon = t.route.stations.get(i_station + 1).parent.lon;
 
 					List<Time> new_times = new LinkedList<Time>();
 
@@ -78,14 +83,18 @@ public class Trips {
 						i++;
 						Time aux = new_times.get(j);
 						t.times.add(i, aux);
-						t.latitudes.add(i, lat);
-						t.longitudes.add(i, lon);
+						t.latitudes.add(i,
+								((next_lat - lat) / (new_times.size() + 1))
+										* (j + 1) + lat);
+						t.longitudes.add(i,
+								((next_lon - lon) / (new_times.size() + 1))
+										* (j + 1) + lon);
 					}
 					i_station++;
 				}
 				t.latitudes.add(t.route.stations.get(i_station).parent.lat);
 				t.longitudes.add(t.route.stations.get(i_station).parent.lon);
-
+				System.out.println(trip_id);
 			}
 
 		} catch (SQLException e) {
