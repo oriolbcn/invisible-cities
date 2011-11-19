@@ -1,6 +1,6 @@
 package edu.invisiblecities.data;
 
-import java.util.Set;
+import java.util.List;
 
 import processing.core.PApplet;
 
@@ -35,27 +35,28 @@ public class DataTester extends PApplet {
 		 * println("\t riderhips: " + st.ridership); }
 		 */
 
-		Set<Trip> trips = mod.getTrips();
-
-		int to_show = 10;
-		int i = 0;
-		for (Trip t : trips) {
-			if (i == to_show) {
-
-				int i_station = 0;
-				Float lat = null;
-				Float lon = null;
-				for (int j = 0; j < t.times.size(); j++) {
-					lat = t.latitudes.get(j);
-					lon = t.longitudes.get(j);
-					if (lat.equals(t.route.stations.get(i_station).parent.lat)) {
-						println(t.route.stations.get(i_station).station_name);
-						i_station++;
-					}
-					println(t.times.get(j) + " || " + lat + " || " + lon);
-				}
+		List<Timepoint>[] tpoints = mod.timepoints;
+		for (int i = 0; i < Constants.NUM_TIMEPOINTS; i++) {
+			System.out.println(i + ":");
+			for (Timepoint tp : tpoints[i]) {
+				System.out.println(tp.latitude
+						+ " || "
+						+ tp.longitude
+						+ " || "
+						+ (tp.stop_index == -1 ? "--" : tp.route.stations
+								.get(tp.stop_index).station_name));
 			}
-			i++;
 		}
+
+		/*
+		 * int i = 0; for (Trip t : trips) { if (i == to_show) {
+		 * 
+		 * int i_station = 0; Float lat = null; Float lon = null; for (int j =
+		 * 0; j < t.times.size(); j++) { lat = t.latitudes.get(j); lon =
+		 * t.longitudes.get(j); if
+		 * (lat.equals(t.route.stations.get(i_station).parent.lat)) {
+		 * println(t.route.stations.get(i_station).station_name); i_station++; }
+		 * println(t.times.get(j) + " || " + lat + " || " + lon); } } i++; }
+		 */
 	}
 }

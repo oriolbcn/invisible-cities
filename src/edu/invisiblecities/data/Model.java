@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -21,13 +22,15 @@ public class Model {
 
 	// Current day
 	public String day = "2011-11-14";
+	// Number of trips to show
+	public int limit = 100;
 
 	// Data
-	Routes routes;
-	Stations stations;
-	ParentStations parentStations;
-	Trips trips;
-	List<Timepoint> timepoints[];
+	private Routes routes;
+	private Stations stations;
+	private ParentStations parentStations;
+	private Trips trips;
+	public List<Timepoint> timepoints[];
 
 	@SuppressWarnings("unchecked")
 	public Model() {
@@ -37,6 +40,9 @@ public class Model {
 		parentStations = new ParentStations(this);
 		trips = new Trips(this);
 		timepoints = (List<Timepoint>[]) new List[Constants.NUM_TIMEPOINTS];
+		for (int i = 0; i < Constants.NUM_TIMEPOINTS; i++) {
+			timepoints[i] = new LinkedList<Timepoint>();
+		}
 		load();
 	}
 
@@ -73,22 +79,35 @@ public class Model {
 
 	private void load() {
 		trips.load();
-		// loadTimepoints();
+		loadTimepoints();
 	}
 
 	private void loadTimepoints() {
 
 		Set<Trip> trips = getTrips();
 		for (Trip t : trips) {
+			int i_station = 0;
 			// Classify the timepoints of the trip
 			for (int i = 0; i < t.times.size(); i++) {
-				int point_index = getPointIndex(t.times.get(i));
+				Float lat = t.latitudes.get(i);
+				Float lon = t.longitudes.get(i);
+				Route r = t.route;
+				int stop_index = -1;
+				if (lat.equals(r.stations.get(i_station).parent.lat)) {
+					stop_index = i_station;
+					i_station++;
+				}
+				timepoints[getPointIndex(t.times.get(i))].add(new Timepoint(
+						lat, lon, r, stop_index));
 			}
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private int getPointIndex(Time t) {
-		return 0;
+		return (t.getHours() - 5) * 120 + t.getMinutes() * 2
+				+ (t.getSeconds() == 30 ? 1 : 0);
+
 	}
 
 	public Station loadStation(int station_id, Route r) {
