@@ -18,10 +18,9 @@ public class Trips {
 	}
 
 	public void load() {
-		System.out.println("1");
 		ResultSet rs1 = mod
-				.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC LIMIT 100");
-		System.out.println("2");
+				.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC LIMIT "
+						+ mod.limit);
 		try {
 			while (rs1.next()) {
 
@@ -40,8 +39,11 @@ public class Trips {
 					stop_sequence.add(new Integer(station_id));
 					t.times.add(time);
 
-					rs1.next();
-					trip_id = rs1.getLong("trip_id");
+					if (rs1.next()) {
+						trip_id = rs1.getLong("trip_id");
+					} else {
+						trip_id = (long) 0;
+					}
 				}
 				rs1.previous();
 
@@ -94,7 +96,6 @@ public class Trips {
 				}
 				t.latitudes.add(t.route.stations.get(i_station).parent.lat);
 				t.longitudes.add(t.route.stations.get(i_station).parent.lon);
-				System.out.println(trip_id);
 			}
 
 		} catch (SQLException e) {
