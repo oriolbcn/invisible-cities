@@ -4,7 +4,7 @@ import processing.core.PApplet;
 import edu.invisiblecities.core.BaseInfovis;
 import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.maps.IsochronicMap.IsochronicMap;
-import edu.invisiblecities.maps.TopologicalMap.TopologicalMap;
+import edu.invisiblecities.maps.TopologicalMap.TopoMap;
 
 public class InvisibleCities extends PApplet {
     
@@ -32,7 +32,7 @@ public class InvisibleCities extends PApplet {
     @Override
     public void setup() {
         //showMap = new IsochronicMap(this, 20);
-        showMap = new TopologicalMap(this);
+        showMap = new TopoMap(this);
         showMap.init();
         textAlign(LEFT);
         ellipseMode(CENTER);
@@ -42,7 +42,7 @@ public class InvisibleCities extends PApplet {
     
     @Override
     public void draw() {
-        background(backgroundColor);
+        //background(backgroundColor);
         showMap.draw();
     }
     

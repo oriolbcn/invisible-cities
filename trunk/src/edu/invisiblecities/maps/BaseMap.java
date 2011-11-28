@@ -6,8 +6,9 @@ import edu.invisiblecities.core.BaseInfovis;
 abstract public class BaseMap implements BaseInfovis {
 
     public static PApplet parent = null;
-    public static int canvasWidth = 1000;
+    public static int canvasWidth = 1200;
     public static int canvasHeight = 800;
+    public static String canvasType = null;
     
     public BaseMap(PApplet p) {
         parent = p;
@@ -17,9 +18,7 @@ abstract public class BaseMap implements BaseInfovis {
     abstract public void init();
 
     @Override
-    public void draw() {
-        parent.text(parent.frameRate, 5, 5);
-    }
+    abstract public void draw();
 
     @Override
     abstract public void mousePressed();
