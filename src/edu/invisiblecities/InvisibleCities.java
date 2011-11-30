@@ -5,6 +5,7 @@ import edu.invisiblecities.core.BaseInfovis;
 import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.maps.IsochronicMap.IsochronicMap;
 import edu.invisiblecities.maps.TopologicalMap.TopoMap;
+import edu.invisiblecities.maps.rain.Rain;
 
 public class InvisibleCities extends PApplet {
     
@@ -32,7 +33,8 @@ public class InvisibleCities extends PApplet {
     @Override
     public void setup() {
         //showMap = new IsochronicMap(this, 20);
-        showMap = new TopoMap(this);
+        showMap = new Rain(this);
+        //showMap = new TopoMap(this);
         showMap.init();
         textAlign(LEFT);
         ellipseMode(CENTER);

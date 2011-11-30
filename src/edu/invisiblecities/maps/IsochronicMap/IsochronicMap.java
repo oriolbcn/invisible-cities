@@ -130,6 +130,7 @@ public class IsochronicMap extends BaseMap {
         
     @Override
     public void draw() {
+        parent.background(255);
         parent.noFill();
         parent.stroke(sred, sgreen, sblue, salpha);
         parent.strokeWeight(1);
