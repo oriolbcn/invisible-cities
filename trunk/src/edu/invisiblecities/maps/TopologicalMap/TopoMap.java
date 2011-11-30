@@ -75,21 +75,6 @@ public class TopoMap extends BaseMap {
         }
     }
     
-    public class Route {
-        public String routeId;
-        public String name;
-        public short red;
-        public short green;
-        public short blue;
-        public Route(String rid, String col) {
-            routeId = rid;
-            int color = Integer.parseInt(col, 16);
-            blue = (short)(color % 256);
-            green = (short)((color / 256) % 256);
-            red = (short)(color / 256 / 256);
-        }
-    }
-    
     static FileWriter ofstream;
     static BufferedWriter out;
     
@@ -179,7 +164,7 @@ public class TopoMap extends BaseMap {
     public static float BtnStpLeft;
     public static float BtnStpRight;
     public static float ProgressBarCircleX = ProgressBarLeft;
-    public static int stopsDiameter = 8;
+    public static int stopsDiameter = 4;
     public static int stopsRadius = stopsDiameter;
     public static float stopsDiameter2 = 10;
     public static int stopClicked = -1;
@@ -232,12 +217,12 @@ public class TopoMap extends BaseMap {
     }
     
     public static void drawStops() {
-        parent.stroke(200);
-        parent.strokeWeight(1);
-        parent.noFill();
-        
+        //parent.stroke(200);
+        //parent.strokeWeight(1);
+        //parent.noFill();
+        parent.noStroke();
         for (Stop s : mStops) {
-            parent.stroke(s.route.red, s.route.green, s.route.blue);
+            parent.fill(s.route.red, s.route.green, s.route.blue);
             parent.ellipse(s.screenX, s.screenY, stopsDiameter, stopsDiameter);
         }
     }
@@ -488,14 +473,17 @@ public class TopoMap extends BaseMap {
 
     @Override
     public void draw() {
-        //parent.background(255);
+        parent.background(250);
         // Map 2
-        map2.draw();
+        //map2.draw();
         drawMap2();
         
         // Map 1
-        map.draw();
+        //map.draw();
+        parent.noStroke();
         parent.fill(255);
+        parent.rect(0, 0, MapRightBottomX, MapRightBottomY);
+        parent.fill(0);
         parent.text("" + parent.frameRate, 20, 20);
         parent.text("" + stopClicked, 20, 40);
         Location loc = map2.getLocationFromScreenPosition(parent.mouseX, parent.mouseY);
