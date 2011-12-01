@@ -32,8 +32,8 @@ public class InvisibleCities extends PApplet {
     
     @Override
     public void setup() {
-        //showMap = new IsochronicMap(this, 20);
-        showMap = new Rain(this);
+        showMap = new IsochronicMap(this);
+        //showMap = new Rain(this);
         //showMap = new TopoMap(this);
         showMap.init();
         textAlign(LEFT);

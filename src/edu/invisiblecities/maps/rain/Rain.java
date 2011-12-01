@@ -36,8 +36,8 @@ public class Rain extends BaseMap {
     /*
     public class DropCircle {
         float diameter = StartDiameter;
-        float x = parent.random(0, CanvasWidth);
-        float y = parent.random(0, CanvasHeight);
+        float x = parent.random(0, canvasWidth);
+        float y = parent.random(0, canvasHeight);
         int red, green, blue;
         String name;
         Ani diameterAni;
@@ -75,8 +75,8 @@ public class Rain extends BaseMap {
             diameterAni.start();
 
             // move to new position
-            Ani.to(this, 0.f, "x", parent.random(0, CanvasWidth), Ani.EXPO_IN_OUT);
-            Ani.to(this, 0.f, "y", parent.random(0, CanvasHeight), Ani.EXPO_IN_OUT);
+            Ani.to(this, 0.f, "x", parent.random(0, canvasWidth), Ani.EXPO_IN_OUT);
+            Ani.to(this, 0.f, "y", parent.random(0, canvasHeight), Ani.EXPO_IN_OUT);
         }
         
         public void draw() {
@@ -92,18 +92,18 @@ public class Rain extends BaseMap {
     public static int mTimer = 0;
     public static int StartDiameter = 1;
     public static final float SIZEDIV = 3000;
-    public static final int CanvasWidth = 1200;
-    public static final int CanvasHeight = 800;
+    //public static final int canvasWidth = 1200;
+    //public static final int canvasHeight = 800;
     public static final float FrameRate = 150;
     public static final String rstdfilename = "rainrtdInsert.csv";
     public static final String routesfilename = "routeInfo.csv";
     public static final int Interval = 15;
     public static final int TotalTimeStamps = 6801;
     public static final int TimeLineLeftX = 50;
-    public static final int TimeLineRightX = CanvasWidth - 50;
+    public static final int TimeLineRightX = canvasWidth - 50;
     public static final int TimeLineWidth = TimeLineRightX - TimeLineLeftX;
     public static final int TimeLineTopY = 20;
-    public static final int TimeLineBottomY = CanvasHeight - 20;
+    public static final int TimeLineBottomY = canvasHeight - 20;
     public static final int TimeLineHeight = TimeLineBottomY - TimeLineTopY;
     public static final float StrokeWeight = (float)(TimeLineRightX - TimeLineLeftX) / TotalTimeStamps;
     
@@ -181,7 +181,7 @@ public class Rain extends BaseMap {
                     int dist = Integer.parseInt(split[2]);
                     if (dist == 0) break;
                     time = Integer.parseInt(split[1]) / Interval;
-                    //x = parent.map(time, 0, TotalTimeStamps, TimeLineLeftX, TimeLineRightX);//parent.random(0, CanvasWidth);
+                    //x = parent.map(time, 0, TotalTimeStamps, TimeLineLeftX, TimeLineRightX);//parent.random(0, canvasWidth);
                     Drop e = new Drop(x, y, r, dist);
                     mDrops[time].add(e);
                     ++cnt;
@@ -233,7 +233,7 @@ public class Rain extends BaseMap {
     
     @Override
     public void init() {
-        parent.size(CanvasWidth, CanvasHeight);
+        parent.size(canvasWidth, canvasHeight);
         parent.frameRate(FrameRate);
 
         parent.smooth();
@@ -259,7 +259,7 @@ public class Rain extends BaseMap {
         mTimer = (mTimer + 1) % TotalTimeStamps;
         parent.noStroke();
         parent.fill(255);
-        parent.rect((float)mTimer*TimeLineWidth/TotalTimeStamps+TimeLineLeftX, TimeLineTopY, CanvasWidth, CanvasHeight);
+        parent.rect((float)mTimer*TimeLineWidth/TotalTimeStamps+TimeLineLeftX, TimeLineTopY, canvasWidth, canvasHeight);
         if (mDrops[mTimer].isEmpty()) return;
         parent.line(TimeLineLeftX, TimeLineBottomY, TimeLineRightX, TimeLineBottomY);
         parent.noStroke();

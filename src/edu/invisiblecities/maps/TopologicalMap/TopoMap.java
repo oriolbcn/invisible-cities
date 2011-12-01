@@ -249,7 +249,6 @@ public class TopoMap extends BaseMap {
                 Route r = findRoute(split[0]);
                 CTrip tm = new CTrip(r, Float.parseFloat(split[3]), Float.parseFloat(split[4]));
                 mTrips[time].add(tm);
-                //if (cnt == 500000) break;
                 ++cnt;
             }
             br.close();
@@ -475,11 +474,11 @@ public class TopoMap extends BaseMap {
     public void draw() {
         parent.background(250);
         // Map 2
-        //map2.draw();
+        map2.draw();
         drawMap2();
         
         // Map 1
-        //map.draw();
+        map.draw();
         parent.noStroke();
         parent.fill(255);
         parent.rect(0, 0, MapRightBottomX, MapRightBottomY);
