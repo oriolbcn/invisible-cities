@@ -21,9 +21,9 @@ public class Model {
 	private static final String DBNAME = "cs7450_invisible";
 
 	// Current day
-	public String day = "2011-11-14";
+	public String day = "2011-11-28";
 	// Number of trips to show
-	public int limit = 100;
+	public int limit = 0;
 
 	// Data
 	private Routes routes;
@@ -34,7 +34,7 @@ public class Model {
 
 	@SuppressWarnings("unchecked")
 	public Model() {
-		conn = connect();
+		// conn = connect();
 		routes = new Routes(this);
 		stations = new Stations(this);
 		parentStations = new ParentStations(this);
@@ -43,7 +43,7 @@ public class Model {
 		for (int i = 0; i < Constants.NUM_TIMEPOINTS; i++) {
 			timepoints[i] = new LinkedList<Timepoint>();
 		}
-		load();
+		// load();
 	}
 
 	public Connection connect() {
@@ -123,11 +123,11 @@ public class Model {
 	}
 
 	// Get Data
-	public Set<Route> getRoutes() {
+	public List<Route> getRoutes() {
 		return routes.getRoutes();
 	}
 
-	public Set<Station> getStations() {
+	public List<Station> getStations() {
 		return stations.getStations();
 	}
 

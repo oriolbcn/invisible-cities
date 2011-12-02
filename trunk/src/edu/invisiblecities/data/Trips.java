@@ -18,9 +18,16 @@ public class Trips {
 	}
 
 	public void load() {
-		ResultSet rs1 = mod
-				.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC LIMIT "
-						+ mod.limit);
+		ResultSet rs1 = null;
+		if (mod.limit == 0) {
+			rs1 = mod
+					.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC");
+		} else {
+			rs1 = mod
+					.query("SELECT * FROM stop_times_routes ORDER BY trip_id ASC, stop_sequence ASC LIMIT "
+							+ mod.limit);
+		}
+		System.out.println("Hey!");
 		try {
 			while (rs1.next()) {
 

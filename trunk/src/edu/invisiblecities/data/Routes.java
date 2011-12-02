@@ -2,16 +2,15 @@ package edu.invisiblecities.data;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public class Routes {
-	Set<Route> routes;
+	List<Route> routes;
 	Model mod;
 
 	public Routes(Model mod) {
-		routes = new HashSet<Route>();
+		routes = new LinkedList<Route>();
 		this.mod = mod;
 	}
 
@@ -76,7 +75,7 @@ public class Routes {
 		return r;
 	}
 
-	public Set<Route> getRoutes() {
+	public List<Route> getRoutes() {
 		return routes;
 	}
 }
