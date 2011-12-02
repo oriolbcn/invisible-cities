@@ -3,15 +3,15 @@ package edu.invisiblecities.data;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Stations {
-	Set<Station> stations;
+	List<Station> stations;
 	Model mod;
 
 	public Stations(Model mod) {
-		stations = new HashSet<Station>();
+		stations = new LinkedList<Station>();
 		this.mod = mod;
 	}
 
@@ -112,7 +112,7 @@ public class Stations {
 		return st;
 	}
 
-	public Set<Station> getStations() {
+	public List<Station> getStations() {
 		return stations;
 	}
 
