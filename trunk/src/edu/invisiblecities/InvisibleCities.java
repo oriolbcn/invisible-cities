@@ -66,6 +66,10 @@ public class InvisibleCities extends PApplet {
         showMap.keyReleased();
     }
     
+    @Override
+    public void mouseDragged() {
+        showMap.mouseDragged();
+    }
     
     public static void main(String args[]) {
         PApplet.main(new String[] {"--present", "InvisibleCities"});
