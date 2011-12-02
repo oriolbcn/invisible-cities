@@ -25,7 +25,9 @@ public class IsochronicMap extends BaseMap {
     public static float Scale = 300;
 
     public static de.fhpotsdam.unfolding.Map map;
-    public static final int MapLeftTopX = 1000;
+    public static final int PictureWidth = 1000;
+    public static final int PictureHeight = canvasHeight;
+    public static final int MapLeftTopX = PictureWidth;
     public static final int MapLeftTopY = 0;
     public static final int MapWidth = 400;
     public static final int MapHeight = canvasHeight;
@@ -45,10 +47,12 @@ public class IsochronicMap extends BaseMap {
     
     public class Station {
         // Graph
+        public float rx;
+        public float ry;
         public float x;
         public float y;
-        public float diameter = 5000.f;
-        public float radius = 2500.f;
+        public float diameter = 20.f;
+        public float radius = 10.f;
         // fill color
         public int fred;
         public int fgreen;
@@ -72,6 +76,11 @@ public class IsochronicMap extends BaseMap {
         public float screenX, screenY;
         public float lat, lon;
         
+        public void restorePosition() {
+            x = rx;
+            y = ry;
+        }
+        
         public Station(Route r, String n, int size, int fr, int fg, int fb, int id, float la, float lo) {
             route = r;
             name = n;
@@ -94,14 +103,14 @@ public class IsochronicMap extends BaseMap {
         public void draw() {
             parent.fill(fred, fgreen, fblue);
             parent.stroke(sred, sgreen, sblue, salpha);
-            parent.ellipse(x, y, diameter/Scale, diameter/Scale);
+            parent.ellipse(x, y, diameter, diameter);
             parent.fill(tred, tgreen, tblue);
             parent.text(""+name, x, y + 25);
         }
         
         public boolean isInside(float sx, float sy) {
             // AABB
-            if (x + radius/Scale < sx || x - radius/Scale > sx || y + radius/Scale < sy || y - radius/Scale > sy)
+            if (x + radius < sx || x - radius > sx || y + radius < sy || y - radius > sy)
                 return false;
             return true;
             //float distance = mathFunctions.getDistance(x, y, sx, sy);
@@ -254,8 +263,8 @@ public class IsochronicMap extends BaseMap {
     /**********  Basic attributes **********/
     //public int numOfNodes;              // Total number of nodes in this map
     public static float CenterOffSet = 200;
-    public final static float centerX = canvasWidth / 2 - CenterOffSet;
-    public final static float centerY = canvasHeight / 2;      // The center of this map
+    public static float centerX = canvasWidth / 2 - CenterOffSet;
+    public static float centerY = canvasHeight / 2;      // The center of this map
     public static float[] RadiusArray;
     public static final int RadiusSize = 10;
     public boolean connections[][];     // The adjacency matrix
@@ -308,7 +317,7 @@ public class IsochronicMap extends BaseMap {
     // Initialize attributes that are not initialized in constructor
     @Override
     public void init() {
-        parent.size(canvasWidth, canvasHeight, GLConstants.GLGRAPHICS/*, parent.P3D*/);
+        parent.size(canvasWidth, canvasHeight, GLConstants.GLGRAPHICS);
         map = new de.fhpotsdam.unfolding.Map
                 (parent, MapLeftTopX, MapLeftTopY,
                  MapWidth, MapHeight,
@@ -346,18 +355,19 @@ public class IsochronicMap extends BaseMap {
         return -1;
     }
         
-    @Override
-    public void draw() {
-        parent.background(255);
-        parent.stroke(tred, tgreen, tblue);
-        parent.text("Current node " + selectedNode + " " + stations[selectedNode].x + " " + stations[selectedNode].y, 20, 20);
-        parent.text("Max distance from center node: " + MaxDistance, 20, 40);
+    public static void drawRadius() {
         parent.noStroke();
         for (int i=RadiusSize-1; i>=0; --i) {
             if (i % 2 == 1) parent.fill(200);
             else parent.fill(255);
             parent.ellipse(centerX, centerY, RadiusArray[i] * 2 / Scale, RadiusArray[i] * 2 / Scale);
         }
+    }
+    
+    @Override
+    public void draw() {
+        parent.background(255);
+        drawRadius();
         parent.stroke(sred, sgreen, sblue, salpha);
         for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
             Station sta = stations[i];
@@ -379,6 +389,21 @@ public class IsochronicMap extends BaseMap {
             stations[i].draw();
         }
         drawRadar();
+        if (parent.mousePressed) {
+            mouseEndX = parent.mouseX;
+            mouseEndY = parent.mouseY;
+            parent.noFill();
+            parent.stroke(0, 40);
+            parent.rect(mouseStartX, mouseStartY, 
+                    parent.abs(mouseStartX - mouseEndX), 
+                    parent.abs(mouseStartY - mouseEndY));
+        }
+        
+        parent.fill(0);
+        parent.text("Current node " + selectedNode + " " + stations[selectedNode].x + " " + stations[selectedNode].y, 20, 20);
+        parent.text("Max distance from center node: " + MaxDistance, 20, 40);
+        parent.text("Sx " + mouseStartX + " Sy " + mouseStartY + " Ex " + mouseEndX + " Ey " + mouseEndY, 20, 60);
+        parent.text("CX " + centerX + " CY " + centerY, 20, 80);
     }
     
     public static final int RadarDiameterMax = 50;
@@ -396,36 +421,100 @@ public class IsochronicMap extends BaseMap {
         parent.ellipse(sta.screenX, sta.screenY, radarDiameter, radarDiameter);
     }
     
+    public static int mouseStartX;
+    public static int mouseStartY;
+    public static int mouseEndX;
+    public static int mouseEndY;
+    public static final int MinimumSize = 30;
     @Override
     public void mousePressed() {
-        // TODO Auto-generated method stub
-        
+        mouseStartX = parent.mouseX;
+        mouseStartY = parent.mouseY;
     }
 
+    public void mouseDragged() {
+        
+    }
+    
+    public static final float MAXSCALE = 10000;
     @Override
     public void mouseReleased() {
-        int id = getSelection();
-        System.out.println("Selected" + id);
-        if (id >= 0) {
-            selectedNode = id;
-            updateGraph();
+        mouseEndX = parent.mouseX;
+        mouseEndY = parent.mouseY;
+        int selectHeight = parent.abs(mouseStartY - mouseEndY);
+        int selectWidth = parent.abs(mouseStartX - mouseEndX);
+        if (selectHeight > MinimumSize && selectWidth > MinimumSize) {
+            if (selectWidth > selectHeight) Scale = (float)PictureWidth / selectWidth;
+            else Scale = (float)PictureHeight / selectHeight;
+            if (Scale > MAXSCALE) Scale = MAXSCALE;
+            
+            int lefttopX = parent.min(mouseStartX, mouseEndX);
+            int lefttopY = parent.min(mouseStartY, mouseEndY);
+            
+            //centerX = (centerX - leftbottomX) * Scale;
+            //centerY = canvasHeight + (leftbottomY - centerY) * Scale;
+            centerX = scalePositionX(centerX, lefttopX);
+            centerY = scalePositionY(centerY, lefttopY);
+            drawRadius();
             for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
-                stations[i].setAni(toPositions[i][0], toPositions[i][1]);
+                Station sta = stations[i];
+                sta.rx = sta.x;
+                sta.ry = sta.y;
+                sta.x = scalePositionX(sta.x, lefttopX);
+                sta.y = scalePositionY(sta.y, lefttopY);
+                sta.draw();
             }
-            updateMapRadar();
+        } else {
+            restoreCenter();
+            int id = getSelection();
+            System.out.println("Selected" + id);
+            if (id >= 0) {
+                selectedNode = id;
+                updateGraph();
+                for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                    stations[i].setAni(toPositions[i][0], toPositions[i][1]);
+                }
+                updateMapRadar();
+            }
         }
     }
 
+    public static void restoreCenter() {
+        centerX = canvasWidth / 2 - CenterOffSet;
+        centerY = canvasHeight / 2;
+    }
+    
+    public static float scalePositionX(float cx, int x) {
+        return Scale * (cx - x);
+    }
+    
+    public static float scalePositionY(float cy, int y) {
+        return Scale * (cy - y);
+    }
+    
+    public static float reversePositionX(float cx, int x) {
+        return cx / Scale + x;
+    }
+    
+    public static float reversePositionY(float cy, int y) {
+        return cy / Scale + y;
+    }
+    
     @Override
     public void keyPressed() {
-        // TODO Auto-generated method stub
+        if (parent.keyPressed) {
+            restoreCenter();
+            drawRadius();
+            for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                stations[i].restorePosition();
+                stations[i].draw();
+            }
+        }
         
     }
 
     @Override
     public void keyReleased() {
-        // TODO Auto-generated method stub
-        
     }
     
     /********** Constructors **********/

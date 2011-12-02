@@ -8,4 +8,5 @@ public interface BaseInfovis {
     public void mouseReleased();
     public void keyPressed();
     public void keyReleased();
+    public void mouseDragged();
 }

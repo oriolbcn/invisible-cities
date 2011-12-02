@@ -548,4 +548,10 @@ public class TopoMap extends BaseMap {
         
     }
 
+    @Override
+    public void mouseDragged() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

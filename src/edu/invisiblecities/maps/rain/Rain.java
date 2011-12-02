@@ -293,4 +293,10 @@ public class Rain extends BaseMap {
         
     }
 
+    @Override
+    public void mouseDragged() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

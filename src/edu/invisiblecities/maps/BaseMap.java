@@ -32,4 +32,6 @@ abstract public class BaseMap implements BaseInfovis {
     @Override
     abstract public void keyReleased();
     
+    @Override
+    abstract public void mouseDragged();
 }
