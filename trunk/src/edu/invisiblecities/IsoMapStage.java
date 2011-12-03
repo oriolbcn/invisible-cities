@@ -19,6 +19,7 @@ public class IsoMapStage extends PApplet {
     public static final int     CanvasHeight = 600;
     public static final int     PictureWidth = 600;
     public static final int     PictureHeight = CanvasHeight;
+    public static final int     PictureHalfHeight = PictureHeight / 2;
     public static final int     PictureCenterX = PictureWidth / 2;
     public static final int     PictureCenterY = PictureHeight / 2;
     public static final int     MapLeftX = PictureWidth;
@@ -38,21 +39,21 @@ public class IsoMapStage extends PApplet {
     public static final String  Stationinfofilename = "stationrelationship.csv";
     public static final String  Bfsinfofilename = "bfsinfo.csv";
     public static final String  SSSPfilename = "SSSP.csv";
-    public static final float   FixedScale = 400;
     public static final int     RadarDiameterMax = 50;
     public static final int     RadarStrokeWeight = 1;
     
     // Animation
     public static final float   Duration = 1.f;
     public static final Easing  Easing = Ani.QUINT_IN_OUT;//EXPO_IN_OUT;
-        
+    public static float         FixedScale = 400;
+    
     public static Route[]       mRoutes;
     public static int           NumOfRoutes;
     public static Station[]     mStations;
     public static int           NumOfStations = 170; // Hard code for this case 
     public static int           SelectedNode = -1;
     public static int[]         RouteCount;
-    public static int           MaxDistance;
+    public static int[]         MaxDistance;
     public static float[][]     toPositions;
     public static float[][]     AngleRanges;
     public static int           radarDiameter = 0;
@@ -70,8 +71,8 @@ public class IsoMapStage extends PApplet {
         Station sta = mStations[SelectedNode];
         sta.isSelected = true;
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
-            toPositions[i][0] = sta.bfsPosition[i][0];
-            toPositions[i][1] = sta.bfsPosition[i][1];
+            toPositions[i][0] = PictureCenterX + sta.bfsPosition[i][0] / FixedScale;
+            toPositions[i][1] = PictureCenterY + sta.bfsPosition[i][1] / FixedScale;
         }
     }
     
@@ -89,10 +90,13 @@ public class IsoMapStage extends PApplet {
         toPositions = new float[NumOfStations][2];
         updateGraph();
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
-            mStations[i].curX = toPositions[i][0];
-            mStations[i].curY = toPositions[i][1];
+            mStations[i].curX = PictureCenterX;
+            mStations[i].curY = PictureCenterY;
         }
-       
+        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
+            mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+        mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
+                                                   toPositions[SelectedNode][1]);
     }
     
     
@@ -143,38 +147,41 @@ public class IsoMapStage extends PApplet {
                 line(sta.curX, sta.curY, sj.curX, sj.curY);
             }
         }
-        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null)
+        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
             mStations[i].draw();
         
         hoverId = getSelection();
         if (hoverId != -1) {
             Station sta = mStations[SelectedNode];
-            int len = sta.
-                    sssp[hoverId].
-                    length;
+            stroke(0, 100);
+            strokeWeight(1);
+            line(sta.curX, sta.curY, mStations[hoverId].curX, mStations[hoverId].curY);
+            int len = sta.sssp[hoverId].length;
+            strokeWeight(5);
             for (int i=1; i<len; ++i) {
                 Station ssp = mStations[sta.sssp[hoverId][i]];
                 Station ssb = mStations[sta.sssp[hoverId][i-1]];
-                strokeWeight(5);
                 line(ssp.curX, ssp.curY, ssb.curX, ssb.curY);
             }
             
+            strokeWeight(0);
+            stroke(0);
             for (int i=0; i<len; ++i) {
                 Station ssp = mStations[sta.sssp[hoverId][i]];
                 fill(ssp.fred, ssp.fgreen, ssp.fblue);
-                strokeWeight(0);
-                stroke(0);
                 ellipse(ssp.curX, ssp.curY, ssp.diameter, ssp.diameter);
                 //fill(0);
                 //text(ssp.name, + ssp.bfsDistance[SelectedNode], ssp.curX, ssp.curY + 25);
             }
         }
+        mStations[SelectedNode].draw();
         
         drawSideMap();
         drawSideTable();
         
         fill(0);
-        text("Mouse x: " + mouseX + " y: " + mouseY, 20, 40);
+        text("Mouse x: " + mouseX + " y: " + mouseY, 20, 20);
+        text("Scale " + FixedScale, 20, 40);
         stroke(0);
         strokeWeight(0);
         line(PictureWidth, 0, PictureWidth, PictureHeight);
@@ -189,8 +196,10 @@ public class IsoMapStage extends PApplet {
             mStations[SelectedNode].isSelected = false;
             SelectedNode = id;
             updateGraph();
-            for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null)
+            for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
                 mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+            mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
+                                                       toPositions[SelectedNode][1]);
         }
     }
 
@@ -213,7 +222,6 @@ public class IsoMapStage extends PApplet {
     public static void main(String args[]) {
         PApplet.main(new String[] {"--present", "InvisibleCities"});
     }
-    
     
     /*************** Subclasses ***************/
     public class Station {
@@ -264,18 +272,33 @@ public class IsoMapStage extends PApplet {
             Ani.to(this, Duration, "curY", _y, Easing);
         }
         
+        public void setAniWithCallback(float _x, float _y) {
+            Ani.to(this, Duration, "curX", _x, Easing, "onEnd:reScale");
+            Ani.to(this, Duration, "curY", _y, Easing);
+        }
+        
+        public void reScale(Ani theAni) {
+            if (theAni.isEnded()) {
+                FixedScale = MaxDistance[SelectedNode] / PictureHalfHeight;
+                updateGraph();
+                for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null)
+                    mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+            }
+        }
+        
         public void draw() {
             if (isSelected) {
                 stroke(0);
                 fill(fred, fgreen, fblue);
+                ellipse(curX, curY, diameter, diameter);
+                fill(0);
+                text(name, curX, curY + 25);
             }
             else {
                 fill(fred, fgreen, fblue, alpha);
                 stroke(0, alpha);
+                ellipse(curX, curY, diameter, diameter);
             }
-            ellipse(curX, curY, diameter, diameter);
-            //fill(0);
-            //text(name, curX, curY + 25);
         }
         
         public boolean isInside(int sx, int sy) {
@@ -432,6 +455,7 @@ public class IsoMapStage extends PApplet {
             ifstream.close();
             
             // Load bfs distance
+            MaxDistance = new int[NumOfStations];
             ifstream = new FileInputStream(Bfsinfofilename);
             in = new DataInputStream(ifstream);
             br = new BufferedReader(new InputStreamReader(in));
@@ -445,6 +469,7 @@ public class IsoMapStage extends PApplet {
                     int sid = Integer.parseInt(split[i]);
                     int acc = Integer.parseInt(split[i+1]);
                     mStations[stationid].bfsDistance[sid] = acc;
+                    if (MaxDistance[stationid] < acc) MaxDistance[stationid] = acc;
                 }
             }
             System.out.println("BFS distance done");
@@ -494,8 +519,8 @@ public class IsoMapStage extends PApplet {
                     float theta = random(AngleRanges[sj.rid][0], AngleRanges[sj.rid][1]);
                     //float theta = (AngleRanges[sj.rid][1] - AngleRanges[sj.rid][0]) / 
                     //        RouteCount[sj.rid] * accAngle[sj.rid] + AngleRanges[sj.rid][0];
-                    sta.bfsPosition[j][0] = PictureCenterX + sta.bfsDistance[j] * cos(theta) / FixedScale;
-                    sta.bfsPosition[j][1] = PictureCenterY + sta.bfsDistance[j] * sin(theta) / FixedScale;
+                    sta.bfsPosition[j][0] = sta.bfsDistance[j] * cos(theta);
+                    sta.bfsPosition[j][1] = sta.bfsDistance[j] * sin(theta);
                     //System.out.println("id " + sj.rid + " x " + sta.bfsPosition[j][0] + " y " + sta.bfsPosition[j][1]);
                     //++accAngle[sj.rid];
                 }
