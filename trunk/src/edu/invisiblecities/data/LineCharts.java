@@ -2,58 +2,40 @@ package edu.invisiblecities.data;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import processing.core.PApplet;
 
 public class LineCharts extends PApplet {
 
 	// Constants
-	final int rectWidth = 40;
-	final int rectHeight = 20;
 	final int textSize = 12;
 	final int titleTextSize = 16;
-	final int nRects = 20;
-	final int nRectsExpanded = 45;
-	final int chartHeight = rectHeight * nRects;
-	final int chartHeightExpanded = rectHeight * nRectsExpanded;
-	final int chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
-	final int legendRowHeight = 20;
-	final int legendHeight = legendRowHeight * 8;
-	final int legendWidth = 150;
+	final int subtitleTextSize = 14;
+	final int nSteps = 8;
+	final int sep = 15;
+	final int Xsep = 25;
+	final int chartHeight = (nSteps + 1) * sep;
+	final int chartWidth = (Constants.NUM_TIME_INTERVALS + 1) * Xsep;
+	int rY1 = 209;
+	int gY1 = 165;
+	int bY1 = 0;
+	int rY2 = 209;
+	int gY2 = 70;
+	int bY2 = 0;
+
+	int chartsInRow = 3;
+	int chartsInColumn = 4;
+	int chartsSep = 100;
 
 	Model mod;
 
 	// Heatmaps
-	Heatmap hm1, hm2;
+	DoubleAxisLineChartSet chartSet;
 
 	public void setup() {
-		size(1100, 1000);
+		size(1900, 1000);
 		mod = new Model();
 		// noLoop();
-
-		/*
-		 * Set<Route> routes = mod.getRoutes(); for (Route r : routes) {
-		 * println(r.route_id + " || " + r.route_name + " GOES " + " from: " +
-		 * r.stations.get(0).station_name + " to: " +
-		 * r.stations.get(r.stations.size() - 1).station_name); int i = 0; for
-		 * (Station st : r.stations) { println("\t" + i + ": " + st.station_id +
-		 * " || " + st.station_name + " ( " + st.parent.station_id + " || " +
-		 * st.parent.station_name + " || " + st.parent.lat + " || " +
-		 * st.parent.lon + " )"); i++; } }
-		 */
-
-		/*
-		 * Set<Route> routes = mod.getRoutes(); for (Route r : routes) {
-		 * print(r.route_name + "," + r.hex_color + ","); int[] freqs =
-		 * r.getFrequencies(); for (int i = 0; i < freqs.length; i++) {
-		 * print(freqs[i] + " , "); } int[] delays = r.getDelays(); for (int i =
-		 * 0; i < delays.length; i++) { if (i == delays.length - 1) {
-		 * print(delays[i]); } else { print(delays[i] + " , "); } } println(); }
-		 */
 
 		String lines[] = loadStrings("C:/Users/Oriol/Desktop/stations.txt");
 		for (int i = 0; i < lines.length; i++) {
@@ -101,427 +83,320 @@ public class LineCharts extends PApplet {
 			}
 		});
 
-		hm1 = new Heatmap(140, 80, createRows(true, false),
-				createAggregatedRows(true, false), "Frequencies", 140, 80);
-
-		hm2 = new Heatmap(140, 160 + chartHeight + 40, createRows(false, true),
-				createAggregatedRows(false, true), "Delays (in seconds)", 140,
-				80);
-
-		/*
-		 * List<Timepoint>[] tpoints = mod.timepoints; for (int i = 0; i <
-		 * Constants.NUM_TIMEPOINTS; i++) { System.out.println(i + ":"); for
-		 * (Timepoint tp : tpoints[i]) { System.out.println(tp.latitude + " || "
-		 * + tp.longitude + " || " + (tp.stop_index == -1 ? "--" :
-		 * tp.route.stations .get(tp.stop_index).station_name)); } }
-		 */
-
-		/*
-		 * int i = 0; for (Trip t : trips) { if (i == to_show) {
-		 * 
-		 * int i_station = 0; Float lat = null; Float lon = null; for (int j =
-		 * 0; j < t.times.size(); j++) { lat = t.latitudes.get(j); lon =
-		 * t.longitudes.get(j); if
-		 * (lat.equals(t.route.stations.get(i_station).parent.lat)) {
-		 * println(t.route.stations.get(i_station).station_name); i_station++; }
-		 * println(t.times.get(j) + " || " + lat + " || " + lon); } } i++; }
-		 */
-	}
-
-	public HeatMapRow[] createRows(boolean freq, boolean del) {
-
-		HeatMapRow[] rows = new HeatMapRow[mod.getStations().size()];
-		for (int i = 0; i < mod.getStations().size(); i++) {
+		DoubleAxisLineChart[] charts = new DoubleAxisLineChart[mod
+				.getStations().size()];
+		for (int i = 0; i < charts.length; i++) {
 			Station st = mod.getStations().get(i);
-			HeatMapRow row = new HeatMapRow(st.station_name.substring(1,
-					st.station_name.length() - 1),
-					st.route.hex_color.substring(2));
-			row.values = new int[Constants.NUM_TIME_INTERVALS];
-			for (int j = 0; j < st.frequencies.length; j++) {
-				int val;
-				if (freq)
-					val = st.frequencies[j];
-				else if (del)
-					val = st.delays[j];
-				else
-					val = 0;
-				row.values[j] = val;
-			}
-			rows[i] = row;
+			charts[i] = createChart(
+					st.station_name.substring(1, st.station_name.length() - 1),
+					st.route.hex_color, st.frequencies, st.delays);
 		}
 
-		return rows;
-
-	}
-
-	public HeatMapRow[] createAggregatedRows(boolean freq, boolean del) {
-
-		HeatMapRow[] rows = new HeatMapRow[8];
-		int[] sum = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-		int[] n = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-
+		DoubleAxisLineChart[] chartsAggregated = new DoubleAxisLineChart[8];
+		int[] sumFreqs = new int[Constants.NUM_TIME_INTERVALS]; // aux var
+		int[] nFreqs = new int[Constants.NUM_TIME_INTERVALS]; // aux var
+		int[] sumDelays = new int[Constants.NUM_TIME_INTERVALS]; // aux var
+		int[] nDelays = new int[Constants.NUM_TIME_INTERVALS]; // aux var
 		Route r = mod.getRoutes().get(0);
 		int index = 0;
 		for (int i = 0; i < mod.getRoutes().size();) {
-			for (int j = 0; j < sum.length; j++) {
-				sum[j] = 0;
-				n[j] = 0;
+			for (int j = 0; j < sumFreqs.length; j++) {
+				sumFreqs[j] = 0;
+				nFreqs[j] = 0;
+				sumDelays[j] = 0;
+				nDelays[j] = 0;
 			}
 			String rName = r.route_name;
 			String rColor = r.hex_color;
 			while (i < mod.getRoutes().size() && r.route_name.equals(rName)) {
 				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-					int val;
-					if (freq)
-						val = r.frequencies[j];
-					else if (del)
-						val = r.delays[j];
-					else
-						val = 0;
-					sum[j] += val;
-					n[j]++;
+					sumFreqs[j] += r.frequencies[j];
+					sumDelays[j] += r.delays[j];
+					nFreqs[j]++;
+					nDelays[j]++;
 				}
 				i++;
 				if (i < mod.getRoutes().size())
 					r = mod.getRoutes().get(i);
 			}
-			HeatMapRow row = new HeatMapRow(rName, rColor.substring(2));
-			row.values = new int[Constants.NUM_TIME_INTERVALS];
-			for (int j = 0; j < sum.length; j++) {
-				row.values[j] = sum[j] / n[j];
+			int[] valuesFreq = new int[Constants.NUM_TIME_INTERVALS];
+			int[] valuesDelays = new int[Constants.NUM_TIME_INTERVALS];
+			for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+				valuesFreq[j] = sumFreqs[j] / nFreqs[j];
+				valuesDelays[j] = sumDelays[j] / nDelays[j];
+				println(j + " : " + rName + " - " + sumDelays[j] + " - "
+						+ nDelays[j]);
 			}
-			rows[index] = row;
+			chartsAggregated[index] = createChart(rName, rColor, valuesFreq,
+					valuesDelays);
 			index++;
 		}
 
-		return rows;
+		chartSet = new DoubleAxisLineChartSet(40, 80, charts, chartsAggregated,
+				"Frequencies", "Delays (in seconds)");
+	}
 
+	public DoubleAxisLineChart createChart(String name, String color,
+			int[] values1, int[] values2) {
+		String labels[] = new String[Constants.NUM_TIME_INTERVALS];
+		for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+			String s;
+			if (i >= 7) {
+				if (i != 7) {
+					s = String.valueOf(5 + i - 12);
+				} else {
+					s = "12";
+				}
+				s += "p";
+			} else {
+				s = String.valueOf(5 + i);
+				s += "a";
+			}
+			labels[i] = s;
+		}
+
+		return new DoubleAxisLineChart(labels, values1, values2, name, color);
 	}
 
 	public void draw() {
 		background(255);
 		noStroke();
-
-		if (hm1.visible) {
-			hm1.update();
-			hm1.display();
-		}
-		if (hm2.visible) {
-			hm2.update();
-			hm2.display();
-		}
-
+		chartSet.update();
+		chartSet.display();
 	}
 
 	public void mousePressed() {
-		if (hm1.visible) {
-			hm1.cbox.update();
-			hm1.expandButton.update();
-		}
-		if (hm2.visible) {
-			hm2.cbox.update();
-			hm2.expandButton.update();
-		}
+		chartSet.cbox.update();
 	}
 
-	// Heatmap
-	class Heatmap {
+	class DoubleAxisLineChartSet {
 
-		String title;
+		String var1;
+		String var2;
 
 		// GUI
 		VScrollbar sbar;
-		VScrollbar sbarExpanded;
+		DoubleAxisLineChart[] charts;
+		DoubleAxisLineChart[] chartsAggregated;
 		CheckBox cbox;
-		Button expandButton;
 
-		// Data
-		HeatMapRow[] rows;
-		HeatMapRow[] rowsAggregated;
-		Map<String, Integer> maxColor;
-		Map<String, Integer> maxColorAggregated;
-
-		// Size and position parameters
 		int iniX;
-		int iniXCollapsed;
-		int iniXExpanded;
-		int iniLegendX;
 		int iniY;
-		int iniYCollapsed;
-		int iniYExpanded;
-		int iniLegendY;
-		int shownRects;
-		int h;
-		int maxValue;
-		int maxValueAggregated;
-		boolean visible;
-		boolean expanded;
-
-		// Rows to show
 		int rowNum;
+		int totalHeight;
+		int totalWidth;
+
 		boolean aggregated;
 
-		Heatmap(int iniX, int iniY, HeatMapRow[] rows,
-				HeatMapRow[] rowsAggregated, String title, int iniXExpanded,
-				int iniYExpanded) {
+		DoubleAxisLineChartSet(int iniX, int iniY,
+				DoubleAxisLineChart[] charts,
+				DoubleAxisLineChart[] chartsAggregated, String var1, String var2) {
 			this.iniX = iniX;
 			this.iniY = iniY;
-			this.iniXExpanded = iniXExpanded;
-			this.iniYExpanded = iniYExpanded;
-			this.iniXCollapsed = iniX;
-			this.iniYCollapsed = iniY;
-			this.shownRects = nRects;
-			this.h = chartHeight;
-			this.rows = rows;
-			this.rowsAggregated = rowsAggregated;
-			maxValue = getMaxValue(rows);
-			maxValueAggregated = getMaxValue(rowsAggregated);
+			this.var1 = var1;
+			this.var2 = var2;
+			this.charts = charts;
+			this.chartsAggregated = chartsAggregated;
 			this.rowNum = 0;
-			this.title = title;
-			this.iniLegendX = iniX + chartWidth + rectWidth * 1;
-			this.iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
-			aggregated = true;
-			visible = true;
-			expanded = false;
+			this.aggregated = false;
+			this.totalHeight = chartHeight * chartsInColumn + chartsSep
+					* (chartsInColumn - 1);
+			this.totalWidth = chartWidth * chartsInRow + chartsSep
+					* (chartsInRow - 1);
 
-			maxColor = new HashMap<String, Integer>();
-			maxColorAggregated = new HashMap<String, Integer>();
-			calcMaxColors(maxColor, rows);
-			calcMaxColors(maxColorAggregated, rowsAggregated);
-
-			sbar = new VScrollbar(iniX + Constants.NUM_TIME_INTERVALS
-					* (rectWidth + 1), iniY, 20, chartHeight, 3 * 5 + 1);
-			sbarExpanded = new VScrollbar(iniXExpanded
-					+ Constants.NUM_TIME_INTERVALS * (rectWidth + 1),
-					iniYExpanded, 20, chartHeightExpanded, 3 * 5 + 1);
-			cbox = new CheckBox("Routes", iniX - 40, iniY - 40, 20);
-			expandButton = new Button("Expand", "Collapse", iniX + chartWidth
-					- 50, iniY - 60, 30);
+			sbar = new VScrollbar(iniX + totalWidth + chartsSep, iniY, 20,
+					totalHeight, 3 * 5 + 1);
+			cbox = new CheckBox("Routes", iniX + 40, iniY - 40, 20);
 		}
 
 		public void update() {
-			if (visible) {
-				aggregated = cbox.checked;
-				expanded = expandButton.checked;
-				if (expanded) {
-					iniX = iniXExpanded;
-					iniY = iniYExpanded;
-					shownRects = nRectsExpanded;
-					h = chartHeightExpanded;
-					iniLegendX = iniX + chartWidth + rectWidth * 1;
-					iniLegendY = iniY + chartHeightExpanded / 2 - legendHeight
-							/ 2;
-					cbox.iniX = iniXExpanded - 40;
-					cbox.iniY = iniYExpanded - 40;
-					expandButton.iniX = iniXExpanded + chartWidth - 50;
-					expandButton.iniY = iniYExpanded - 60;
-				} else {
-					iniX = iniXCollapsed;
-					iniY = iniYCollapsed;
-					shownRects = nRects;
-					h = chartHeight;
-					iniLegendX = iniX + chartWidth + rectWidth * 1;
-					iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
-					cbox.iniX = iniX - 40;
-					cbox.iniY = iniY - 40;
-					expandButton.iniX = iniX + chartWidth - 50;
-					expandButton.iniY = iniY - 60;
-				}
-				if (!aggregated) {
-					if (expanded) {
-						float sbarPos = sbarExpanded.getPos();
-						int numSteps = rows.length - nRectsExpanded;
-						rowNum = (int) (sbarPos / ((float) (chartHeightExpanded - 2) / (float) numSteps));
-						sbarExpanded.update();
-					} else {
-						float sbarPos = sbar.getPos();
-						int numSteps = rows.length - nRects;
-						rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
-						sbar.update();
-					}
-				} else {
-					rowNum = 0;
-				}
+			aggregated = cbox.checked;
+			if (!aggregated) {
+				float sbarPos = sbar.getPos();
+				int numSteps = ceil(charts.length / chartsInRow)
+						- chartsInColumn + 1;
+				rowNum = (int) (sbarPos / ((float) (totalHeight - 2) / (float) numSteps));
+				sbar.update();
+			} else {
+				rowNum = 0;
 			}
 		}
 
 		public void display() {
 
+			DoubleAxisLineChart[] charts = aggregated ? this.chartsAggregated
+					: this.charts;
 			textSize(titleTextSize);
-			float wTitle = textWidth(title);
+			float wTitle = textWidth(var1 + " vs. " + var2);
+			textAlign(LEFT);
+			fill(rY1, gY1, bY1);
+			text(var1, iniX + totalWidth / 2 - wTitle / 2, iniY - 40);
 			fill(0);
-			text(title, iniX + chartWidth / 2 - wTitle / 2, iniY - 40);
+			text(" vs. ", iniX + totalWidth / 2 - wTitle / 2 + textWidth(var1),
+					iniY - 40);
+			fill(rY2, gY2, bY2);
+			text(var2, iniX + totalWidth / 2 - wTitle / 2
+					+ textWidth(var1 + " vs. "), iniY - 40);
 
 			textSize(textSize);
 			fill(0);
-			// Write time labels
-			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
-				String s;
-				if (i >= 7) {
-					if (i != 7) {
-						s = String.valueOf(5 + i - 12);
-					} else {
-						s = "12";
+
+			for (int i = 0; i < chartsInColumn; i++) {
+				for (int j = 0; j < chartsInRow; j++) {
+					int index = (i + rowNum) * chartsInRow + j;
+					if (index < charts.length) {
+						charts[index].iniX = iniX + (chartWidth + chartsSep)
+								* j;
+						charts[index].iniY = iniY + (chartHeight + chartsSep)
+								* i;
+						charts[index].display();
 					}
-					s += "p";
-				} else {
-					s = String.valueOf(5 + i);
-					s += "a";
 				}
-				textAlign(CENTER);
-				text(s, iniX + i * rectWidth, iniY - rectHeight, rectWidth,
-						rectHeight);
 			}
-
-			List<String> colors = new LinkedList<String>();
-			int nRectsAux = aggregated ? 8 : shownRects;
-			for (int i = 0; i < nRectsAux; i++) {
-				HeatMapRow row;
-				if (aggregated) {
-					row = rowsAggregated[i + rowNum];
-				} else {
-					row = rows[i + rowNum];
-				}
-
-				// Write station name
-				textAlign(LEFT);
-				fill(0);
-				float w = textWidth(row.label);
-				text(row.label, iniX - w, iniY + rectHeight * (i + 1));
-
-				colorMode(HSB, 360, 100, 100);
-				// Write values
-				for (int j = 0; j < row.values.length; j++) {
-					if (!colors.contains(row.color)) {
-						colors.add(row.color);
-					}
-					fill(getHue(row.color),
-							100,
-							((float) row.values[j] / (float) (aggregated ? maxValueAggregated
-									: maxValue)) * 100);
-					rect(iniX + j * rectWidth, iniY + rectHeight * i,
-							rectWidth, rectHeight);
-				}
-				colorMode(RGB, 255, 255, 255);
-
+			if (!aggregated) {
+				sbar.display();
 			}
-
-			// Legend
-			stroke(0);
-			noFill();
-			rect(iniLegendX, iniLegendY, legendWidth, legendHeight);
-			noStroke();
-
-			int k = 0;
-			for (String c : colors) {
-				fill(0);
-				text("0", iniLegendX + 5, iniLegendY + rectHeight * k + 15);
-				for (int b = 0; b <= 100; b++) {
-					colorMode(HSB, 360, 100, 100);
-					stroke(getHue(c), 100, b);
-					line(iniLegendX + 15 + b, iniLegendY + rectHeight * k + 5,
-							iniLegendX + 15 + b, iniLegendY + rectHeight * k
-									+ 15);
-					noStroke();
-					colorMode(RGB, 255, 255, 255);
-				}
-				fill(0);
-				int max = aggregated ? maxColorAggregated.get(c) : maxColor
-						.get(c);
-				text(max, iniLegendX + 120, iniLegendY + rectHeight * k + 15);
-				k++;
-			}
-
-			if (!aggregated)
-				if (expanded)
-					sbarExpanded.display();
-				else
-					sbar.display();
 			cbox.display();
-			expandButton.display();
+		}
+	}
+
+	// Double Axis Line Chart
+	class DoubleAxisLineChart {
+
+		String title;
+		String color;
+
+		// Data
+		String[] Y1labels;
+		String[] Y2labels;
+		String[] Xlabels;
+		int[] values1;
+		int[] values2;
+
+		// Size and position parameters
+		int iniX;
+		int iniY;
+		int maxValue1;
+		int maxValue2;
+		int step1;
+		int step2;
+
+		DoubleAxisLineChart(String[] labels, int[] values1, int[] values2,
+				String title, String color) {
+			this.values1 = values1;
+			this.values2 = values2;
+			maxValue1 = getMaxValue(values1);
+			maxValue2 = getMaxValue(values2);
+			this.title = title;
+			this.color = color;
+			this.Xlabels = labels;
+			int max = maxValue1 + (nSteps - maxValue1 % nSteps) + nSteps;
+			step1 = max / nSteps;
+			max = maxValue2 + (nSteps - maxValue2 % nSteps) + nSteps;
+			step2 = max / nSteps;
+			this.Y1labels = getYLabels(maxValue1, step1);
+			this.Y2labels = getYLabels(maxValue2, step2);
 
 		}
 
-		public void setVisibility(boolean someExpanded) {
-			if ((someExpanded && expandButton.checked) || !someExpanded) {
-				visible = true;
-			} else {
-				visible = false;
+		public void update() {
+
+		}
+
+		public void display() {
+
+			fill(unhex(color));
+			noStroke();
+			rect(iniX + chartWidth / 5, iniY - 30, 3 * chartWidth / 5, 40);
+			textSize(subtitleTextSize);
+			fill(255);
+			textAlign(CENTER);
+			text(title, iniX + chartWidth / 2, iniY);
+
+			textSize(textSize);
+			fill(0);
+
+			// Y1 axis and line
+			stroke(rY1, gY1, bY1);
+			fill(rY1, gY1, bY1);
+			line(iniX, iniY, iniX, iniY + chartHeight);
+			for (int i = 0; i <= nSteps; i++) {
+				textAlign(LEFT);
+				float w = textWidth(Y1labels[i]);
+				text(Y1labels[i], iniX - w - 5, iniY + sep * (i + 1));
 			}
+			int x = iniX;
+			float y = iniY + chartHeight;
+			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+				int x2 = iniX + Xsep * (i + 1);
+				int mod = values1[i] % step1;
+				float y2 = iniY
+						+ chartHeight
+						- ((values1[i] / step1) * sep + ((float) sep / (float) step1)
+								* mod);
+				if (i != 0)
+					line(x, y, x2, y2);
+				x = x2;
+				y = y2;
+			}
+
+			// Y2 axis and line
+			fill(rY2, gY2, bY2);
+			stroke(rY2, gY2, bY2);
+			line(iniX + chartWidth, iniY, iniX + chartWidth, iniY + chartHeight);
+			for (int i = 0; i <= nSteps; i++) {
+				textAlign(RIGHT);
+				float w = textWidth(Y2labels[i]);
+				text(Y2labels[i], iniX + chartWidth + w + 5, iniY + sep
+						* (i + 1));
+			}
+			x = iniX;
+			y = iniY + chartHeight;
+			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+				int x2 = iniX + Xsep * (i + 1);
+				int mod = values2[i] % step2;
+				float y2 = iniY
+						+ chartHeight
+						- ((values2[i] / step2) * sep + ((float) sep / (float) step2)
+								* mod);
+				if (i != 0)
+					line(x, y, x2, y2);
+				x = x2;
+				y = y2;
+			}
+
+			// X axis
+			stroke(0);
+			fill(0);
+			line(iniX, iniY + chartHeight, iniX + chartWidth, iniY
+					+ chartHeight);
+			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+				textAlign(CENTER);
+				text(Xlabels[i], iniX + Xsep * (i + 1), iniY + chartHeight + 15);
+			}
+
 		}
 
-		public int getMaxValue(HeatMapRow[] rows) {
+		public String[] getYLabels(int maxValue, int step) {
+			String[] labels = new String[nSteps + 1];
+			int max = maxValue + (nSteps - maxValue % nSteps) + nSteps;
+			int val = max;
+			for (int i = 0; i <= nSteps; i++) {
+				labels[i] = String.valueOf(val);
+				val -= step;
+			}
+			return labels;
+		}
+
+		public int getMaxValue(int[] values) {
 			int max = 0;
-			for (int i = 0; i < rows.length; i++) {
-				for (int j = 0; j < rows[i].values.length; j++) {
-					if (rows[i].values[j] > max) {
-						max = rows[i].values[j];
-					}
-				}
+			for (int i = 0; i < values.length; i++) {
+				if (values[i] > max)
+					max = values[i];
 			}
 
 			return max;
 		}
-
-		public void calcMaxColors(Map<String, Integer> maxColor,
-				HeatMapRow[] rows) {
-			for (int i = 0; i < rows.length;) {
-
-				int max = 0;
-				String color = rows[i].color;
-				while (i < rows.length && rows[i].color.equals(color)) {
-					for (int j = 0; j < rows[i].values.length; j++) {
-						if (rows[i].values[j] > max) {
-							max = rows[i].values[j];
-						}
-					}
-					i++;
-				}
-				maxColor.put(color, max);
-			}
-		}
-
-		public int getHue(String hex) {
-			int rRGB = Integer.parseInt(hex.substring(0, 2), 16);
-			int gRGB = Integer.parseInt(hex.substring(2, 4), 16);
-			int bRGB = Integer.parseInt(hex.substring(4, 6), 16);
-
-			float r = ((float) rRGB) / 255;
-			float g = ((float) gRGB) / 255;
-			float b = ((float) bRGB) / 255;
-			float max = Math.max(r, Math.max(g, b));
-			float min = Math.min(r, Math.min(g, b));
-			float diff = max - min;
-
-			float h;
-			if (min == max) {
-				h = 0;
-			} else if (r == max) {
-				if (g < b) {
-					h = ((60 * ((g - b) / diff)) + 360) % 360;
-				} else {
-					h = (60 * ((g - b) / diff));
-				}
-			} else if (g == max) {
-				h = (60 * ((b - r) / diff)) + 120;
-			} else {
-				h = (60 * ((r - g) / diff)) + 240;
-			}
-
-			return (int) h;
-		}
-	}
-
-	class HeatMapRow {
-		String label;
-		String color;
-		int[] values;
-
-		public HeatMapRow(String l, String c) {
-			label = l;
-			color = c;
-		}
-
 	}
 
 	// Vertical Scrollbar
@@ -632,6 +507,7 @@ public class LineCharts extends PApplet {
 		public void display() {
 
 			fill(0);
+			textAlign(LEFT);
 			text(label, iniX - textWidth(label) - 5, iniY + s / 2);
 
 			stroke(0);
@@ -643,54 +519,6 @@ public class LineCharts extends PApplet {
 				line(iniX + s, iniY, iniX, iniY + s);
 			}
 			noStroke();
-		}
-	}
-
-	class Button {
-		int iniX, iniY;
-		int h, w;
-		String label1;
-		String label2;
-
-		boolean checked;
-
-		Button(String l1, String l2, int iniX, int iniY, int h) {
-			this.iniX = iniX;
-			this.iniY = iniY;
-			this.h = h;
-			label1 = l1;
-			label2 = l2;
-			this.w = (int) max(textWidth(label1), textWidth(label2)) + 20;
-			checked = false;
-		}
-
-		public void update() {
-			if (over()) {
-				checked = !checked;
-				hm1.setVisibility(checked);
-				hm2.setVisibility(checked);
-			}
-		}
-
-		boolean over() {
-			if (mouseX > iniX && mouseX < iniX + w && mouseY > iniY
-					&& mouseY < iniY + h) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		public void display() {
-
-			stroke(0);
-			fill(190);
-			rect(iniX, iniY, w, h);
-			noStroke();
-
-			String t = checked ? label2 : label1;
-			fill(0);
-			text(t, iniX + 10, iniY + 20);
 		}
 	}
 }
