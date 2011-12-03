@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PImage;
 import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
@@ -17,12 +18,15 @@ import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
 import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.maps.TopologicalMap.Route;
-import edu.invisiblecities.utils.mathFunctions;
 
 // TODO All nodes must be connected, no independent regiment for now
 public class IsochronicMap extends BaseMap {
     
-    public static float Scale = 300;
+    public static PImage Overview = null;
+    public static final String overviewImg = "overview.tif";
+    public static float FixedScale = 300;
+    public static float Scale = FixedScale;
+    public static float rScale = Scale;
 
     public static de.fhpotsdam.unfolding.Map map;
     public static final int PictureWidth = 1000;
@@ -30,12 +34,18 @@ public class IsochronicMap extends BaseMap {
     public static final int MapLeftTopX = PictureWidth;
     public static final int MapLeftTopY = 0;
     public static final int MapWidth = 400;
-    public static final int MapHeight = canvasHeight;
-    public static final int canvasHeightHalf = canvasHeight / 2;
+    public static final int MapHeight = canvasHeight / 2;
+    public static final int CornerWindowLeftX = PictureWidth;
+    public static final int CornerWindowTopY = canvasHeight / 2;
+    public static final int CornerWindowHeight = canvasHeight / 2;
+    public static final int CornerWindowWidth = CornerWindowHeight * PictureWidth / canvasHeight;
+    public static final float OverviewScale = 0.5f;
+    
+    //public static final int canvasHeightHalf = canvasHeight / 2;
+    
     public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
     public static final int OpenMapID = 40077;
     public static final int ZoomLevel = 11;
-    
     
     public static final float Duration = 1.5f;
     public static final Easing easing = Ani.EXPO_IN_OUT;
@@ -43,10 +53,12 @@ public class IsochronicMap extends BaseMap {
     public static final String stationinfofilename = "stationrelationship.csv";
     public static final String accfilename = "accdistance.csv";
     public static PFont Font;
-    public int selectedNode = -1;            // The id of current selected node, initially -1
+    public int selectedNode = -1; // The id of current selected node, initially -1
     
     public class Station {
         // Graph
+        public float tx;
+        public float ty;
         public float rx;
         public float ry;
         public float x;
@@ -128,6 +140,11 @@ public class IsochronicMap extends BaseMap {
     static BufferedReader br;
     static FileWriter ofstream;
     static BufferedWriter out;
+    
+    public static float picinpicLeftX;
+    public static float rpicinpicLeftX;
+    public static float picinpicTopY;
+    public static float rpicinpicTopY;
     
     public void loadStations() {
         routeCnt = new int[mRoutes.size()];
@@ -294,7 +311,8 @@ public class IsochronicMap extends BaseMap {
                 if (MaxDistance < sta.accDistances[i])
                     MaxDistance = sta.accDistances[i];
             }
-        Scale = (float)MaxDistance / canvasHeightHalf;
+        //rScale = Scale;
+        //Scale = (float)MaxDistance / canvasHeightHalf;
         for (int i=0; i<NumOfStations; ++i) 
             if (stations[i] != null && i != selectedNode) {
                 toPositions[i][0] = centerX + toPositions[i][0] / Scale;
@@ -340,11 +358,78 @@ public class IsochronicMap extends BaseMap {
         sred = sgreen = sblue = 0;
         salpha = 50;
         updateGraph();
+        rScale = Scale;
         for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
             stations[i].x = toPositions[i][0];
             stations[i].y = toPositions[i][1];
+            stations[i].rx = toPositions[i][0];
+            stations[i].ry = toPositions[i][1];
         }
         updateMapRadar();
+        
+        try {
+        String outfilename = "SSSP.csv";
+        ofstream = new FileWriter(outfilename);
+        out = new BufferedWriter(ofstream);
+        for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+            Dijkstra(i);
+        }
+        out.close();
+        System.out.println("Dijkstra done");
+        } catch (Exception e) {}
+    }
+    
+    public void Dijkstra(int snode) {
+        int MAXINT = 100000000;
+        int[] dist = new int[NumOfStations];
+        int[] path = new int[NumOfStations];
+        boolean[] s = new boolean[NumOfStations];
+        for (int i=0; i<NumOfStations; ++i) {
+            dist[i] = MAXINT;
+        }
+        for (int i=0; i<stations[snode].connected.length; ++i) {
+            dist[stations[snode].connected[i]] = stations[snode].distances[i];
+        }
+        for (int i=0; i<NumOfStations; ++i) {
+            if (dist[i] == MAXINT) {
+                path[i] = -1;
+            } else path[i] = snode;
+        }
+        s[snode] = true;
+        path[snode] = -2;
+
+        while (true) {
+            int min = MAXINT;
+            int node = -1;
+            for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                if (!s[i] && dist[i] < min) {
+                    min = dist[i];
+                    node = i;
+                }
+            }
+            if (min == MAXINT) break;
+            s[node] = true;
+            for (int i=0; i<stations[node].connected.length; ++i) {
+                if (!s[stations[node].connected[i]] && min + stations[node].distances[i] < dist[stations[node].connected[i]]) {
+                    dist[stations[node].connected[i]] = min + stations[node].distances[i];
+                    path[stations[node].connected[i]] = node;
+                }
+            }
+        }
+        try {
+        out.write(snode + "\n");
+        for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+            out.write("" + i);
+            int node = path[i];
+            if (node == -2) {out.write(";-1\n"); continue;}
+            while (node != -2) {
+                out.write(";" + node);
+                node = path[node];
+            }
+            out.write("\n");
+        }
+        System.out.println("Done " + snode);
+        } catch (Exception e) {System.out.println(e.toString());}
     }
     
     public int getSelection() {
@@ -366,7 +451,7 @@ public class IsochronicMap extends BaseMap {
     
     @Override
     public void draw() {
-        parent.background(255);
+        /*parent.background(255);
         drawRadius();
         parent.stroke(sred, sgreen, sblue, salpha);
         for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
@@ -388,13 +473,21 @@ public class IsochronicMap extends BaseMap {
         for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
             stations[i].draw();
         }
+        
         drawRadar();
-        if (parent.mousePressed) {
+        
+        if (Scale != FixedScale) {
+            drawOverview();
+        }
+        
+        if (parent.mousePressed && controlDown) {
             mouseEndX = parent.mouseX;
             mouseEndY = parent.mouseY;
             parent.noFill();
-            parent.stroke(0, 40);
-            parent.rect(mouseStartX, mouseStartY, 
+            parent.stroke(0);
+            int leftmostX = parent.min(mouseStartX, mouseEndX);
+            int topmostY = parent.min(mouseStartY, mouseEndY);
+            parent.rect(leftmostX, topmostY, 
                     parent.abs(mouseStartX - mouseEndX), 
                     parent.abs(mouseStartY - mouseEndY));
         }
@@ -404,6 +497,19 @@ public class IsochronicMap extends BaseMap {
         parent.text("Max distance from center node: " + MaxDistance, 20, 40);
         parent.text("Sx " + mouseStartX + " Sy " + mouseStartY + " Ex " + mouseEndX + " Ey " + mouseEndY, 20, 60);
         parent.text("CX " + centerX + " CY " + centerY, 20, 80);
+        parent.text("Scale " + Scale, 20, 100);*/
+    }
+    
+    public static void drawOverview() {
+        parent.image(Overview, CornerWindowLeftX, CornerWindowTopY, 
+                                CornerWindowWidth + 100, CornerWindowHeight);
+        float rectx = mouseStartX * OverviewScale + CornerWindowLeftX;
+        float recty = mouseStartY * OverviewScale + CornerWindowTopY;
+        float rectw = PictureWidth / Scale;
+        float recth = PictureHeight / Scale;
+        parent.fill(100, 50);
+        parent.noStroke();
+        parent.rect(rectx, recty, rectw, recth);
     }
     
     public static final int RadarDiameterMax = 50;
@@ -426,48 +532,85 @@ public class IsochronicMap extends BaseMap {
     public static int mouseEndX;
     public static int mouseEndY;
     public static final int MinimumSize = 30;
+    public static float rcenterX;
+    public static float rcenterY;
     @Override
     public void mousePressed() {
         mouseStartX = parent.mouseX;
         mouseStartY = parent.mouseY;
+        
+        if (!controlDown) {
+            rcenterX = centerX;
+            rcenterY = centerY;
+            for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                Station sta = stations[i];
+                sta.tx = sta.x;
+                sta.ty = sta.y;
+            }
+        } else {
+            parent.save(overviewImg);
+            Overview = parent.loadImage(overviewImg);
+        }
     }
 
     public void mouseDragged() {
-        
+        if (!controlDown) {
+            int deltax = parent.mouseX - mouseStartX;
+            int deltay = parent.mouseY - mouseStartY;
+            centerX = translatePositionX(rcenterX, deltax);
+            centerY = translatePositionY(rcenterY, deltay);
+            //drawRadius();
+            for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                Station sta = stations[i];
+                sta.x = translatePositionX(sta.tx, deltax);
+                sta.y = translatePositionY(sta.ty, deltay);
+                sta.draw();
+            }
+        }
+        if (Scale != FixedScale) drawOverview();
+        drawRadar();
     }
     
     public static final float MAXSCALE = 10000;
+    public static int selectHeight;
+    public static int selectWidth;
     @Override
     public void mouseReleased() {
         mouseEndX = parent.mouseX;
         mouseEndY = parent.mouseY;
-        int selectHeight = parent.abs(mouseStartY - mouseEndY);
-        int selectWidth = parent.abs(mouseStartX - mouseEndX);
-        if (selectHeight > MinimumSize && selectWidth > MinimumSize) {
-            if (selectWidth > selectHeight) Scale = (float)PictureWidth / selectWidth;
-            else Scale = (float)PictureHeight / selectHeight;
-            if (Scale > MAXSCALE) Scale = MAXSCALE;
-            
-            int lefttopX = parent.min(mouseStartX, mouseEndX);
-            int lefttopY = parent.min(mouseStartY, mouseEndY);
-            
-            //centerX = (centerX - leftbottomX) * Scale;
-            //centerY = canvasHeight + (leftbottomY - centerY) * Scale;
-            centerX = scalePositionX(centerX, lefttopX);
-            centerY = scalePositionY(centerY, lefttopY);
-            drawRadius();
-            for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
-                Station sta = stations[i];
-                sta.rx = sta.x;
-                sta.ry = sta.y;
-                sta.x = scalePositionX(sta.x, lefttopX);
-                sta.y = scalePositionY(sta.y, lefttopY);
-                sta.draw();
+        selectHeight = parent.abs(mouseStartY - mouseEndY);
+        selectWidth = parent.abs(mouseStartX - mouseEndX);
+        
+        if (controlDown) {
+            if (selectHeight > MinimumSize && selectWidth > MinimumSize) {
+                
+                rScale = Scale;
+                if (selectWidth > selectHeight) Scale = (float)PictureWidth / selectWidth;
+                else Scale = (float)PictureHeight / selectHeight;
+                if (Scale > MAXSCALE) Scale = MAXSCALE;
+                
+                int lefttopX = parent.min(mouseStartX, mouseEndX);
+                int lefttopY = parent.min(mouseStartY, mouseEndY);
+                
+                centerX = scalePositionX(centerX, lefttopX);
+                centerY = scalePositionY(centerY, lefttopY);
+                //drawRadius();
+                for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
+                    Station sta = stations[i];
+                    sta.rx = sta.x;
+                    sta.ry = sta.y;
+                    sta.x = scalePositionX(sta.x, lefttopX);
+                    sta.y = scalePositionY(sta.y, lefttopY);
+                    sta.draw();
+                }
             }
-        } else {
+        } 
+        // 
+        else if (selectHeight == 0 && selectWidth == 0) {
             restoreCenter();
             int id = getSelection();
             System.out.println("Selected" + id);
+            //drawRadius();
             if (id >= 0) {
                 selectedNode = id;
                 updateGraph();
@@ -480,8 +623,19 @@ public class IsochronicMap extends BaseMap {
     }
 
     public static void restoreCenter() {
+        float tmp = Scale;
+        Scale = rScale;
+        rScale = tmp;
         centerX = canvasWidth / 2 - CenterOffSet;
         centerY = canvasHeight / 2;
+    }
+    
+    public static float translatePositionX(float cx, int deltax) {
+        return cx + deltax;
+    }
+    
+    public static float translatePositionY(float cy, int deltay) {
+        return cy + deltay;
     }
     
     public static float scalePositionX(float cx, int x) {
@@ -500,21 +654,29 @@ public class IsochronicMap extends BaseMap {
         return cy / Scale + y;
     }
     
+    public static boolean controlDown = false;
+    
     @Override
     public void keyPressed() {
-        if (parent.keyPressed) {
+        if (parent.key == 's') {
+            controlDown = true;
+            System.out.println("control " + controlDown);
+        } else if (parent.key == 'r') {
             restoreCenter();
-            drawRadius();
+            //drawRadius();
             for (int i=0; i<NumOfStations; ++i) if (stations[i] != null) {
                 stations[i].restorePosition();
                 stations[i].draw();
             }
         }
-        
     }
 
     @Override
     public void keyReleased() {
+        if (parent.key == 's') {
+            controlDown = false;
+            System.out.println("control " + controlDown);
+        }
     }
     
     /********** Constructors **********/
