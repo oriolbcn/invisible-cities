@@ -15,9 +15,10 @@ import de.looksgood.ani.easing.Easing;
 
 public class IsoMapStage extends PApplet {
     
-    public static final int     CanvasWidth = 800;
-    public static final int     CanvasHeight = 600;
-    public static final int     PictureWidth = 600;
+    public static final int     BackgroundCircleInterval = 30000;
+    public static final int     CanvasWidth = 1200;
+    public static final int     CanvasHeight = 800;
+    public static final int     PictureWidth = 800;
     public static final int     PictureHeight = CanvasHeight;
     public static final int     PictureHalfHeight = PictureHeight / 2;
     public static final int     PictureCenterX = PictureWidth / 2;
@@ -33,7 +34,9 @@ public class IsoMapStage extends PApplet {
     public static final int     SideTableHeight = MapHeight;
     public static final String  API_KEY = "d3e0942376a3438b8d5fce7378307b58";
     public static final int     OpenMapID = 40077;
-    public static final int     ZoomLevel = 11;
+    public static final int     ZoomLevel = 10;
+    public static final int     SideMapDiameter = 6;
+    public static final int     SideMapRadius = SideMapDiameter / 2;
     
     public static final String  Routeinfofilename = "routes.csv";
     public static final String  Stationinfofilename = "stationrelationship.csv";
@@ -41,12 +44,14 @@ public class IsoMapStage extends PApplet {
     public static final String  SSSPfilename = "SSSP.csv";
     public static final int     RadarDiameterMax = 50;
     public static final int     RadarStrokeWeight = 1;
+    public static final int     NumOfBackgroundCircles = 10;
     
     // Animation
     public static final float   Duration = 1.f;
-    public static final Easing  Easing = Ani.QUINT_IN_OUT;//EXPO_IN_OUT;
+    public static final Easing  Easing = Ani./*QUINT_IN_OUT;*/EXPO_IN_OUT;
     public static float         FixedScale = 400;
     
+    public static BackgroundCircle[] bgCircles;
     public static Route[]       mRoutes;
     public static int           NumOfRoutes;
     public static Station[]     mStations;
@@ -76,10 +81,20 @@ public class IsoMapStage extends PApplet {
         }
     }
     
+    public void initBackgroundCircle() {
+        bgCircles = new BackgroundCircle[NumOfBackgroundCircles];
+        for (int i=0; i<NumOfBackgroundCircles; ++i) {
+            if (i % 2 == 1)
+                bgCircles[i] = new BackgroundCircle(i * BackgroundCircleInterval, 255);
+            else bgCircles[i] = new BackgroundCircle(i * BackgroundCircleInterval, 220);
+        }
+    }
+    
     @Override
     public void setup() {
         size(CanvasWidth, CanvasHeight);
         smooth();
+        //textAlign(CENTER);
         strokeWeight(1);
         Ani.init(this);
         map = new de.fhpotsdam.unfolding.Map
@@ -87,6 +102,8 @@ public class IsoMapStage extends PApplet {
                  new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
         loadRoutes();
         loadStations();
+        initBackgroundCircle();
+        
         toPositions = new float[NumOfStations][2];
         updateGraph();
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
@@ -97,8 +114,8 @@ public class IsoMapStage extends PApplet {
             mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
         mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
                                                    toPositions[SelectedNode][1]);
+        hoverId = SelectedNode;
     }
-    
     
     public static Location loc = new Location(0, 0);
     public void drawSideMap() {
@@ -116,28 +133,87 @@ public class IsoMapStage extends PApplet {
         radarDiameter = (radarDiameter + 1) % RadarDiameterMax;
         fill(sta.fred, sta.fgreen, sta.fblue, 100);
         ellipse(sta.screenX, sta.screenY, radarDiameter, radarDiameter);
+        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
+            sta = mStations[i];
+            loc.setLat(sta.lat);
+            loc.setLon(sta.lon);
+            xy = map.getScreenPositionFromLocation(loc);
+            sta.screenX = xy[0];
+            sta.screenY = xy[1];
+            if (sta.isInsideSideMap()) {
+                if (sta.isHover) {
+                    fill(sta.fred, sta.fgreen, sta.fblue);
+                    ellipse(sta.screenX, sta.screenY, SideMapDiameter + 4, SideMapDiameter + 4);
+                }
+                else {
+                    fill(sta.fred, sta.fgreen, sta.fblue, 100);
+                    ellipse(sta.screenX, sta.screenY, SideMapDiameter, SideMapDiameter);
+                }
+            }
+        }
     }
     
     
+    public static final int StationOffsetY = 20;
     public static final int StationNameOffsetX = SideTableLeftX + 20;
-    public static final int StationNameOffsetY = SideTableTopY + 20;
+    public static final int StationNameOffsetY = SideTableTopY + StationOffsetY;
     public static final int StationCapacityOffsetX = StationNameOffsetX;
-    public static final int StationCapacityOffsetY = StationNameOffsetY + 20;
+    public static final int StationCapacityOffsetY = StationNameOffsetY + StationOffsetY;
     public void drawSideTable() {
         fill(255);
         rect(SideTableLeftX, SideTableTopY, SideTableWidth, SideTableHeight);
         fill(0);
         Station sta = mStations[SelectedNode];
-        text("Name: " + sta.name, StationNameOffsetX, StationNameOffsetY);
-        text("Capacity: " + sta.diameter, StationCapacityOffsetX, StationCapacityOffsetY);
+        text("Name: " + sta.name + " Capacity: " + sta.diameter, StationNameOffsetX, StationNameOffsetY);
+        if (hoverId >= 0) {
+            int len = sta.sssp[hoverId].length;
+            for (int i=0; i<len; ++i) {
+                Station ssp = mStations[sta.sssp[hoverId][i]];
+                text("Name: " + ssp.name + " Capacity: " + ssp.diameter, 
+                        StationNameOffsetX, 
+                        StationNameOffsetY + (i+1) * StationOffsetY);
+            }
+        }
     }
     
     public static int hoverId = -1;
     
-    @Override
-    public void draw() {
-        background(255);
+    public void drawHoverPath() {
+        Station sta = mStations[SelectedNode];
+        stroke(0, 100);
+        strokeWeight(1);
+        line(sta.curX, sta.curY, mStations[hoverId].curX, mStations[hoverId].curY);
+        int len = sta.sssp[hoverId].length;
+        strokeWeight(5);
+        for (int i=1; i<len; ++i) {
+            Station ssp = mStations[sta.sssp[hoverId][i]];
+            Station ssb = mStations[sta.sssp[hoverId][i-1]];
+            line(ssp.curX, ssp.curY, ssb.curX, ssb.curY);
+        }
         
+        strokeWeight(0);
+        stroke(0);
+        for (int i=0; i<len; ++i) {
+            Station ssp = mStations[sta.sssp[hoverId][i]];
+            fill(ssp.fred, ssp.fgreen, ssp.fblue);
+            ellipse(ssp.curX, ssp.curY, ssp.diameter, ssp.diameter);
+            fill(0);
+        }
+        sta = mStations[hoverId];
+        sta.isHover = true;
+        text(sta.name, sta.curX, sta.curY + 25);
+    }
+    
+    public void drawHover() {
+        int id = getSelection();
+        mStations[hoverId].isHover = false;
+        if (id != -1) {
+            hoverId = id;
+            drawHoverPath();
+        }
+    }
+    
+    public void drawStationLines() {
         stroke(0, 100);
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
             Station sta = mStations[i];
@@ -147,45 +223,45 @@ public class IsoMapStage extends PApplet {
                 line(sta.curX, sta.curY, sj.curX, sj.curY);
             }
         }
-        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
-            mStations[i].draw();
-        
-        hoverId = getSelection();
-        if (hoverId != -1) {
-            Station sta = mStations[SelectedNode];
-            stroke(0, 100);
-            strokeWeight(1);
-            line(sta.curX, sta.curY, mStations[hoverId].curX, mStations[hoverId].curY);
-            int len = sta.sssp[hoverId].length;
-            strokeWeight(5);
-            for (int i=1; i<len; ++i) {
-                Station ssp = mStations[sta.sssp[hoverId][i]];
-                Station ssb = mStations[sta.sssp[hoverId][i-1]];
-                line(ssp.curX, ssp.curY, ssb.curX, ssb.curY);
-            }
-            
-            strokeWeight(0);
-            stroke(0);
-            for (int i=0; i<len; ++i) {
-                Station ssp = mStations[sta.sssp[hoverId][i]];
-                fill(ssp.fred, ssp.fgreen, ssp.fblue);
-                ellipse(ssp.curX, ssp.curY, ssp.diameter, ssp.diameter);
-                //fill(0);
-                //text(ssp.name, + ssp.bfsDistance[SelectedNode], ssp.curX, ssp.curY + 25);
-            }
-        }
-        mStations[SelectedNode].draw();
-        
-        drawSideMap();
-        drawSideTable();
-        
+    }
+    
+    public void drawLayoutAndText() {
         fill(0);
         text("Mouse x: " + mouseX + " y: " + mouseY, 20, 20);
         text("Scale " + FixedScale, 20, 40);
+        text("FPS: " + frameRate, 20, 60);
         stroke(0);
         strokeWeight(0);
         line(PictureWidth, 0, PictureWidth, PictureHeight);
         line(MapLeftX, MapBottomY, MapRightX, MapBottomY);
+    }
+    
+    public void drawStations() {
+        for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
+            mStations[i].draw();
+        mStations[SelectedNode].draw();
+    }
+    
+    public void drawBackgroundCircles() {
+        for (int i=NumOfBackgroundCircles-1; i>=0; --i) {
+            bgCircles[i].draw();
+        }
+    }
+    
+    @Override
+    public void draw() {
+        background(255);
+
+        drawBackgroundCircles();
+
+        drawStationLines();
+        drawHover();
+        
+        drawStations();
+        
+        drawSideMap();
+        drawSideTable();
+        drawLayoutAndText();
     }
     
     @Override
@@ -223,6 +299,8 @@ public class IsoMapStage extends PApplet {
         PApplet.main(new String[] {"--present", "InvisibleCities"});
     }
     
+    
+    
     /*************** Subclasses ***************/
     public class Station {
         public float curX;
@@ -244,6 +322,7 @@ public class IsoMapStage extends PApplet {
         public int[] distance;
         public int   numOfConneted;
         public boolean isSelected = false;
+        public boolean isHover = false;
         
         public int[] bfsDistance = new int[NumOfStations];
         public float[][] bfsPosition = new float[NumOfStations][2];
@@ -283,6 +362,8 @@ public class IsoMapStage extends PApplet {
                 updateGraph();
                 for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null)
                     mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+                for (int i=0; i<NumOfBackgroundCircles; ++i)
+                    bgCircles[i].setAni();
             }
         }
         
@@ -303,10 +384,17 @@ public class IsoMapStage extends PApplet {
         
         public boolean isInside(int sx, int sy) {
             // AABB
-            if (curX + radius >= sx && curX - radius <= sx && curY + radius >= sy && curY - radius <= sy) {
+            if (curX + radius >= sx && curX - radius <= sx 
+                    && curY + radius >= sy && curY - radius <= sy) 
                 return true;
-            }
+            if (screenX + SideMapRadius >= sx && screenX - SideMapRadius <= sx
+                    && screenY + SideMapRadius >= sy && screenY - SideMapRadius <= sy)
+                return true;
             return false;
+        }
+        
+        public boolean isInsideSideMap() {
+            return screenX > MapLeftX && screenY < MapHeight;
         }
     }
     
@@ -336,6 +424,31 @@ public class IsoMapStage extends PApplet {
         }
     }
 
+    public class BackgroundCircle {
+        public float diameter;
+        public float rDiameter;
+        public int gray;
+        public BackgroundCircle(float d, int g) {
+            rDiameter = d;
+            diameter = rDiameter / FixedScale;
+            gray = g;
+        }
+        public void setAni() {
+            float _d = rDiameter / FixedScale;
+            Ani.to(this, Duration, "diameter", _d, Easing);
+        }
+        public void draw() {
+            noStroke();
+            fill(gray);
+            ellipse(PictureCenterX, PictureCenterY, diameter, diameter);
+        }
+    }
+
+    
+    
+////////////////////////////////////////////////////////////////////////////////
+    
+    
     /*************** Load Data ***************/
     public static FileInputStream ifstream;
     public static DataInputStream in;
@@ -511,7 +624,6 @@ public class IsoMapStage extends PApplet {
             
             initAngleRange();
             // Load bfs positions
-            int[] accAngle = new int[NumOfRoutes];
             for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
                 Station sta = mStations[i];
                 for (int j=0; j<NumOfStations; ++j) if (mStations[j] != null) {
