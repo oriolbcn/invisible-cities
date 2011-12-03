@@ -4,6 +4,8 @@ import processing.core.PApplet;
 import edu.invisiblecities.core.BaseInfovis;
 import edu.invisiblecities.maps.BaseMap;
 import edu.invisiblecities.maps.IsochronicMap.IsochronicMap;
+import edu.invisiblecities.maps.TopologicalMap.TopoMap;
+import edu.invisiblecities.maps.rain.Rain;
 
 public class InvisibleCities extends PApplet {
     
@@ -71,7 +73,7 @@ public class InvisibleCities extends PApplet {
         showMap.mouseDragged();
     }
     
-    public static void main(String args[]) {
-        PApplet.main(new String[] {"--present", "InvisibleCities"});
-    }
+    //public static void main(String args[]) {
+    //    PApplet.main(new String[] {"--present", "InvisibleCities"});
+    //}
 }
