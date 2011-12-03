@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import processing.core.PApplet;
+import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
 
@@ -22,28 +24,39 @@ public class IsoMapStage extends PApplet {
     public static final int     MapLeftX = PictureWidth;
     public static final int     MapWidth = CanvasWidth - PictureWidth;
     public static final int     MapHeight = CanvasHeight / 2;
-    public static final int     SmallMapLeftX = MapLeftX;
-    public static final int     SmallMapWidth = MapWidth;
-    public static final int     SmallMapHeight = MapHeight;
+    public static final int     MapBottomY = MapHeight;
+    public static final int     MapRightX = MapLeftX + MapWidth;
+    public static final int     SideTableLeftX = MapLeftX;
+    public static final int     SideTableTopY = MapHeight;
+    public static final int     SideTableWidth = MapWidth;
+    public static final int     SideTableHeight = MapHeight;
+    public static final String  API_KEY = "d3e0942376a3438b8d5fce7378307b58";
+    public static final int     OpenMapID = 40077;
+    public static final int     ZoomLevel = 11;
     
     public static final String  Routeinfofilename = "routes.csv";
     public static final String  Stationinfofilename = "stationrelationship.csv";
     public static final String  Bfsinfofilename = "bfsinfo.csv";
+    public static final String  SSSPfilename = "SSSP.csv";
     public static final float   FixedScale = 400;
+    public static final int     RadarDiameterMax = 50;
+    public static final int     RadarStrokeWeight = 1;
     
     // Animation
-    public static final float     Duration = 1.f;
-    public static final Easing    Easing = Ani.QUINT_IN_OUT;//EXPO_IN_OUT;
+    public static final float   Duration = 1.f;
+    public static final Easing  Easing = Ani.QUINT_IN_OUT;//EXPO_IN_OUT;
         
-    public static Route[] mRoutes;
-    public static int NumOfRoutes;
-    public static Station[] mStations;
-    public static int NumOfStations = 170; // Hard code for this case 
-    public static int SelectedNode = -1;
-    public static int[] RouteCount;
-    public static int MaxDistance;
-    public static float[][] toPositions;
-    public static float[][] AngleRanges;
+    public static Route[]       mRoutes;
+    public static int           NumOfRoutes;
+    public static Station[]     mStations;
+    public static int           NumOfStations = 170; // Hard code for this case 
+    public static int           SelectedNode = -1;
+    public static int[]         RouteCount;
+    public static int           MaxDistance;
+    public static float[][]     toPositions;
+    public static float[][]     AngleRanges;
+    public static int           radarDiameter = 0;
+    public static de.fhpotsdam.unfolding.Map map;
     
     public int getSelection() {
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
@@ -68,6 +81,9 @@ public class IsoMapStage extends PApplet {
         smooth();
         strokeWeight(1);
         Ani.init(this);
+        map = new de.fhpotsdam.unfolding.Map
+                (this, MapLeftX, 0, MapWidth, MapHeight,
+                 new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
         loadRoutes();
         loadStations();
         toPositions = new float[NumOfStations][2];
@@ -79,11 +95,45 @@ public class IsoMapStage extends PApplet {
        
     }
     
+    
+    public static Location loc = new Location(0, 0);
+    public void drawSideMap() {
+        map.draw();
+        Station sta = mStations[SelectedNode];
+        //parent.noFill();
+        noStroke();
+        //parent.strokeWeight(RadarStrokeWeight);
+        loc.setLat(sta.lat);
+        loc.setLon(sta.lon);
+        map.zoomAndPanTo(loc, ZoomLevel);
+        float[] xy = map.getScreenPositionFromLocation(loc);
+        sta.screenX = xy[0];
+        sta.screenY = xy[1];
+        radarDiameter = (radarDiameter + 1) % RadarDiameterMax;
+        fill(sta.fred, sta.fgreen, sta.fblue, 100);
+        ellipse(sta.screenX, sta.screenY, radarDiameter, radarDiameter);
+    }
+    
+    
+    public static final int StationNameOffsetX = SideTableLeftX + 20;
+    public static final int StationNameOffsetY = SideTableTopY + 20;
+    public static final int StationCapacityOffsetX = StationNameOffsetX;
+    public static final int StationCapacityOffsetY = StationNameOffsetY + 20;
+    public void drawSideTable() {
+        fill(255);
+        rect(SideTableLeftX, SideTableTopY, SideTableWidth, SideTableHeight);
+        fill(0);
+        Station sta = mStations[SelectedNode];
+        text("Name: " + sta.name, StationNameOffsetX, StationNameOffsetY);
+        text("Capacity: " + sta.diameter, StationCapacityOffsetX, StationCapacityOffsetY);
+    }
+    
+    public static int hoverId = -1;
+    
     @Override
     public void draw() {
         background(255);
-        stroke(0);
-        line(PictureWidth, 0, PictureWidth, PictureHeight);
+        
         stroke(0, 100);
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
             Station sta = mStations[i];
@@ -96,27 +146,45 @@ public class IsoMapStage extends PApplet {
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null)
             mStations[i].draw();
         
-        int id = getSelection();
-        if (id != -1) {
-            Station sta = mStations[id];
-            fill(sta.fred, sta.fgreen, sta.fblue);
-            stroke(0);
-            ellipse(sta.curX, sta.curY, sta.diameter, sta.diameter);
-            fill(0);
-            text(sta.name + sta.bfsDistance[SelectedNode], sta.curX, sta.curY + 25);
+        hoverId = getSelection();
+        if (hoverId != -1) {
+            Station sta = mStations[SelectedNode];
+            int len = sta.
+                    sssp[hoverId].
+                    length;
+            for (int i=1; i<len; ++i) {
+                Station ssp = mStations[sta.sssp[hoverId][i]];
+                Station ssb = mStations[sta.sssp[hoverId][i-1]];
+                strokeWeight(5);
+                line(ssp.curX, ssp.curY, ssb.curX, ssb.curY);
+            }
+            
+            for (int i=0; i<len; ++i) {
+                Station ssp = mStations[sta.sssp[hoverId][i]];
+                fill(ssp.fred, ssp.fgreen, ssp.fblue);
+                strokeWeight(0);
+                stroke(0);
+                ellipse(ssp.curX, ssp.curY, ssp.diameter, ssp.diameter);
+                //fill(0);
+                //text(ssp.name, + ssp.bfsDistance[SelectedNode], ssp.curX, ssp.curY + 25);
+            }
         }
         
+        drawSideMap();
+        drawSideTable();
+        
         fill(0);
-        text("Selected " + SelectedNode + 
-                " x: " + mStations[SelectedNode].curX + 
-                " y: " + mStations[SelectedNode].curY, 20, 20);
         text("Mouse x: " + mouseX + " y: " + mouseY, 20, 40);
+        stroke(0);
+        strokeWeight(0);
+        line(PictureWidth, 0, PictureWidth, PictureHeight);
+        line(MapLeftX, MapBottomY, MapRightX, MapBottomY);
     }
     
     @Override
     public void mouseReleased() {
         int id = getSelection();
-        System.out.println("Mouse click " + id);
+        System.out.println("Mouse click on " + id);
         if (id >= 0) {
             mStations[SelectedNode].isSelected = false;
             SelectedNode = id;
@@ -146,11 +214,15 @@ public class IsoMapStage extends PApplet {
         PApplet.main(new String[] {"--present", "InvisibleCities"});
     }
     
+    
+    /*************** Subclasses ***************/
     public class Station {
         public float curX;
         public float curY;
         public float lat;
         public float lon;
+        public float screenX;
+        public float screenY;
         public int diameter;
         public int radius;
         public int fred;
@@ -167,7 +239,7 @@ public class IsoMapStage extends PApplet {
         
         public int[] bfsDistance = new int[NumOfStations];
         public float[][] bfsPosition = new float[NumOfStations][2];
-        public int [][] bfsPath = new int[NumOfStations][];
+        public int [][] sssp = new int[NumOfStations][];
         
         public Station(Route rt, String nm, int size, 
                 int r, int g, int b, 
@@ -241,6 +313,7 @@ public class IsoMapStage extends PApplet {
         }
     }
 
+    /*************** Load Data ***************/
     public static FileInputStream ifstream;
     public static DataInputStream in;
     public static BufferedReader br;
@@ -379,16 +452,52 @@ public class IsoMapStage extends PApplet {
             in.close();
             ifstream.close();
             
+            // Load SSSP
+            ifstream = new FileInputStream(SSSPfilename);
+            in = new DataInputStream(ifstream);
+            br = new BufferedReader(new InputStreamReader(in));
+            
+            line = br.readLine();
+            while (true) {
+                if (line == null) break;
+                int sid = Integer.parseInt(line);
+                while ((line = br.readLine()) != null) {
+                    String[] split = line.split(";");
+                    int len = split.length;
+                    if (len < 2) break;
+                    int toid = Integer.parseInt(split[0]); // Get the destination
+                    if (len == 2 && split[1].equals("-1")) {
+                        mStations[sid].sssp[toid] = new int[1];
+                        mStations[sid].sssp[toid][0] = sid;
+                        continue;
+                    }
+                    mStations[sid].sssp[toid] = new int[len];
+                    // Since the path in csv is in reversed order
+                    for (int i=len-1; i>=0; --i) {
+                        mStations[sid].sssp[toid][len-1-i] = Integer.parseInt(split[i]);
+                    }
+                }
+            }
+
+            System.out.println("SSSP done");
+            br.close();
+            in.close();
+            ifstream.close();
+            
             initAngleRange();
             // Load bfs positions
+            int[] accAngle = new int[NumOfRoutes];
             for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
                 Station sta = mStations[i];
                 for (int j=0; j<NumOfStations; ++j) if (mStations[j] != null) {
                     Station sj = mStations[j];
                     float theta = random(AngleRanges[sj.rid][0], AngleRanges[sj.rid][1]);
+                    //float theta = (AngleRanges[sj.rid][1] - AngleRanges[sj.rid][0]) / 
+                    //        RouteCount[sj.rid] * accAngle[sj.rid] + AngleRanges[sj.rid][0];
                     sta.bfsPosition[j][0] = PictureCenterX + sta.bfsDistance[j] * cos(theta) / FixedScale;
                     sta.bfsPosition[j][1] = PictureCenterY + sta.bfsDistance[j] * sin(theta) / FixedScale;
                     //System.out.println("id " + sj.rid + " x " + sta.bfsPosition[j][0] + " y " + sta.bfsPosition[j][1]);
+                    //++accAngle[sj.rid];
                 }
             }
             System.out.println("BFS positions done");
