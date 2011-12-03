@@ -24,6 +24,7 @@ public class DataTester extends PApplet {
 	final int legendRowHeight = 20;
 	final int legendHeight = legendRowHeight * 8;
 	final int legendWidth = 150;
+	final int tooltipHeight = 15;
 
 	Model mod;
 
@@ -47,7 +48,7 @@ public class DataTester extends PApplet {
 		 */
 
 		/*
-		 * Set<Route> routes = mod.getRoutes(); for (Route r : routes) {
+		 * List<Route> routes = mod.getRoutes(); for (Route r : routes) {
 		 * print(r.route_name + "," + r.hex_color + ","); int[] freqs =
 		 * r.getFrequencies(); for (int i = 0; i < freqs.length; i++) {
 		 * print(freqs[i] + " , "); } int[] delays = r.getDelays(); for (int i =
@@ -102,11 +103,12 @@ public class DataTester extends PApplet {
 		});
 
 		hm1 = new Heatmap(140, 80, createRows(true, false),
-				createAggregatedRows(true, false), "Frequencies", 140, 80);
+				createAggregatedRows(true, false), "Frequencies", 140, 80,
+				"trips");
 
 		hm2 = new Heatmap(140, 160 + chartHeight + 40, createRows(false, true),
 				createAggregatedRows(false, true), "Delays (in seconds)", 140,
-				80);
+				80, "seconds");
 
 		/*
 		 * List<Timepoint>[] tpoints = mod.timepoints; for (int i = 0; i <
@@ -228,6 +230,7 @@ public class DataTester extends PApplet {
 	class Heatmap {
 
 		String title;
+		String unit;
 
 		// GUI
 		VScrollbar sbar;
@@ -256,6 +259,7 @@ public class DataTester extends PApplet {
 		int maxValueAggregated;
 		boolean visible;
 		boolean expanded;
+		int tooltipValue;
 
 		// Rows to show
 		int rowNum;
@@ -263,7 +267,7 @@ public class DataTester extends PApplet {
 
 		Heatmap(int iniX, int iniY, HeatMapRow[] rows,
 				HeatMapRow[] rowsAggregated, String title, int iniXExpanded,
-				int iniYExpanded) {
+				int iniYExpanded, String unit) {
 			this.iniX = iniX;
 			this.iniY = iniY;
 			this.iniXExpanded = iniXExpanded;
@@ -278,8 +282,10 @@ public class DataTester extends PApplet {
 			maxValueAggregated = getMaxValue(rowsAggregated);
 			this.rowNum = 0;
 			this.title = title;
+			this.unit = unit;
 			this.iniLegendX = iniX + chartWidth + rectWidth * 1;
 			this.iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
+			tooltipValue = -1;
 			aggregated = true;
 			visible = true;
 			expanded = false;
@@ -300,49 +306,71 @@ public class DataTester extends PApplet {
 		}
 
 		public void update() {
-			if (visible) {
-				aggregated = cbox.checked;
-				expanded = expandButton.checked;
-				if (expanded) {
-					iniX = iniXExpanded;
-					iniY = iniYExpanded;
-					shownRects = nRectsExpanded;
-					h = chartHeightExpanded;
-					iniLegendX = iniX + chartWidth + rectWidth * 1;
-					iniLegendY = iniY + chartHeightExpanded / 2 - legendHeight
-							/ 2;
-					cbox.iniX = iniXExpanded - 40;
-					cbox.iniY = iniYExpanded - 40;
-					expandButton.iniX = iniXExpanded + chartWidth - 50;
-					expandButton.iniY = iniYExpanded - 60;
-				} else {
-					iniX = iniXCollapsed;
-					iniY = iniYCollapsed;
-					shownRects = nRects;
-					h = chartHeight;
-					iniLegendX = iniX + chartWidth + rectWidth * 1;
-					iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
-					cbox.iniX = iniX - 40;
-					cbox.iniY = iniY - 40;
-					expandButton.iniX = iniX + chartWidth - 50;
-					expandButton.iniY = iniY - 60;
-				}
-				if (!aggregated) {
-					if (expanded) {
-						float sbarPos = sbarExpanded.getPos();
-						int numSteps = rows.length - nRectsExpanded;
-						rowNum = (int) (sbarPos / ((float) (chartHeightExpanded - 2) / (float) numSteps));
-						sbarExpanded.update();
-					} else {
-						float sbarPos = sbar.getPos();
-						int numSteps = rows.length - nRects;
-						rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
-						sbar.update();
-					}
-				} else {
-					rowNum = 0;
-				}
+			aggregated = cbox.checked;
+			expanded = expandButton.checked;
+			if (expanded) {
+				iniX = iniXExpanded;
+				iniY = iniYExpanded;
+				shownRects = nRectsExpanded;
+				h = chartHeightExpanded;
+				iniLegendX = iniX + chartWidth + rectWidth * 1;
+				iniLegendY = iniY + chartHeightExpanded / 2 - legendHeight / 2;
+				cbox.iniX = iniXExpanded - 40;
+				cbox.iniY = iniYExpanded - 40;
+				expandButton.iniX = iniXExpanded + chartWidth - 50;
+				expandButton.iniY = iniYExpanded - 60;
+			} else {
+				iniX = iniXCollapsed;
+				iniY = iniYCollapsed;
+				shownRects = nRects;
+				h = chartHeight;
+				iniLegendX = iniX + chartWidth + rectWidth * 1;
+				iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
+				cbox.iniX = iniX - 40;
+				cbox.iniY = iniY - 40;
+				expandButton.iniX = iniX + chartWidth - 50;
+				expandButton.iniY = iniY - 60;
 			}
+			if (!aggregated) {
+				if (expanded) {
+					float sbarPos = sbarExpanded.getPos();
+					int numSteps = rows.length - nRectsExpanded;
+					rowNum = (int) (sbarPos / ((float) (chartHeightExpanded - 2) / (float) numSteps));
+					sbarExpanded.update();
+				} else {
+					float sbarPos = sbar.getPos();
+					int numSteps = rows.length - nRects;
+					rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
+					sbar.update();
+				}
+				updateTooltipValue();
+			} else {
+				rowNum = 0;
+				updateTooltipValueAggregated();
+			}
+		}
+
+		public void updateTooltipValue() {
+			if (mouseX > iniX && mouseX < iniX + chartWidth && mouseY > iniY
+					&& mouseY < iniY + h) {
+				int x = (mouseX - iniX) / rectWidth;
+				int y = (mouseY - iniY) / rectHeight;
+				tooltipValue = rows[y + rowNum].values[x];
+			} else {
+				tooltipValue = -1;
+			}
+		}
+
+		public void updateTooltipValueAggregated() {
+			if (mouseX > iniX && mouseX < iniX + chartWidth && mouseY > iniY
+					&& mouseY < iniY + rectHeight * 8) {
+				int x = (mouseX - iniX) / rectWidth;
+				int y = (mouseY - iniY) / rectHeight;
+				tooltipValue = rowsAggregated[y].values[x];
+			} else {
+				tooltipValue = -1;
+			}
+
 		}
 
 		public void display() {
@@ -439,6 +467,18 @@ public class DataTester extends PApplet {
 					sbar.display();
 			cbox.display();
 			expandButton.display();
+
+			// Tooltip
+			if (tooltipValue != -1) {
+				String t = tooltipValue + " " + unit;
+				float w = textWidth(t);
+				stroke(0);
+				fill(200);
+				rect(mouseX, mouseY + 20, w + 20, tooltipHeight);
+				noStroke();
+				fill(0);
+				text(t, mouseX + 10, mouseY + 32);
+			}
 
 		}
 
