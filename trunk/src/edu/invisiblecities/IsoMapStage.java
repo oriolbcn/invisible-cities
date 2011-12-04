@@ -16,9 +16,9 @@ import de.looksgood.ani.easing.Easing;
 public class IsoMapStage extends PApplet {
     
     public static final int     BackgroundCircleInterval = 30000;
-    public static final int     CanvasWidth = 1200;
-    public static final int     CanvasHeight = 800;
-    public static final int     PictureWidth = 800;
+    public static final int     CanvasWidth = 800;
+    public static final int     CanvasHeight = 600;
+    public static final int     PictureWidth = CanvasHeight;
     public static final int     PictureHeight = CanvasHeight;
     public static final int     PictureHalfHeight = PictureHeight / 2;
     public static final int     PictureCenterX = PictureWidth / 2;
@@ -115,6 +115,7 @@ public class IsoMapStage extends PApplet {
         mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
                                                    toPositions[SelectedNode][1]);
         hoverId = SelectedNode;
+        
     }
     
     public static Location loc = new Location(0, 0);
@@ -164,14 +165,14 @@ public class IsoMapStage extends PApplet {
         rect(SideTableLeftX, SideTableTopY, SideTableWidth, SideTableHeight);
         fill(0);
         Station sta = mStations[SelectedNode];
-        text("Name: " + sta.name + " Capacity: " + sta.diameter, StationNameOffsetX, StationNameOffsetY);
+        //text(sta.name + " " + sta.diameter, StationNameOffsetX, StationNameOffsetY);
         if (hoverId >= 0) {
             int len = sta.sssp[hoverId].length;
             for (int i=0; i<len; ++i) {
                 Station ssp = mStations[sta.sssp[hoverId][i]];
-                text("Name: " + ssp.name + " Capacity: " + ssp.diameter, 
+                text(ssp.name + " " + ssp.diameter, 
                         StationNameOffsetX, 
-                        StationNameOffsetY + (i+1) * StationOffsetY);
+                        StationNameOffsetY + i * StationOffsetY);
             }
         }
     }
@@ -251,7 +252,6 @@ public class IsoMapStage extends PApplet {
     @Override
     public void draw() {
         background(255);
-
         drawBackgroundCircles();
 
         drawStationLines();
@@ -283,8 +283,10 @@ public class IsoMapStage extends PApplet {
     public void mousePressed() {
     }
     
+    public static boolean IsPlaying = false;
     @Override
     public void keyPressed() {
+        //IsPlaying = true;
     }
     
     @Override
@@ -398,7 +400,7 @@ public class IsoMapStage extends PApplet {
         }
     }
     
-    public class Route {
+    public static class Route {
         public String id;
         public String name;
         public String url;
@@ -496,10 +498,13 @@ public class IsoMapStage extends PApplet {
             in = new DataInputStream(ifstream);
             br = new BufferedReader(new InputStreamReader(in));
             String line;
+            //int cnt = 0;
             while ((line = br.readLine()) != null) {
                 String[] split = line.split(";");
                 Route r = new Route(split[0], split[2].substring(1), split[4], split[5]);
                 alr.add(r);
+            //    route2Int.put(r.id, new Integer(cnt));
+            //    ++cnt;
             }
             int size = alr.size();
             //mRoutes = (Route[]) alr.toArray(); //??
