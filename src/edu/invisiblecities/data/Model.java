@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public class Model {
 	// Connection
@@ -21,9 +20,9 @@ public class Model {
 	private static final String DBNAME = "cs7450_invisible";
 
 	// Current day
-	public String day = "2011-11-28";
+	public String day; // YYYY-MM-DD
 	// Number of trips to show
-	public int limit = 0;
+	public int limit; // 0 for no limit
 
 	// Data
 	private Routes routes;
@@ -34,7 +33,7 @@ public class Model {
 
 	@SuppressWarnings("unchecked")
 	public Model() {
-		// conn = connect();
+
 		routes = new Routes(this);
 		stations = new Stations(this);
 		parentStations = new ParentStations(this);
@@ -43,7 +42,14 @@ public class Model {
 		for (int i = 0; i < Constants.NUM_TIMEPOINTS; i++) {
 			timepoints[i] = new LinkedList<Timepoint>();
 		}
-		// load();
+		this.limit = Constants.limit;
+		this.day = Constants.day;
+
+	}
+
+	public void load() {
+		conn = connect();
+		__load();
 	}
 
 	public Connection connect() {
@@ -77,14 +83,14 @@ public class Model {
 		}
 	}
 
-	private void load() {
+	private void __load() {
 		trips.load();
 		loadTimepoints();
 	}
 
 	private void loadTimepoints() {
 
-		Set<Trip> trips = getTrips();
+		List<Trip> trips = getTrips();
 		for (Trip t : trips) {
 			int i_station = 0;
 			// Classify the timepoints of the trip
@@ -131,11 +137,11 @@ public class Model {
 		return stations.getStations();
 	}
 
-	public Set<ParentStation> getParentStations() {
+	public List<ParentStation> getParentStations() {
 		return parentStations.getParentStations();
 	}
 
-	public Set<Trip> getTrips() {
+	public List<Trip> getTrips() {
 		return trips.getTrips();
 	}
 

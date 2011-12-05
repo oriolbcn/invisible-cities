@@ -24,4 +24,10 @@ public class Constants {
 	public static final int T21_22 = 16;
 	public static final int T22_23 = 17;
 	public static final int T23_24 = 18;
+
+	public static final String day = "2011-11-28";
+	public static final int limit = 0;
+	public static final String dir = "dataFiles"
+			+ System.getProperty("file.separator") + day
+			+ System.getProperty("file.separator");
 }

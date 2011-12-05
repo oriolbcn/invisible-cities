@@ -1,4 +1,4 @@
-package edu.invisiblecities.data;
+package edu.invisiblecities.charts;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,8 +8,14 @@ import java.util.List;
 import java.util.Map;
 
 import processing.core.PApplet;
+import edu.invisiblecities.data.Constants;
+import edu.invisiblecities.data.Model;
+import edu.invisiblecities.data.Route;
+import edu.invisiblecities.data.Station;
 
-public class DataTester extends PApplet {
+public class HeatMaps extends PApplet {
+
+	private static final long serialVersionUID = 1L;
 
 	// Constants
 	final int rectWidth = 40;
@@ -34,29 +40,10 @@ public class DataTester extends PApplet {
 	public void setup() {
 		size(1100, 1000);
 		mod = new Model();
-		// noLoop();
 
-		/*
-		 * Set<Route> routes = mod.getRoutes(); for (Route r : routes) {
-		 * println(r.route_id + " || " + r.route_name + " GOES " + " from: " +
-		 * r.stations.get(0).station_name + " to: " +
-		 * r.stations.get(r.stations.size() - 1).station_name); int i = 0; for
-		 * (Station st : r.stations) { println("\t" + i + ": " + st.station_id +
-		 * " || " + st.station_name + " ( " + st.parent.station_id + " || " +
-		 * st.parent.station_name + " || " + st.parent.lat + " || " +
-		 * st.parent.lon + " )"); i++; } }
-		 */
+		String dir = Constants.dir;
 
-		/*
-		 * List<Route> routes = mod.getRoutes(); for (Route r : routes) {
-		 * print(r.route_name + "," + r.hex_color + ","); int[] freqs =
-		 * r.getFrequencies(); for (int i = 0; i < freqs.length; i++) {
-		 * print(freqs[i] + " , "); } int[] delays = r.getDelays(); for (int i =
-		 * 0; i < delays.length; i++) { if (i == delays.length - 1) {
-		 * print(delays[i]); } else { print(delays[i] + " , "); } } println(); }
-		 */
-
-		String lines[] = loadStrings("C:/Users/Oriol/Desktop/stations.txt");
+		String lines[] = loadStrings(dir + "stations.txt");
 		for (int i = 0; i < lines.length; i++) {
 			String values[] = split(lines[i], ',');
 			boolean contains = false;
@@ -83,7 +70,7 @@ public class DataTester extends PApplet {
 			}
 		});
 
-		String routesLines[] = loadStrings("C:/Users/Oriol/Desktop/routes.txt");
+		String routesLines[] = loadStrings(dir + "routes.txt");
 		for (int i = 0; i < routesLines.length; i++) {
 			String values[] = split(routesLines[i], ',');
 			Route r = new Route("0", values[0], values[1]);
@@ -109,25 +96,6 @@ public class DataTester extends PApplet {
 		hm2 = new Heatmap(140, 160 + chartHeight + 40, createRows(false, true),
 				createAggregatedRows(false, true), "Delays (in seconds)", 140,
 				80, "seconds");
-
-		/*
-		 * List<Timepoint>[] tpoints = mod.timepoints; for (int i = 0; i <
-		 * Constants.NUM_TIMEPOINTS; i++) { System.out.println(i + ":"); for
-		 * (Timepoint tp : tpoints[i]) { System.out.println(tp.latitude + " || "
-		 * + tp.longitude + " || " + (tp.stop_index == -1 ? "--" :
-		 * tp.route.stations .get(tp.stop_index).station_name)); } }
-		 */
-
-		/*
-		 * int i = 0; for (Trip t : trips) { if (i == to_show) {
-		 * 
-		 * int i_station = 0; Float lat = null; Float lon = null; for (int j =
-		 * 0; j < t.times.size(); j++) { lat = t.latitudes.get(j); lon =
-		 * t.longitudes.get(j); if
-		 * (lat.equals(t.route.stations.get(i_station).parent.lat)) {
-		 * println(t.route.stations.get(i_station).station_name); i_station++; }
-		 * println(t.times.get(j) + " || " + lat + " || " + lon); } } i++; }
-		 */
 	}
 
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
