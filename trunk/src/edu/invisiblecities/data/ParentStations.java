@@ -2,16 +2,16 @@ package edu.invisiblecities.data;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ParentStations {
 
-	Set<ParentStation> stations;
+	List<ParentStation> stations;
 	Model mod;
 
 	public ParentStations(Model mod) {
-		stations = new HashSet<ParentStation>();
+		stations = new LinkedList<ParentStation>();
 		this.mod = mod;
 	}
 
@@ -45,7 +45,7 @@ public class ParentStations {
 
 	}
 
-	public Set<ParentStation> getParentStations() {
+	public List<ParentStation> getParentStations() {
 		return stations;
 	}
 
