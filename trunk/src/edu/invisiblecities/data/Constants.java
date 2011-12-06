@@ -30,4 +30,12 @@ public class Constants {
 	public static final String dir = "dataFiles"
 			+ System.getProperty("file.separator") + day
 			+ System.getProperty("file.separator");
+	public static final String dirProcessing = "D:"
+			+ System.getProperty("file.separator") + "Home"
+			+ System.getProperty("file.separator") + "Eclipse"
+			+ System.getProperty("file.separator") + "Workspace_64bits"
+			+ System.getProperty("file.separator") + "invisible_cities"
+			+ System.getProperty("file.separator") + "dataFiles"
+			+ System.getProperty("file.separator") + day
+			+ System.getProperty("file.separator");
 }
