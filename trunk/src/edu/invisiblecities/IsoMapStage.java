@@ -202,7 +202,9 @@ public class IsoMapStage extends PApplet {
         }
         sta = mStations[hoverId];
         sta.isHover = true;
+        textAlign(CENTER);
         text(sta.name, sta.curX, sta.curY + 25);
+        textAlign(LEFT);
     }
     
     public void drawHover() {
@@ -375,7 +377,9 @@ public class IsoMapStage extends PApplet {
                 fill(fred, fgreen, fblue);
                 ellipse(curX, curY, diameter, diameter);
                 fill(0);
+                textAlign(CENTER);
                 text(name, curX, curY + 25);
+                textAlign(LEFT);
             }
             else {
                 fill(fred, fgreen, fblue, alpha);
@@ -407,6 +411,7 @@ public class IsoMapStage extends PApplet {
         public int red;
         public int green;
         public int blue;
+        public int color;
         public Route(String _id, String _name, String _url, String col) {
             id = _id;
             name = _name;
@@ -415,6 +420,7 @@ public class IsoMapStage extends PApplet {
             blue = color % 256;
             green = (color / 256) % 256;
             red = color / 256 / 256;
+            color = unhex(col);
         }
         public Route(String _id, String _name, String _url, int r, int g, int b) {
             id = _id;
@@ -449,7 +455,6 @@ public class IsoMapStage extends PApplet {
     
     
 ////////////////////////////////////////////////////////////////////////////////
-    
     
     /*************** Load Data ***************/
     public static FileInputStream ifstream;
@@ -498,13 +503,10 @@ public class IsoMapStage extends PApplet {
             in = new DataInputStream(ifstream);
             br = new BufferedReader(new InputStreamReader(in));
             String line;
-            //int cnt = 0;
             while ((line = br.readLine()) != null) {
                 String[] split = line.split(";");
                 Route r = new Route(split[0], split[2].substring(1), split[4], split[5]);
                 alr.add(r);
-            //    route2Int.put(r.id, new Integer(cnt));
-            //    ++cnt;
             }
             int size = alr.size();
             //mRoutes = (Route[]) alr.toArray(); //??

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import processing.core.PApplet;
+import processing.core.PFont;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
@@ -41,6 +43,7 @@ public class Splash extends PApplet {
     public static int           selectedFilter;
     public static PImage        clockImg;
     public static final String  Clockimgfilename = "clock.png";
+    public static PGraphics     pg;
     
     @Override
     public void setup() {
@@ -53,7 +56,12 @@ public class Splash extends PApplet {
         loadSplash();
         initUI();
         clockImg = loadImage(Clockimgfilename);
-        clockImg.loadPixels();
+        pg = createGraphics(PictureWidth, PictureHeight, P2D);
+        pg.beginDraw();
+        pg.image(clockImg, 0, 0);
+        pg.endDraw();
+        //clockImg.loadPixels();
+        //drawBackgroundClock();
     }
     public boolean pause = false;
     
@@ -71,7 +79,7 @@ public class Splash extends PApplet {
                     FilterOffsetTop + i * FilterSectionHeight,
                     PictureWidth / 4, PictureWidth / 2); // TODO Delay
             footPrintCheckBoxes[i] = new CheckBox(i, FilterLeftX + FilterOffsetX,
-                    FilterOffsetTop + i * FilterSectionHeight + CheckBoxHeight + 10, false);
+                    FilterOffsetTop + i * FilterSectionHeight + CheckBoxHeight + 10, true);
         }
     }
     
@@ -110,23 +118,38 @@ public class Splash extends PApplet {
     public static final int HourRadius   = ClockRadius - 140;
     public static final int MinuteRadius = ClockRadius - 50;
     public void drawBackgroundClock() {
+        PFont pf = loadFont("Apple-Chancery-28.vlw");
+        //PGraphics pg;
+        //pg = createGraphics(PictureWidth, PictureHeight, P2D);
+        //pg.beginDraw();
+        textFont(pf, 28);
+        background(255);
         noFill();
-        stroke(0, 50);
+        smooth();
+        stroke(0);
         strokeWeight(2);
         ellipse(PictureCenterX, PictureCenterY, ClockDiameter, ClockDiameter);
-        fill(0, 50);
         textAlign(CENTER);
         text("12", ClockTwelveX, ClockTwelveY);
         text("3", ClockThreeX, ClockThreeY);
         text("6", ClockSixX, ClockSixY);
         text("9", ClockNineX, ClockNineY);
         textAlign(LEFT);
+        //pg.endDraw();
+        save("clock.png");
     }
     
     @Override
     public void draw() {
+        
         background(255);
-        image(clockImg, 0, 0);
+        //int g = mTimer;
+        //if (mTimer >= HalfTotalTimeStamps) g = TotalTimeStamps - mTimer;
+        //int gray = (int)map(g, 0, HalfTotalTimeStamps, 0, 255);
+        //tint(gray, 100);
+        //text("" + gray, 20, 60);
+        image(pg, 0, 0);
+
         if (IsPlaying) {
             if (mTimer == TotalTimeStamps) {
                 IsPlaying = false;
@@ -176,6 +199,8 @@ public class Splash extends PApplet {
         
         drawLayout();
     }
+    public static final int HalfTotalTimeStamps = TotalTimeStamps / 2;
+    
     
     public boolean isInsidePicture() {
         return mouseX >= 0 && mouseX <= PictureWidth 
@@ -217,7 +242,7 @@ public class Splash extends PApplet {
     public class Dot {
         public float x;
         public float y;
-        public int diameter = 10;
+        public float diameter;
         public int red;
         public int green;
         public int blue;
@@ -237,7 +262,8 @@ public class Splash extends PApplet {
         public float delay;
         public int color;
         
-        public Dot(int rd, float _x, float _y, float ex, float ey, float d, int r, int g, int b, String tid, float de) {
+        public Dot(int rd, float _x, float _y, float ex, float ey, 
+                float d, int r, int g, int b, String tid, float de, float dia) {
             x = _x;
             y = _y;
             endX = ex;
@@ -253,7 +279,8 @@ public class Splash extends PApplet {
             rid = rd;
             route = mRoutes[rid];
             delay = de;
-            color = color(red, green, blue, 100);
+            color = color(red, green, blue, 30);
+            diameter = dia;
         }
         
         public Dot() {
@@ -273,16 +300,19 @@ public class Splash extends PApplet {
         
         public void finish() {
             if (footPrintCheckBoxes[rid].isChecked && checkBoxes[rid].isChecked) {
-                clockImg.loadPixels();
-                int[] pix = clockImg.pixels;
+                //clockImg.loadPixels();
+                //int[] pix = clockImg.pixels;
                 //for (int x=-1; x<2; ++x)
-                //    for (int y=-1; y<2; ++y)
-                //        pix[((int)endY + y) * PictureWidth + (int)endX + x] = color;
-                for (int x=-1; x<2; ++x)
-                    pix[(int)endY * PictureWidth + (int)endX + x] = color;
-                for (int y=-1; y<2; ++y)
-                    pix[((int)endY + y) * PictureWidth + (int)endX] = color;
-                clockImg.updatePixels();
+                //    pix[(int)endY * PictureWidth + (int)endX + x] = color;
+                //for (int y=-1; y<2; ++y)
+                //    pix[((int)endY + y) * PictureWidth + (int)endX] = color;
+                //clockImg.updatePixels();
+                pg.beginDraw();
+                pg.fill(color);
+                pg.noStroke();
+                pg.smooth();
+                pg.ellipse(endX, endY, diameter, diameter);
+                pg.endDraw();
             }
             if (predot != null) {
                 predot.nextdot = nextdot;
@@ -423,10 +453,10 @@ public class Splash extends PApplet {
                 float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
                 float x = delay * cos(theta) + PictureCenterX;
                 float y = delay * sin(theta) + PictureCenterY;
-                Dot dot = new Dot(rid, PictureCenterX, PictureCenterY, x, y, (float)duration/Interval/FrameRate, 
-                                mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue, split[1], delay);
                 // TODO Ridership
-                dot.diameter += random(-5, 5);
+                float diameter = random(5, 15);
+                Dot dot = new Dot(rid, PictureCenterX, PictureCenterY, x, y, (float)duration/Interval/FrameRate, 
+                                mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue, split[1], delay, diameter);
                 
                 int itime = starttime / Interval;
                 if (mDots[itime] == null) mDots[itime] = new ArrayList<Dot>();
