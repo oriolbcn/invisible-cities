@@ -63,6 +63,8 @@ public class SnapshotMaker {
 				out.write(System.getProperties().getProperty("line.separator"));
 			}
 
+			out.close();
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -72,8 +74,7 @@ public class SnapshotMaker {
 	public static Writer openWriter(String dir, String fileName) {
 		Writer out = null;
 		try {
-			out = new OutputStreamWriter(new FileOutputStream(dir
-					+ "stations.txt"));
+			out = new OutputStreamWriter(new FileOutputStream(dir + fileName));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}

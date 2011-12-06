@@ -1,9 +1,13 @@
-package edu.invisiblecities.data;
+package edu.invisiblecities.charts;
 
 import java.util.Collections;
 import java.util.Comparator;
 
 import processing.core.PApplet;
+import edu.invisiblecities.data.Constants;
+import edu.invisiblecities.data.Model;
+import edu.invisiblecities.data.Route;
+import edu.invisiblecities.data.Station;
 
 public class LineCharts extends PApplet {
 
@@ -35,9 +39,10 @@ public class LineCharts extends PApplet {
 	public void setup() {
 		size(1900, 1000);
 		mod = new Model();
-		// noLoop();
 
-		String lines[] = loadStrings("C:/Users/Oriol/Desktop/stations.txt");
+		String dir = Constants.dirProcessing;
+
+		String lines[] = loadStrings(dir + "stations.txt");
 		for (int i = 0; i < lines.length; i++) {
 			String values[] = split(lines[i], ',');
 			boolean contains = false;
@@ -64,7 +69,7 @@ public class LineCharts extends PApplet {
 			}
 		});
 
-		String routesLines[] = loadStrings("C:/Users/Oriol/Desktop/routes.txt");
+		String routesLines[] = loadStrings(dir + "routes.txt");
 		for (int i = 0; i < routesLines.length; i++) {
 			String values[] = split(routesLines[i], ',');
 			Route r = new Route("0", values[0], values[1]);
@@ -124,8 +129,6 @@ public class LineCharts extends PApplet {
 			for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
 				valuesFreq[j] = sumFreqs[j] / nFreqs[j];
 				valuesDelays[j] = sumDelays[j] / nDelays[j];
-				println(j + " : " + rName + " - " + sumDelays[j] + " - "
-						+ nDelays[j]);
 			}
 			chartsAggregated[index] = createChart(rName, rColor, valuesFreq,
 					valuesDelays);
