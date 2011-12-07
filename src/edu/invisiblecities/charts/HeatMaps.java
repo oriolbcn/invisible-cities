@@ -18,27 +18,44 @@ public class HeatMaps extends PApplet {
 	private static final long serialVersionUID = 1L;
 
 	// Constants
-	final int rectWidth = 40;
 	final int rectHeight = 20;
 	final int textSize = 12;
 	final int titleTextSize = 16;
-	final int nRects = 20;
-	final int nRectsExpanded = 45;
-	final int chartHeight = rectHeight * nRects;
-	final int chartHeightExpanded = rectHeight * nRectsExpanded;
-	final int chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
 	final int legendRowHeight = 20;
 	final int legendHeight = legendRowHeight * 8;
-	final int legendWidth = 150;
+	final int legendWidth = 100;
 	final int tooltipHeight = 15;
 
+	int rectWidth; // 40
+	int nRects; // 20
+	int nRectsExpanded; // 45
+	int chartHeight;
+	int chartHeightExpanded;
+	int chartWidth;
+
+	int w;
+	int h;
 	Model mod;
 
 	// Heatmaps
 	Heatmap hm1, hm2;
 
+	public HeatMaps(int rectWidth, int nRects, int nRectsExpanded, int width,
+			int height) {
+		this.rectWidth = rectWidth;
+		this.nRects = nRects;
+		this.nRectsExpanded = nRectsExpanded;
+
+		h = height;
+		w = width;
+
+		chartHeight = rectHeight * nRects;
+		chartHeightExpanded = rectHeight * nRectsExpanded;
+		chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
+	}
+
 	public void setup() {
-		size(1100, 1000);
+		size(w, h);
 		mod = new Model();
 
 		String dir = Constants.dirProcessing;
@@ -251,7 +268,7 @@ public class HeatMaps extends PApplet {
 			this.rowNum = 0;
 			this.title = title;
 			this.unit = unit;
-			this.iniLegendX = iniX + chartWidth + rectWidth * 1;
+			this.iniLegendX = iniX + chartWidth + 40;
 			this.iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
 			tooltipValue = -1;
 			aggregated = true;
@@ -281,7 +298,6 @@ public class HeatMaps extends PApplet {
 				iniY = iniYExpanded;
 				shownRects = nRectsExpanded;
 				h = chartHeightExpanded;
-				iniLegendX = iniX + chartWidth + rectWidth * 1;
 				iniLegendY = iniY + chartHeightExpanded / 2 - legendHeight / 2;
 				cbox.iniX = iniXExpanded - 40;
 				cbox.iniY = iniYExpanded - 40;
@@ -292,7 +308,6 @@ public class HeatMaps extends PApplet {
 				iniY = iniYCollapsed;
 				shownRects = nRects;
 				h = chartHeight;
-				iniLegendX = iniX + chartWidth + rectWidth * 1;
 				iniLegendY = iniY + chartHeight / 2 - legendHeight / 2;
 				cbox.iniX = iniX - 40;
 				cbox.iniY = iniY - 40;
@@ -351,7 +366,7 @@ public class HeatMaps extends PApplet {
 			textSize(textSize);
 			fill(0);
 			// Write time labels
-			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i += 2) {
 				String s;
 				if (i >= 7) {
 					if (i != 7) {
@@ -364,8 +379,8 @@ public class HeatMaps extends PApplet {
 					s = String.valueOf(5 + i);
 					s += "a";
 				}
-				textAlign(CENTER);
-				text(s, iniX + i * rectWidth, iniY - rectHeight, rectWidth,
+				textAlign(LEFT);
+				text(s, iniX + i * rectWidth, iniY - rectHeight, rectWidth * 2,
 						rectHeight);
 			}
 
@@ -412,9 +427,9 @@ public class HeatMaps extends PApplet {
 			for (String c : colors) {
 				fill(0);
 				text("0", iniLegendX + 5, iniLegendY + rectHeight * k + 15);
-				for (int b = 0; b <= 100; b++) {
+				for (int b = 0; b <= 50; b++) {
 					colorMode(HSB, 360, 100, 100);
-					stroke(getHue(c), 100, b);
+					stroke(getHue(c), 100, b * 2);
 					line(iniLegendX + 15 + b, iniLegendY + rectHeight * k + 5,
 							iniLegendX + 15 + b, iniLegendY + rectHeight * k
 									+ 15);
@@ -424,7 +439,7 @@ public class HeatMaps extends PApplet {
 				fill(0);
 				int max = aggregated ? maxColorAggregated.get(c) : maxColor
 						.get(c);
-				text(max, iniLegendX + 120, iniLegendY + rectHeight * k + 15);
+				text(max, iniLegendX + 70, iniLegendY + rectHeight * k + 15);
 				k++;
 			}
 
