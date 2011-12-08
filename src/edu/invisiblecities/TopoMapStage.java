@@ -13,10 +13,11 @@ import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import edu.invisiblecities.IsoMapStage.Route;
+import edu.invisiblecities.data.Constants;
 
 public class TopoMapStage extends PApplet {
 
-    public static final int     CanvasWidth = 800;
+    public static final int     CanvasWidth = 600;
     public static final int     CanvasHeight = 600;
     public static final int     MapLeftX = 0;
     public static final int     MapTopY = 0;
@@ -79,6 +80,7 @@ public class TopoMapStage extends PApplet {
         //loadStop2Station();
         loadStop();
         loadTrip();
+        loadStopDelays();
         MapImage = loadImage(Mapfilename);
         initUI();
         
@@ -109,10 +111,12 @@ public class TopoMapStage extends PApplet {
     }
     
     public void drawStops() {
-        noFill();
+        noStroke();
+        rectMode(CENTER);
         for (int i=0; i<NumOfStops; ++i) {
             mStops[i].draw();
         }
+        rectMode(CORNER);
     }
     
     public static boolean IsPlaying = false;
@@ -125,7 +129,7 @@ public class TopoMapStage extends PApplet {
         addTrains();
         
         drawStops();
-        noStroke();
+        //noStroke();
         if (IsPlaying) {
             drawTrains(1);
         } else {
@@ -232,10 +236,11 @@ public class TopoMapStage extends PApplet {
     public static final float StopRadius = 8;
     public static final float StopDiameter = 16;
     public static int StopClicked = -1;
+    public static final int HoursPerDay = 24;
     public class Stop {
         public float screenX;
         public float screenY;
-        public float diameter = 4.f;
+        public float[] diameter;
         public String name;
         public int stopId;
         public Route route;
@@ -248,10 +253,13 @@ public class TopoMapStage extends PApplet {
             screenX = xy[0];
             screenY = xy[1];
             name = n;
+            diameter = new float[HoursPerDay + 1];
         }
         public void draw() {
-            stroke(color);
-            rect(screenX, screenY, diameter, diameter);
+            fill(color, 50);
+            int index = (mTimer)/120;
+            //System.out.println("Index " + index);
+            rect(screenX, screenY, diameter[index], diameter[index]);
         }
         public void drawSelected() {
             fill(color);
@@ -267,7 +275,7 @@ public class TopoMapStage extends PApplet {
         }
     }
     
-    public static final int TripTailLength = 6;
+    //public static final int TripTailLength = 6;
     public class Trip {
         public float[] screenX;
         public float[] screenY;
@@ -633,7 +641,35 @@ public class TopoMapStage extends PApplet {
         } catch (Exception e) {
             System.out.println(e.toString());
         }
-        
+    }
+    
+    public static final String stopdelayfilename = "stationsdelay.csv";
+    public void loadStopDelays() {
+        try {
+            ifstream = new FileInputStream(stopdelayfilename);
+            in = new DataInputStream(ifstream);
+            br = new BufferedReader(new InputStreamReader(in));
+            
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] split = line.split(";");
+                int stopid = stop2int.get(split[0]).intValue();
+                int size = split.length - 1;
+                float[] diameters = new float[HoursPerDay + 1];
+                for (int i=1; i<size; ++i) {
+                    diameters[i+4] = Integer.parseInt(split[i]) * 10.f / 150;
+                }
+                diameters[HoursPerDay] = diameters[0];
+                mStops[stopid].diameter = diameters;
+            }
+            
+            br.close();
+            in.close();
+            ifstream.close();
+            System.out.println("Stop delays done");
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
     
     private static final long serialVersionUID = 3201839212322830L;
