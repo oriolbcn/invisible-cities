@@ -5,6 +5,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.JFrame;
 
+import edu.invisiblecities.IsoMapStage;
 import edu.invisiblecities.charts.HeatMaps;
 
 public class Dashboard extends JFrame {
@@ -18,7 +19,7 @@ public class Dashboard extends JFrame {
 
 	private void createComponents() {
 
-		this.getContentPane().setLayout(new GridBagLayout());
+		//this.getContentPane().setLayout(new GridBagLayout());
 
 		filterPanel = new FilterPanel();
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -33,5 +34,9 @@ public class Dashboard extends JFrame {
 		c2.gridy = 0;
 		this.getContentPane().add(heatMaps, c2);
 		heatMaps.init();
+		
+		IsoMapStage isoMap = new IsoMapStage();
+		this.getContentPane().add(isoMap);
+		isoMap.init();
 	}
 }

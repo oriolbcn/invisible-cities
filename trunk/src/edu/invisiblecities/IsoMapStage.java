@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import processing.core.PApplet;
+import processing.core.PVector;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import de.looksgood.ani.Ani;
@@ -209,9 +210,10 @@ public class IsoMapStage extends PApplet {
     
     public void drawHover() {
         int id = getSelection();
-        mStations[hoverId].isHover = false;
-        if (id != -1) {
-            hoverId = id;
+        if (hoverId >= 0)
+            mStations[hoverId].isHover = false;
+        hoverId = id;
+        if (hoverId != -1) {
             drawHoverPath();
         }
     }
@@ -251,6 +253,12 @@ public class IsoMapStage extends PApplet {
         }
     }
     
+    public void drawIntent() {
+        if (IntentNode >= 0) {
+            mStations[IntentNode].draw();
+        }
+    }
+    
     @Override
     public void draw() {
         background(255);
@@ -258,7 +266,7 @@ public class IsoMapStage extends PApplet {
 
         drawStationLines();
         drawHover();
-        
+        drawIntent();
         drawStations();
         
         drawSideMap();
@@ -268,21 +276,34 @@ public class IsoMapStage extends PApplet {
     
     @Override
     public void mouseReleased() {
-        int id = getSelection();
-        System.out.println("Mouse click on " + id);
-        if (id >= 0) {
-            mStations[SelectedNode].isSelected = false;
-            SelectedNode = id;
-            updateGraph();
-            for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
-                mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
-            mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
-                                                       toPositions[SelectedNode][1]);
+        if (mouseX == MouseStartX && mouseY == MouseStartY) {
+            int id = getSelection();
+            System.out.println("Mouse click on " + id);
+            if (id >= 0) {
+                mStations[SelectedNode].isSelected = false;
+                SelectedNode = id;
+                updateGraph();
+                for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null && i != SelectedNode)
+                    mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+                mStations[SelectedNode].setAniWithCallback(toPositions[SelectedNode][0], 
+                                                           toPositions[SelectedNode][1]);
+            }
         }
     }
 
+    public static float MouseStartX;
+    public static float MouseStartY;
+    public static int   IntentNode = -1;
     @Override
     public void mousePressed() {
+        MouseStartX = mouseX;
+        MouseStartY = mouseY;
+        if (IntentNode >= 0)
+            mStations[IntentNode].isIntent = false;
+        IntentNode = hoverId;
+        if (IntentNode >= 0) 
+            mStations[IntentNode].isIntent = true;
+        System.out.println("IntentNode " + IntentNode);
     }
     
     public static boolean IsPlaying = false;
@@ -295,8 +316,27 @@ public class IsoMapStage extends PApplet {
     public void keyReleased() {
     }
     
+
+    public static PVector pv = new PVector();
     @Override
     public void mouseDragged() {
+        if (IntentNode >= 0) {
+            float mx = mouseX - PictureCenterX;
+            float my = mouseY - PictureCenterY;
+            float y = -1.0f;
+            if (mouseY - PictureCenterY >= 0.f) y = 1.0f;
+            System.out.println("y " + y);
+            float x = mx * y / my;
+            System.out.println("x " + x);
+            pv.x = x;
+            pv.y = y;
+            pv.normalize();
+            Station sta = mStations[IntentNode];
+            pv.mult(mStations[SelectedNode].bfsDistance[IntentNode] / FixedScale);
+            System.out.println("pvx " + pv.x + " pvy " + pv.y);
+            sta.curX = pv.x + PictureCenterX;
+            sta.curY = pv.y + PictureCenterY;
+        }
     }
     
     public static void main(String args[]) {
@@ -307,6 +347,8 @@ public class IsoMapStage extends PApplet {
     
     /*************** Subclasses ***************/
     public class Station {
+        public float recX;
+        public float recY;
         public float curX;
         public float curY;
         public float lat;
@@ -327,6 +369,7 @@ public class IsoMapStage extends PApplet {
         public int   numOfConneted;
         public boolean isSelected = false;
         public boolean isHover = false;
+        public boolean isIntent = false;
         
         public int[] bfsDistance = new int[NumOfStations];
         public float[][] bfsPosition = new float[NumOfStations][2];
@@ -372,7 +415,7 @@ public class IsoMapStage extends PApplet {
         }
         
         public void draw() {
-            if (isSelected) {
+            if (isSelected || isIntent) {
                 stroke(0);
                 fill(fred, fgreen, fblue);
                 ellipse(curX, curY, diameter, diameter);

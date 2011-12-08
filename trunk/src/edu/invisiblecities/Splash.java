@@ -431,6 +431,7 @@ public class Splash extends PApplet {
     public static final String  Routeinfofilename = "routes.csv";
     public static final String  Splashfilename = "splash.csv";
     public static final int FrameRate = 30;
+    public static final int ClockInnerDiameter = 100;
 
     public void loadSplash() {
         try {
@@ -449,14 +450,15 @@ public class Splash extends PApplet {
                 int duration = endtime - starttime;
                 float theta = map((starttime/Interval)%slot, 0, slot, -HALF_PI, TWO_PI-HALF_PI);
                 
-                // TODO delay
-                float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
-                float x = delay * cos(theta) + PictureCenterX;
-                float y = delay * sin(theta) + PictureCenterY;
+                // Since delay for each trip is not available, change this to start hour
+                //float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
+                float hour = (starttime / 3600.f) / 24 * ((ClockDiameter - ClockInnerDiameter)/ 2) + ClockInnerDiameter / 2;
+                float x = hour * cos(theta) + PictureCenterX;
+                float y = hour * sin(theta) + PictureCenterY;
                 // TODO Ridership
                 float diameter = random(5, 15);
                 Dot dot = new Dot(rid, PictureCenterX, PictureCenterY, x, y, (float)duration/Interval/FrameRate, 
-                                mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue, split[1], delay, diameter);
+                                mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue, split[1], hour, diameter);
                 
                 int itime = starttime / Interval;
                 if (mDots[itime] == null) mDots[itime] = new ArrayList<Dot>();

@@ -58,7 +58,7 @@ public class HeatMaps extends PApplet {
 		size(w, h);
 		mod = new Model();
 
-		String dir = Constants.dirProcessing;
+		String dir = "";//Constants.dirProcessing;
 
 		String lines[] = loadStrings(dir + "stations.txt");
 		for (int i = 0; i < lines.length; i++) {
