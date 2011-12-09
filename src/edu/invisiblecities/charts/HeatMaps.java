@@ -45,6 +45,22 @@ public class HeatMaps extends PApplet {
 	// Heatmaps
 	Heatmap hm1, hm2;
 
+	public HeatMaps() {
+
+		this.rectWidth = 40;
+		this.nRects = 20;
+		this.nRectsExpanded = 45;
+		this.timeLine = true;
+
+		h = 1000;
+		w = 1100;
+
+		chartHeight = rectHeight * nRects;
+		chartHeightExpanded = rectHeight * nRectsExpanded;
+		chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
+
+	}
+
 	public HeatMaps(int rectWidth, int nRects, int nRectsExpanded, int width,
 			int height, boolean timeLine) {
 		this.rectWidth = rectWidth;
@@ -481,11 +497,14 @@ public class HeatMaps extends PApplet {
 
 			// TimeLine
 			if (timeLine) {
-				fill(255);
+				stroke(255);
 				strokeWeight(4);
-				float x = iniX + (float) timer * (chartWidth / TotalTimeStamps);
-				line(x, iniY, x, iniY + chartHeight);
+				float x = iniX + (float) timer * chartWidth / TotalTimeStamps;
+				println(x);
+				line(x, iniY, x, iniY
+						+ (expanded ? chartHeightExpanded : chartHeight));
 				strokeWeight(1);
+				noStroke();
 			}
 		}
 
