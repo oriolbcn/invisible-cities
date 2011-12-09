@@ -19,7 +19,7 @@ public class Dashboard extends JFrame {
 
 	private void createComponents() {
 
-		//this.getContentPane().setLayout(new GridBagLayout());
+		// this.getContentPane().setLayout(new GridBagLayout());
 
 		filterPanel = new FilterPanel();
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -27,14 +27,13 @@ public class Dashboard extends JFrame {
 		c1.gridy = 1;
 		this.getContentPane().add(filterPanel, c1);
 
-		// TODO: Show slider line on heatmap
-		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 800, 650);
+		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 800, 650, true);
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 0;
 		c2.gridy = 0;
 		this.getContentPane().add(heatMaps, c2);
 		heatMaps.init();
-		
+
 		IsoMapStage isoMap = new IsoMapStage();
 		this.getContentPane().add(isoMap);
 		isoMap.init();

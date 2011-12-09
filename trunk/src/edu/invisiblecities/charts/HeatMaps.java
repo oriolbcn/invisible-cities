@@ -25,6 +25,8 @@ public class HeatMaps extends PApplet {
 	final int legendHeight = legendRowHeight * 8;
 	final int legendWidth = 100;
 	final int tooltipHeight = 15;
+	final int frameRate = 30;
+	final int TotalTimeStamps = 2880;
 
 	int rectWidth; // 40
 	int nRects; // 20
@@ -32,6 +34,9 @@ public class HeatMaps extends PApplet {
 	int chartHeight;
 	int chartHeightExpanded;
 	int chartWidth;
+	boolean timeLine;
+	int timer;
+	boolean isPlaying;
 
 	int w;
 	int h;
@@ -41,10 +46,11 @@ public class HeatMaps extends PApplet {
 	Heatmap hm1, hm2;
 
 	public HeatMaps(int rectWidth, int nRects, int nRectsExpanded, int width,
-			int height) {
+			int height, boolean timeLine) {
 		this.rectWidth = rectWidth;
 		this.nRects = nRects;
 		this.nRectsExpanded = nRectsExpanded;
+		this.timeLine = timeLine;
 
 		h = height;
 		w = width;
@@ -58,7 +64,9 @@ public class HeatMaps extends PApplet {
 		size(w, h);
 		mod = new Model();
 
-		String dir = "";//Constants.dirProcessing;
+		String dir = "";// Constants.dirProcessing;
+		timer = 0;
+		isPlaying = true;
 
 		String lines[] = loadStrings(dir + "stations.txt");
 		for (int i = 0; i < lines.length; i++) {
@@ -196,6 +204,14 @@ public class HeatMaps extends PApplet {
 		if (hm2.visible) {
 			hm2.update();
 			hm2.display();
+		}
+
+		if (isPlaying) {
+			++timer;
+			if (timer == TotalTimeStamps) {
+				timer = 0;
+				isPlaying = false;
+			}
 		}
 
 	}
@@ -463,6 +479,14 @@ public class HeatMaps extends PApplet {
 				text(t, mouseX + 10, mouseY + 32);
 			}
 
+			// TimeLine
+			if (timeLine) {
+				fill(255);
+				strokeWeight(4);
+				float x = iniX + (float) timer * (chartWidth / TotalTimeStamps);
+				line(x, iniY, x, iniY + chartHeight);
+				strokeWeight(1);
+			}
 		}
 
 		public void setVisibility(boolean someExpanded) {
