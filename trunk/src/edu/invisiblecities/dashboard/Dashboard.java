@@ -36,6 +36,6 @@ public class Dashboard extends JFrame {
 
 		IsoMapStage isoMap = new IsoMapStage();
 		this.getContentPane().add(isoMap);
-		isoMap.init();
+		// isoMap.init();
 	}
 }
