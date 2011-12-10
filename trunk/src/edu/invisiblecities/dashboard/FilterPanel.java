@@ -50,6 +50,7 @@ public class FilterPanel extends JPanel implements ChangeListener {
 					ch,
 					createConstraints(GridBagConstraints.HORIZONTAL, 0, i + 1,
 							-1, -1));
+			routesCBs[i] = ch;
 		}
 
 		// frequencies
