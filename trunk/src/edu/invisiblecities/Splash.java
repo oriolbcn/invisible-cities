@@ -428,8 +428,8 @@ public class Splash extends PApplet {
     public static BufferedReader br;
     public static int NumOfRoutes;
     public static HashMap<String, Integer> route2Int;
-    public static final String  Routeinfofilename = "routes.csv";
-    public static final String  Splashfilename = "splash.csv";
+    public static final String  Routeinfofilename = "bin/routes.csv";
+    public static final String  Splashfilename = "bin/splash.csv";
     public static final int FrameRate = 30;
     public static final int ClockInnerDiameter = 100;
 
