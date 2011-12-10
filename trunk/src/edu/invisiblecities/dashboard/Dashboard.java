@@ -42,4 +42,8 @@ public class Dashboard extends JFrame {
 	public void registerAsFilterListener(FilterListener fl) {
 		filterPanel.register(fl);
 	}
+
+	public boolean[] getSelectedRoutes() {
+		return filterPanel.getSelectedRoutes();
+	}
 }
