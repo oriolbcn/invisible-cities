@@ -28,7 +28,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 	SliderWithLabel delaysSlider;
 	SliderWithLabel ridershipSlider;
 	JCheckBox routesCBs[];
-	JComboBox<String> dayCombo;
+	JComboBox dayCombo;
 
 	Model mod;
 
@@ -117,7 +117,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 5, -1, -1));
 
 		// day
-		dayCombo = new JComboBox<String>(ICities.days);
+		dayCombo = new JComboBox(ICities.days);
 		dayCombo.setSelectedIndex(2);
 		dayCombo.addActionListener(this);
 		GridBagConstraints c3 = createConstraints(
