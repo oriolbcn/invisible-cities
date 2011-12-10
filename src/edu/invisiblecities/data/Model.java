@@ -170,7 +170,7 @@ public class Model {
 
 		try {
 
-			ifstream = new FileInputStream("routes.csv");
+			ifstream = new FileInputStream("bin/routes.csv");
 			in = new DataInputStream(ifstream);
 			br = new BufferedReader(new InputStreamReader(in));
 			String line;
@@ -187,7 +187,7 @@ public class Model {
 	public void loadTextStations() {
 
 		try {
-			ifstream = new FileInputStream("stations.txt");
+			ifstream = new FileInputStream("bin/stations.txt");
 			in = new DataInputStream(ifstream);
 			br = new BufferedReader(new InputStreamReader(in));
 
