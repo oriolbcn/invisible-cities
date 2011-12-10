@@ -31,9 +31,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static final int PanelTopY = 0;
 	public static final int PanelWidth = CanvasWidth - MapWidth;
 	public static final int PanelHeight = CanvasHeight;
-	public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
-	public static final int OpenMapID = 44094;
-	public static final int ZoomLevel = 11;
 	public static final int Interval = 30;
 	public static final int TotalTimeStamps = 24 * 3600 / Interval;
 	public static final int FrameRate = 30;
@@ -61,12 +58,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	@Override
 	public void setup() {
-		//size(CanvasWidth, CanvasHeight);
-		size(CanvasWidth, CanvasHeight, GLConstants.GLGRAPHICS);
-		map = new de.fhpotsdam.unfolding.Map(this, MapLeftX, MapTopY, MapWidth,
-				MapHeight, new OpenStreetMap.CloudmadeProvider(API_KEY,
-						OpenMapID));
-		map.zoomAndPanTo(new Location(MapCenterLat, MapCenterLon), ZoomLevel);
+		size(CanvasWidth, CanvasHeight);
 		smooth();
 		frameRate(FrameRate);
 		loadRoutes();
@@ -109,7 +101,11 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	}
 
 	public static int hour, minute;
-
+	public static boolean isDisplayed = true;
+	public static void setHide(boolean hide) {
+	    isDisplayed = !hide;
+	}
+	
 	@Override
 	public void draw() {
 		background(255);
