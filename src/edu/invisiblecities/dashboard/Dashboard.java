@@ -35,12 +35,12 @@ public class Dashboard extends JFrame {
 		this.getContentPane().add(heatMaps, c2);
 		heatMaps.init();
 
-		TopoMapStage topoMap = new TopoMapStage();
+		Splash splash = new Splash();
 		GridBagConstraints c3 = new GridBagConstraints();
 		c3.gridx = 0;
 		c3.gridy = 0;
-		this.getContentPane().add(topoMap, c3);
-		topoMap.init();
+		this.getContentPane().add(splash, c3);
+		splash.init();
 	}
 
 	public static void registerAsFilterListener(FilterListener fl) {
