@@ -19,6 +19,8 @@ import edu.invisiblecities.data.Route;
 public class FilterPanel extends JPanel implements ChangeListener {
 
 	SliderWithLabel freqsSlider;
+	SliderWithLabel delaysSlider;
+	SliderWithLabel ridershipSlider;
 	JCheckBox routesCBs[];
 
 	Model mod;
@@ -30,11 +32,10 @@ public class FilterPanel extends JPanel implements ChangeListener {
 		mod = new Model();
 		mod.loadTextRoutes();
 		mod.loadTextStations();
-		createComponents();
-		setBorder(BorderFactory.createTitledBorder("Filters:"));
-
 		routesCBs = new JCheckBox[8];
 		listeners = new LinkedList<FilterListener>();
+		createComponents();
+		setBorder(BorderFactory.createTitledBorder("Filters:"));
 	}
 
 	public void createComponents() {
@@ -62,8 +63,25 @@ public class FilterPanel extends JPanel implements ChangeListener {
 		this.add(freqsSlider,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 1, -1, -1));
 		// delays
+		JLabel label2 = new JLabel("Delay");
+		this.add(label2,
+				createConstraints(GridBagConstraints.HORIZONTAL, 1, 2, -1, -1));
+
+		delaysSlider = new SliderWithLabel(0, 20);
+		this.add(delaysSlider,
+				createConstraints(GridBagConstraints.HORIZONTAL, 1, 3, -1, -1));
 		// ridership ?
+		JLabel label3 = new JLabel("Ridership");
+		this.add(label3,
+				createConstraints(GridBagConstraints.HORIZONTAL, 1, 4, -1, -1));
+
+		ridershipSlider = new SliderWithLabel(0, 20);
+		this.add(ridershipSlider,
+				createConstraints(GridBagConstraints.HORIZONTAL, 1, 5, -1, -1));
+
 		// day
+		// play and stop
+		// lines or dots
 	}
 
 	// getMaxFreq
