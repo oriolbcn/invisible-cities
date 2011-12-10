@@ -131,16 +131,16 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		ICities.dashboard.registerAsFilterListener(this);
 	}
 
+	public static Dashboard dashboard = ICities.dashboard;
+	
 	public void filterChanged() {
-		Dashboard db = ICities.dashboard;
-
-		// db.getSelectedRoutes();
-		// db.getMaxFrequency();
-		// db.getMinFrequency();
-		// db.getMaxDelay();
-		// db.getMinDelay();
-		// db.getMaxRidership();
-		// db.getMinRidership();
+		// dashboard.getSelectedRoutes();
+		// dashboard.getMaxFrequency();
+		// dashboard.getMinFrequency();
+		// dashboard.getMaxDelay();
+		// dashboard.getMinDelay();
+		// dashboard.getMaxRidership();
+		// dashboard.getMinRidership();
 	}
 
 	public static Location loc = new Location(0, 0);
