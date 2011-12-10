@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import processing.core.PApplet;
+import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.dashboard.ICities;
 import edu.invisiblecities.data.Constants;
@@ -102,11 +103,11 @@ public class HeatMaps extends PApplet implements FilterListener {
 				createAggregatedRows(false, true), "Delays (in seconds)", 140,
 				80, "seconds");
 
-		ICities.dashboard.registerAsFilterListener(this);
+		Dashboard.registerAsFilterListener(this);
 	}
 
 	public void filterChanged() {
-		println()
+		println(Dashboard.getSelectedRoutes());
 	}
 
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
