@@ -176,7 +176,7 @@ public class Model {
 
 			for (int i = 0; i < lines.size(); i++) {
 				String values[] = lines.get(i).split(";");
-				Route r = new Route("0", values[2], values[6]);
+				Route r = new Route("0", values[2], values[5]);
 				getRoutes().add(r);
 			}
 		} catch (FileNotFoundException e) {
