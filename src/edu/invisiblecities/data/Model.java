@@ -167,7 +167,6 @@ public class Model {
 	public static BufferedReader br;
 
 	public void loadTextRoutes() {
-		String dir = Constants.dirProcessing;
 
 		try {
 
