@@ -461,6 +461,18 @@ public class HeatMaps extends PApplet implements FilterListener {
 			cbox.display();
 			expandButton.display();
 
+			// TimeLine
+			if (timeLine && ICities.timer > timerStart) {
+				stroke(255);
+				strokeWeight(4);
+				float x = iniX + (float) (ICities.timer - timerStart)
+						* chartWidth / (ICities.TotalTimeStamps - timerStart);
+				line(x, iniY, x, iniY
+						+ (expanded ? chartHeightExpanded : chartHeight));
+				strokeWeight(1);
+				noStroke();
+			}
+
 			// Tooltip
 			if (tooltipValue != -1) {
 				String t = tooltipValue + " " + unit;
@@ -473,17 +485,6 @@ public class HeatMaps extends PApplet implements FilterListener {
 				text(t, mouseX + 10, mouseY + 32);
 			}
 
-			// TimeLine
-			if (timeLine && ICities.timer > timerStart) {
-				stroke(255);
-				strokeWeight(4);
-				float x = iniX + (float) (ICities.timer - timerStart)
-						* chartWidth / ICities.TotalTimeStamps;
-				line(x, iniY, x, iniY
-						+ (expanded ? chartHeightExpanded : chartHeight));
-				strokeWeight(1);
-				noStroke();
-			}
 		}
 
 		public void setVisibility(boolean someExpanded) {
