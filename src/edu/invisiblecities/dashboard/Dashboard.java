@@ -52,16 +52,19 @@ public class Dashboard extends JFrame {
 		this.getContentPane().add(splash, c3);
 		splash.init();
 		splash.setHide(true);
+		splash.setVisible(false);
 
 		isoMap = new IsoMapStage();
 		this.getContentPane().add(isoMap, c3);
 		isoMap.init();
-		isoMap.setHide(true);
+		isoMap.setHide(false);
+		isoMap.setVisible(true);
 
 		topoMap = new TopoMapStage();
 		this.getContentPane().add(topoMap, c3);
-		topoMap.init();
+		// topoMap.init();
 		// topoMap.setHide(false);
+		// topoMap.setVisible(true);
 
 		// TODO: play and stop
 		ImageIcon playIcon = new ImageIcon("img/play.png");
