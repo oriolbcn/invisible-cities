@@ -62,15 +62,25 @@ public class FilterPanel extends JPanel {
 		// day
 	}
 
-	// public void notify() {
-	// for (FilterListener fl : listeners) {
-	// fl.notify();
-	// }
-	// }
+	public void notifyChange() {
+		for (FilterListener fl : listeners) {
+			fl.filterChanged();
+		}
+	}
 
 	// getMaxFreq
-	// getSelectedLines
 	// getMinFreq
+
+	public boolean[] getSelectedRoutes() {
+
+		boolean[] res = new boolean[8];
+
+		for (int i = 0; i < 8; i++) {
+			res[i] = routesCBs[i].isSelected();
+		}
+
+		return res;
+	}
 
 	public GridBagConstraints createConstraints(int fill, int gridx, int gridy,
 			int ipadx, int ipady) {
