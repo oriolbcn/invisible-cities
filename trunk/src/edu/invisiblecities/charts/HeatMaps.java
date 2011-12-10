@@ -78,7 +78,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 	}
 
 	public void setup() {
-		size(800, 600);
+		size(w, h);
 		mod = new Model();
 
 		mod.loadTextStations();
@@ -99,7 +99,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 				createAggregatedRows(true, false), "Frequencies", 140, 80,
 				"trips");
 
-		hm2 = new Heatmap(140, 160 + chartHeight + 40, createRows(false, true),
+		hm2 = new Heatmap(140, 160 + chartHeight, createRows(false, true),
 				createAggregatedRows(false, true), "Delays (in seconds)", 140,
 				80, "seconds");
 

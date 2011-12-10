@@ -41,6 +41,7 @@ public class Model {
 	public Model() {
 
 		routes = new Routes(this);
+		routesLong = new Routes(this);
 		stations = new Stations(this);
 		parentStations = new ParentStations(this);
 		trips = new Trips(this);
@@ -196,6 +197,13 @@ public class Model {
 			while ((line = br.readLine()) != null) {
 				String[] split = line.split(",");
 				Route r = new Route("0", split[0], split[1]);
+				for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+					r.frequencies[i] = Integer.parseInt(split[2 + i].trim());
+				}
+				for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
+					r.delays[i] = Integer.parseInt(split[2
+							+ Constants.NUM_TIME_INTERVALS + i].trim());
+				}
 				getRoutes().add(r);
 			}
 		} catch (IOException e) {

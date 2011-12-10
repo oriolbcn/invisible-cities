@@ -6,7 +6,6 @@ import java.awt.GridBagLayout;
 import javax.swing.JFrame;
 
 import edu.invisiblecities.Splash;
-import edu.invisiblecities.TopoMapStage;
 import edu.invisiblecities.charts.HeatMaps;
 
 public class Dashboard extends JFrame {
@@ -28,7 +27,7 @@ public class Dashboard extends JFrame {
 		c1.gridy = 1;
 		this.getContentPane().add(filterPanel, c1);
 
-		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 800, 650, true);
+		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 700, 600, true);
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 1;
 		c2.gridy = 0;
