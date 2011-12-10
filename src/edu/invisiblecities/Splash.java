@@ -14,9 +14,11 @@ import processing.core.PImage;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
 import edu.invisiblecities.IsoMapStage.Route;
+import edu.invisiblecities.dashboard.Dashboard;
+import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.dashboard.ICities;
 
-public class Splash extends PApplet {
+public class Splash extends PApplet implements FilterListener {
 
     public static final int     CanvasWidth = 600;
     public static final int     CanvasHeight = 600;
@@ -35,13 +37,14 @@ public class Splash extends PApplet {
     public static ArrayList<Dot>[] mDots = new ArrayList[TotalTimeStamps];
     public Dot[]                mListHeader;
     public static boolean       IsPlaying = false;
-    //public static int           mTimer = 0;
     public static Route[]       mRoutes;
     public static int           NumOfDots;
     public static int           selectedFilter;
     public static PImage        clockImg;
     public static final String  Clockimgfilename = "clock.png";
     public static PGraphics     pg;
+    public static int           mTimer = 0;
+    
     
     @Override
     public void setup() {
@@ -51,7 +54,7 @@ public class Splash extends PApplet {
         smooth();
         noStroke();
         loadRoutes();
-        DisplayRoutes = new boolean[NumOfRoutes];
+        DisplayRoutes = Dashboard.getSelectedRoutes();
         loadSplash();
         initUI();
         clockImg = loadImage(Clockimgfilename);
@@ -59,6 +62,7 @@ public class Splash extends PApplet {
         pg.beginDraw();
         pg.image(clockImg, 0, 0);
         pg.endDraw();
+        Dashboard.registerAsFilterListener(this);
     }
     public boolean pause = false;
     
@@ -108,7 +112,6 @@ public class Splash extends PApplet {
         text("6", ClockSixX, ClockSixY);
         text("9", ClockNineX, ClockNineY);
         textAlign(LEFT);
-        //pg.endDraw();
         save("clock.png");
     }
     
@@ -118,10 +121,14 @@ public class Splash extends PApplet {
     public void draw() {
         background(255);
         image(pg, 0, 0);
-
+        text(mTimer, 20, 80);
         if (ICities.IsPlaying) {
-            if (mDots[ICities.timer] != null) {
-                for (Dot dot : mDots[ICities.timer]) {
+            if (mTimer == TotalTimeStamps) {
+                IsPlaying = false;
+                mTimer = 0;
+            }
+            if (mDots[mTimer] != null) {
+                for (Dot dot : mDots[mTimer]) if (DisplayRoutes[dot.rid]) {
                     dot.x = PictureCenterX;
                     dot.y = PictureCenterY;
                     int rid = dot.rid;
@@ -133,23 +140,23 @@ public class Splash extends PApplet {
                     dot.setAni();
                 }
             }
-            int showTime = ICities.timer * Interval;
+            int showTime = mTimer * Interval;
             hour = showTime / 3600;
             minute = (showTime % 3600) / 60;
+            ++mTimer;
         }
-        
         noStroke();
-        for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i]) {
+        for (int i=0; i<NumOfRoutes; ++i) {
             fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
             Dot pointer = mListHeader[i].nextdot;
-            float fvalue = 100.f;
+            float fvalue = 0.f;
             while (pointer != null) {
-                if (pointer.delay > fvalue) {
+                /*if (pointer.delay > fvalue) {
                     Dot next = pointer.nextdot;
                     pointer.finish();
                     pointer = next;
                     continue;
-                }
+                }*/
                 pointer.draw();
                 pointer = pointer.nextdot;
             }
@@ -166,6 +173,21 @@ public class Splash extends PApplet {
     @Override
     public void mouseDragged() {
     }
+    
+    public void filterChanged() {
+        DisplayRoutes = Dashboard.getSelectedRoutes();
+        for (int i=0; i<NumOfRoutes; ++i)
+            System.out.println(mRoutes[i].name + " " + DisplayRoutes[i]);
+        // dashboard.getSelectedRoutes();
+        // dashboard.getMaxFrequency();
+        // dashboard.getMinFrequency();
+        // dashboard.getMaxDelay();
+        // dashboard.getMinDelay();
+        // dashboard.getMaxRidership();
+        // dashboard.getMinRidership();
+    }
+    
+////////////////// Inner Class /////////////////////////////////////////////////
     
     public class Dot {
         public float x;
@@ -242,6 +264,8 @@ public class Splash extends PApplet {
         }
     }
     
+    
+    
 ////////////////////////////////////////////////////////////////////////////////
     public static FileInputStream ifstream;
     public static DataInputStream in;
@@ -252,7 +276,8 @@ public class Splash extends PApplet {
     public static final String  Splashfilename = "bin/splash.csv";
     public static final int FrameRate = 30;
     public static final int ClockInnerDiameter = 100;
-
+    
+    
     public void loadSplash() {
         try {
             ifstream = new FileInputStream(Splashfilename);
@@ -276,7 +301,7 @@ public class Splash extends PApplet {
                 float x = hour * cos(theta) + PictureCenterX;
                 float y = hour * sin(theta) + PictureCenterY;
                 // TODO Ridership
-                float diameter = random(5, 15);
+                float diameter = random(ICities.minRiderhsip, ICities.maxRidership);
                 Dot dot = new Dot(rid, PictureCenterX, PictureCenterY, x, y, (float)duration/Interval/FrameRate, 
                                 mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue, split[1], hour, diameter);
                 
