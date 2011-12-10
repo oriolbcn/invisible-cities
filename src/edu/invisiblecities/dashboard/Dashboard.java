@@ -115,6 +115,7 @@ public class Dashboard extends JFrame {
 		return filterPanel.getMinRidership();
 	}
 
+	// To be called by Topo and Iso maps when a station is selected
 	public void noitifySelection(String stationId) {
 		// notifiy listeners
 	}
