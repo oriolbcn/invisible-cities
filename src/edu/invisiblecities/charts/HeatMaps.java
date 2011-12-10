@@ -28,7 +28,6 @@ public class HeatMaps extends PApplet implements FilterListener {
 	final int legendHeight = legendRowHeight * 8;
 	final int legendWidth = 100;
 	final int tooltipHeight = 15;
-	final int frameRate = 30;
 	final int timerStart = 5 * 3600 / ICities.Interval;
 
 	int rectWidth; // 40
@@ -80,9 +79,10 @@ public class HeatMaps extends PApplet implements FilterListener {
 	public void setup() {
 		size(w, h);
 		mod = new Model();
+		frameRate(ICities.frameRate);
 
 		mod.loadTextStations();
-		mod.loadTextRoutes();
+		mod.loadTextRoutesLong();
 		Collections.sort(mod.getStations(), new Comparator<Station>() {
 			public int compare(Station o1, Station o2) {
 				return o1.route.hex_color.compareTo(o2.route.hex_color);
@@ -90,6 +90,12 @@ public class HeatMaps extends PApplet implements FilterListener {
 		});
 
 		Collections.sort(mod.getRoutes(), new Comparator<Route>() {
+			public int compare(Route o1, Route o2) {
+				return o1.hex_color.compareTo(o2.hex_color);
+			}
+		});
+
+		Collections.sort(mod.getRoutesLong(), new Comparator<Route>() {
 			public int compare(Route o1, Route o2) {
 				return o1.hex_color.compareTo(o2.hex_color);
 			}
@@ -142,16 +148,16 @@ public class HeatMaps extends PApplet implements FilterListener {
 		int[] sum = new int[Constants.NUM_TIME_INTERVALS]; // aux var
 		int[] n = new int[Constants.NUM_TIME_INTERVALS]; // aux var
 
-		Route r = mod.getRoutes().get(0);
+		Route r = mod.getRoutesLong().get(0);
 		int index = 0;
-		for (int i = 0; i < mod.getRoutes().size();) {
+		for (int i = 0; i < mod.getRoutesLong().size();) {
 			for (int j = 0; j < sum.length; j++) {
 				sum[j] = 0;
 				n[j] = 0;
 			}
 			String rName = r.route_name;
 			String rColor = r.hex_color;
-			while (i < mod.getRoutes().size() && r.route_name.equals(rName)) {
+			while (i < mod.getRoutesLong().size() && r.route_name.equals(rName)) {
 				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
 					int val;
 					if (freq)
@@ -164,8 +170,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 					n[j]++;
 				}
 				i++;
-				if (i < mod.getRoutes().size())
-					r = mod.getRoutes().get(i);
+				if (i < mod.getRoutesLong().size())
+					r = mod.getRoutesLong().get(i);
 			}
 			HeatMapRow row = new HeatMapRow(rName, rColor.substring(2));
 			row.values = new int[Constants.NUM_TIME_INTERVALS];
