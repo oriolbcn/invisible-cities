@@ -39,7 +39,7 @@ public class Dashboard extends JFrame {
 		// isoMap.init();
 	}
 
-	public void registerAsFilterListener(FilterListener fl) {
+	public static void registerAsFilterListener(FilterListener fl) {
 		filterPanel.register(fl);
 	}
 
