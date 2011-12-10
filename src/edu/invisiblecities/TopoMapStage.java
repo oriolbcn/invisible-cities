@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import edu.invisiblecities.IsoMapStage.Route;
@@ -60,8 +61,8 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	@Override
 	public void setup() {
-		size(CanvasWidth, CanvasHeight);
-		// size(CanvasWidth, CanvasHeight, GLConstants.GLGRAPHICS);
+		//size(CanvasWidth, CanvasHeight);
+		size(CanvasWidth, CanvasHeight, GLConstants.GLGRAPHICS);
 		map = new de.fhpotsdam.unfolding.Map(this, MapLeftX, MapTopY, MapWidth,
 				MapHeight, new OpenStreetMap.CloudmadeProvider(API_KEY,
 						OpenMapID));
@@ -362,7 +363,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		return -1;
 	}
 
-	public static final String Routeinfofilename = "routes.csv";
+	public static final String Routeinfofilename = "bin/routes.csv";
 
 	public void loadRoutes() {
 		try {
@@ -400,7 +401,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		}
 	}
 
-	public static final String Triproutefilename = "routetrip.csv";
+	public static final String Triproutefilename = "bin/routetrip.csv";
 	public static HashMap<String, String> trip2route;
 
 	public void loadTrip2Route() {
@@ -428,7 +429,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	public static final float RidershipUpper = 12;
 	public static final float RidershipLower = 4;
-	public static final String Tripstoplatlon = "tripstoplatlontime.csv";
+	public static final String Tripstoplatlon = "bin/tripstoplatlontime.csv";
 
 	public void loadTrip() {
 		try {
@@ -549,7 +550,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		}
 	}
 
-	public static final String stopsfilename = "stopsInfo.csv";
+	public static final String stopsfilename = "bin/stopsInfo.csv";
 	public static HashMap<String, Integer> stop2int;
 
 	public void loadStop() {
@@ -583,7 +584,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		}
 	}
 
-	public static final String stopdelayfilename = "stationsdelay.csv";
+	public static final String stopdelayfilename = "bin/stationsdelay.csv";
 
 	public void loadStopDelays() {
 		try {
