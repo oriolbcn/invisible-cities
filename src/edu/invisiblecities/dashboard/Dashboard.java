@@ -49,4 +49,28 @@ public class Dashboard extends JFrame {
 	public static boolean[] getSelectedRoutes() {
 		return filterPanel.getSelectedRoutes();
 	}
+
+	public int getMaxFrequency() {
+		return filterPanel.getMaxFrequency();
+	}
+
+	public int getMinFrequency() {
+		return filterPanel.getMinFrequency();
+	}
+
+	public int getMaxDelay() {
+		return filterPanel.getMaxDelay();
+	}
+
+	public int getMinDelay() {
+		return filterPanel.getMinDelay();
+	}
+
+	public int getMaxRidership() {
+		return filterPanel.getMaxRidership();
+	}
+
+	public int getMinRidership() {
+		return filterPanel.getMinRidership();
+	}
 }

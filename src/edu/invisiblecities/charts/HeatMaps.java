@@ -189,7 +189,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 	public void draw() {
 		background(255);
 		noStroke();
-
+		text(ICities.timer, 20, 20);
 		if (hm1.visible) {
 			hm1.update();
 			hm1.display();
