@@ -18,6 +18,11 @@ public class ICities {
 			"2011-12-02", "2011-12-03", "2011-12-04", "2011-12-05",
 			"2011-12-06", "2011-12-07", "2011-12-08", "2011-12-09",
 			"2011-12-10", "2011-12-11", "2011-12-12" };
+	public static final String[] maps = { "Topological Map", "Isochronic Map",
+			"Splash Map" };
+	public static final int INDEX_MAP_TOPO = 0;
+	public static final int INDEX_MAP_ISO = 1;
+	public static final int INDEX_MAP_SPLASH = 2;
 
 	public static void main(String[] args) {
 

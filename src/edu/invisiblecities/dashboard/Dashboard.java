@@ -3,14 +3,25 @@ package edu.invisiblecities.dashboard;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 
+import edu.invisiblecities.IsoMapStage;
 import edu.invisiblecities.Splash;
+import edu.invisiblecities.TopoMapStage;
 import edu.invisiblecities.charts.HeatMaps;
 
 public class Dashboard extends JFrame {
 
 	static FilterPanel filterPanel;
+	static Splash splash;
+	static IsoMapStage isoMap;
+	static TopoMapStage topoMap;
+	static JButton playButton;
+	static JButton pauseButton;
+
+	// List<SelectionListener>
 
 	public Dashboard() {
 		this.getContentPane().setLayout(new GridBagLayout());
@@ -34,12 +45,39 @@ public class Dashboard extends JFrame {
 		this.getContentPane().add(heatMaps, c2);
 		heatMaps.init();
 
-		Splash splash = new Splash();
+		splash = new Splash();
 		GridBagConstraints c3 = new GridBagConstraints();
 		c3.gridx = 0;
 		c3.gridy = 0;
 		this.getContentPane().add(splash, c3);
 		splash.init();
+		splash.setHide(true);
+
+		isoMap = new IsoMapStage();
+		this.getContentPane().add(isoMap, c3);
+		isoMap.init();
+		isoMap.setHide(true);
+
+		topoMap = new TopoMapStage();
+		this.getContentPane().add(topoMap, c3);
+		topoMap.init();
+		// topoMap.setHide(false);
+
+		// TODO: play and stop
+		ImageIcon playIcon = new ImageIcon("img/play.png");
+		ImageIcon pauseIcon = new ImageIcon("img/pause.png");
+		playButton = new JButton(playIcon);
+		GridBagConstraints c4 = new GridBagConstraints();
+		c4.gridx = 1;
+		c4.gridy = 1;
+		this.getContentPane().add(playButton, c4);
+
+		pauseButton = new JButton(pauseIcon);
+		GridBagConstraints c5 = new GridBagConstraints();
+		c5.gridx = 2;
+		c5.gridy = 1;
+		this.getContentPane().add(pauseButton, c5);
+
 	}
 
 	public static void registerAsFilterListener(FilterListener fl) {
@@ -72,5 +110,9 @@ public class Dashboard extends JFrame {
 
 	public int getMinRidership() {
 		return filterPanel.getMinRidership();
+	}
+
+	public void noitifySelection(String stationId) {
+		// notifiy listeners
 	}
 }

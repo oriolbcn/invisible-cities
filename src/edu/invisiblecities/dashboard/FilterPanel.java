@@ -29,12 +29,14 @@ public class FilterPanel extends JPanel implements ChangeListener,
 	SliderWithLabel ridershipSlider;
 	JCheckBox routesCBs[];
 	JComboBox dayCombo;
+	JComboBox mapCombo;
 
 	Model mod;
 
 	List<FilterListener> listeners;
 
-	int maxFreq, maxDelay, maxRidership;
+	public int maxFreq, maxDelay, maxRidership;
+	public int selMap = 0;
 
 	public FilterPanel() {
 		this.setLayout(new GridBagLayout());
@@ -123,10 +125,17 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		GridBagConstraints c3 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 2, 0, -1, -1);
 		c3.insets = new Insets(0, 20, 0, 0);
-		c3.gridheight = 5;
 		this.add(dayCombo, c3);
-		// play and stop
-		// lines or dots
+
+		// maps combo
+		mapCombo = new JComboBox(ICities.maps);
+		mapCombo.setSelectedIndex(ICities.INDEX_MAP_TOPO);
+		dayCombo.addActionListener(this);
+		GridBagConstraints c4 = createConstraints(
+				GridBagConstraints.HORIZONTAL, 2, 1, -1, -1);
+		this.add(mapCombo, c4);
+
+		// TODO: lines or dots
 	}
 
 	public int getMaxFrequency() {
@@ -201,6 +210,27 @@ public class FilterPanel extends JPanel implements ChangeListener,
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		int map = mapCombo.getSelectedIndex();
+		if (map != selMap) {
+			selMap = map;
+		}
 		notifyListeners();
+	}
+
+	public void showMap() {
+		boolean t = false;
+		boolean i = false;
+		boolean s = false;
+		if (selMap == 0) {
+			t = true;
+		} else if (selMap == 1) {
+			i = true;
+		} else {
+			s = true;
+		}
+
+		Dashboard.topoMap.setHide(t);
+		Dashboard.isoMap.setHide(i);
+		Dashboard.splash.setHide(s);
 	}
 }
