@@ -13,6 +13,12 @@ public class ICities {
 	public static final int maxRidership = 15;
 	public static final int mult = 50;
 
+	public static final String[] days = { "2011-11-26", "2011-11-27",
+			"2011-11-28", "2011-11-29", "2011-11-30", "2011-12-01",
+			"2011-12-02", "2011-12-03", "2011-12-04", "2011-12-05",
+			"2011-12-06", "2011-12-07", "2011-12-08", "2011-12-09",
+			"2011-12-10", "2011-12-11", "2011-12-12" };
+
 	public static void main(String[] args) {
 
 		dashboard = new Dashboard();

@@ -3,11 +3,15 @@ package edu.invisiblecities.dashboard;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
@@ -15,27 +19,54 @@ import javax.swing.event.ChangeListener;
 
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
+import edu.invisiblecities.data.Station;
 
-public class FilterPanel extends JPanel implements ChangeListener {
+public class FilterPanel extends JPanel implements ChangeListener,
+		ActionListener {
 
 	SliderWithLabel freqsSlider;
 	SliderWithLabel delaysSlider;
 	SliderWithLabel ridershipSlider;
 	JCheckBox routesCBs[];
+	JComboBox<String> dayCombo;
 
 	Model mod;
 
 	List<FilterListener> listeners;
 
+	int maxFreq, maxDelay, maxRidership;
+
 	public FilterPanel() {
 		this.setLayout(new GridBagLayout());
-		mod = new Model();
-		mod.loadTextRoutes();
-		mod.loadTextStations();
+		loadModel();
 		routesCBs = new JCheckBox[8];
 		listeners = new LinkedList<FilterListener>();
 		createComponents();
 		setBorder(BorderFactory.createTitledBorder("Filters:"));
+	}
+
+	public void loadModel() {
+		mod = new Model();
+		mod.loadTextRoutes();
+		mod.loadTextStations();
+
+		maxFreq = 0;
+		for (Station st : mod.getStations()) {
+			for (int i = 0; i < st.frequencies.length; i++) {
+				if (st.frequencies[i] > maxFreq)
+					maxFreq = st.frequencies[i];
+			}
+		}
+
+		maxDelay = 0;
+		for (Station st : mod.getStations()) {
+			for (int i = 0; i < st.delays.length; i++) {
+				if (st.delays[i] > maxDelay)
+					maxDelay = st.delays[i];
+			}
+		}
+
+		maxRidership = ICities.maxRidership * ICities.mult;
 	}
 
 	public void createComponents() {
@@ -47,45 +78,80 @@ public class FilterPanel extends JPanel implements ChangeListener {
 			Color color = getColor(r.hex_color);
 			ch.setForeground(color);
 			ch.addChangeListener(this);
-			this.add(
-					ch,
-					createConstraints(GridBagConstraints.HORIZONTAL, 0, i + 1,
-							-1, -1));
+			GridBagConstraints c = createConstraints(
+					GridBagConstraints.HORIZONTAL, 0, i + 1, -1, -1);
+			c.insets = new Insets(0, 0, 0, 30);
+			this.add(ch, c);
 			routesCBs[i] = ch;
 		}
 
+		// TODO: Add labels with current value!
 		// frequencies
 		JLabel label1 = new JLabel("Frequency");
 		this.add(label1,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 0, -1, -1));
 
-		freqsSlider = new SliderWithLabel(0, 20);
-		this.add(freqsSlider,
-				createConstraints(GridBagConstraints.HORIZONTAL, 1, 1, -1, -1));
+		freqsSlider = new SliderWithLabel(0, maxFreq);
+		GridBagConstraints c = createConstraints(GridBagConstraints.HORIZONTAL,
+				1, 1, -1, -1);
+		c.insets = new Insets(0, 0, 20, 0);
+		this.add(freqsSlider, c);
 		// delays
 		JLabel label2 = new JLabel("Delay");
 		this.add(label2,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 2, -1, -1));
 
-		delaysSlider = new SliderWithLabel(0, 20);
-		this.add(delaysSlider,
-				createConstraints(GridBagConstraints.HORIZONTAL, 1, 3, -1, -1));
+		delaysSlider = new SliderWithLabel(0, maxDelay);
+		GridBagConstraints c2 = createConstraints(
+				GridBagConstraints.HORIZONTAL, 1, 3, -1, -1);
+		c2.insets = new Insets(0, 0, 20, 0);
+		this.add(delaysSlider, c2);
 		// ridership ?
 		JLabel label3 = new JLabel("Ridership");
 		this.add(label3,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 4, -1, -1));
 
-		ridershipSlider = new SliderWithLabel(0, 20);
+		ridershipSlider = new SliderWithLabel(ICities.minRiderhsip
+				* ICities.mult, ICities.maxRidership * ICities.mult);
 		this.add(ridershipSlider,
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 5, -1, -1));
 
 		// day
+		dayCombo = new JComboBox<String>(ICities.days);
+		dayCombo.setSelectedIndex(2);
+		dayCombo.addActionListener(this);
+		GridBagConstraints c3 = createConstraints(
+				GridBagConstraints.HORIZONTAL, 2, 0, -1, -1);
+		c3.insets = new Insets(0, 20, 0, 0);
+		c3.gridheight = 3;
+		this.add(dayCombo, c3);
 		// play and stop
 		// lines or dots
 	}
 
-	// getMaxFreq
-	// getMinFreq
+	public int getMaxFrequency() {
+		return maxFreq;
+	}
+
+	public int getMinFrequency() {
+		return 0;
+	}
+
+	public int getMaxDelay() {
+		return maxDelay;
+	}
+
+	public int getMinDelay() {
+		return 0;
+	}
+
+	public int getMaxRidership() {
+		return ICities.maxRidership * ICities.mult;
+	}
+
+	public int getMinRidership() {
+		return ICities.minRiderhsip * ICities.mult;
+	}
 
 	public boolean[] getSelectedRoutes() {
 
@@ -123,10 +189,18 @@ public class FilterPanel extends JPanel implements ChangeListener {
 		listeners.add(fl);
 	}
 
-	@Override
-	public void stateChanged(ChangeEvent e) {
+	public void notifyListeners() {
 		for (FilterListener fl : listeners) {
 			fl.filterChanged();
 		}
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		notifyListeners();
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		notifyListeners();
 	}
 }
