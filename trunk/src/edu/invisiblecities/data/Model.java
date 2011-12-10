@@ -140,6 +140,10 @@ public class Model {
 		return routes.getRoutes();
 	}
 
+	public List<Route> getRoutesLong() {
+		return routesLong.getRoutes();
+	}
+
 	public List<Station> getStations() {
 		return stations.getStations();
 	}
@@ -204,7 +208,7 @@ public class Model {
 					r.delays[i] = Integer.parseInt(split[2
 							+ Constants.NUM_TIME_INTERVALS + i].trim());
 				}
-				getRoutes().add(r);
+				getRoutesLong().add(r);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
