@@ -167,7 +167,7 @@ public class Model {
 		try {
 			ArrayList<String> lines = new ArrayList<String>();
 			Scanner scanner;
-			scanner = new Scanner(new FileInputStream(dir + "routes.csv"));
+			scanner = new Scanner(new FileInputStream("routes.csv"));
 
 			while (scanner.hasNextLine()) {
 				lines.add(scanner.nextLine());
@@ -191,7 +191,7 @@ public class Model {
 			ArrayList<String> lines = new ArrayList<String>();
 			Scanner scanner;
 
-			scanner = new Scanner(new FileInputStream(dir + "stations.txt"));
+			scanner = new Scanner(new FileInputStream("stations.txt"));
 
 			while (scanner.hasNextLine()) {
 				lines.add(scanner.nextLine());
