@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import processing.core.PApplet;
+import edu.invisiblecities.dashboard.ICities;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
@@ -26,7 +27,7 @@ public class HeatMaps extends PApplet {
 	final int legendWidth = 100;
 	final int tooltipHeight = 15;
 	final int frameRate = 30;
-	final int TotalTimeStamps = 2880;
+	final int timerStart = 5 * 3600 / ICities.Interval;
 
 	int rectWidth; // 40
 	int nRects; // 20
@@ -35,8 +36,6 @@ public class HeatMaps extends PApplet {
 	int chartHeightExpanded;
 	int chartWidth;
 	boolean timeLine;
-	int timer;
-	boolean isPlaying;
 
 	int w;
 	int h;
@@ -81,8 +80,6 @@ public class HeatMaps extends PApplet {
 		mod = new Model();
 
 		String dir = "";// Constants.dirProcessing;
-		timer = 0;
-		isPlaying = true;
 
 		mod.loadTextStations();
 		mod.loadTextRoutes();
@@ -190,11 +187,11 @@ public class HeatMaps extends PApplet {
 			hm2.display();
 		}
 
-		if (isPlaying) {
-			++timer;
-			if (timer == TotalTimeStamps) {
-				timer = 0;
-				isPlaying = false;
+		if (ICities.IsPlaying) {
+			++ICities.timer;
+			if (ICities.timer == ICities.TotalTimeStamps) {
+				ICities.timer = 0;
+				ICities.IsPlaying = false;
 			}
 		}
 
@@ -464,10 +461,11 @@ public class HeatMaps extends PApplet {
 			}
 
 			// TimeLine
-			if (timeLine) {
+			if (timeLine && ICities.timer > timerStart) {
 				stroke(255);
 				strokeWeight(4);
-				float x = iniX + (float) timer * chartWidth / TotalTimeStamps;
+				float x = iniX + (float) (ICities.timer - timerStart)
+						* chartWidth / ICities.TotalTimeStamps;
 				line(x, iniY, x, iniY
 						+ (expanded ? chartHeightExpanded : chartHeight));
 				strokeWeight(1);
