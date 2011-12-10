@@ -78,7 +78,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 	}
 
 	public void setup() {
-		size(w, h);
+		size(800, 600);
 		mod = new Model();
 
 		mod.loadTextStations();
@@ -368,6 +368,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 			textSize(textSize);
 			fill(0);
+
 			// Write time labels
 			for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i += 2) {
 				String s;
