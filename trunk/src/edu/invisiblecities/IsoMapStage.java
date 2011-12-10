@@ -261,7 +261,6 @@ public class IsoMapStage extends PApplet {
     @Override
     public void draw() {
         background(255);
-        System.out.println("test");
         drawBackgroundCircles();
 
         drawStationLines();
@@ -665,6 +664,7 @@ public class IsoMapStage extends PApplet {
                     if (len == 2 && split[1].equals("-1")) {
                         mStations[sid].sssp[toid] = new int[1];
                         mStations[sid].sssp[toid][0] = sid;
+                        ++kk;
                         continue;
                     }
                     mStations[sid].sssp[toid] = new int[len];
