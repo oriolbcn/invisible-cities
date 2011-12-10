@@ -1,7 +1,10 @@
 package edu.invisiblecities.dashboard;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -18,6 +21,8 @@ public class FilterPanel extends JPanel {
 
 	Model mod;
 
+	List<FilterListener> listeners;
+
 	public FilterPanel() {
 		this.setLayout(new GridBagLayout());
 		mod = new Model();
@@ -27,6 +32,7 @@ public class FilterPanel extends JPanel {
 		setBorder(BorderFactory.createTitledBorder("Filters:"));
 
 		routesCBs = new JCheckBox[8];
+		listeners = new LinkedList<FilterListener>();
 	}
 
 	public void createComponents() {
@@ -35,13 +41,14 @@ public class FilterPanel extends JPanel {
 		for (int i = 0; i < 8; i++) {
 			Route r = mod.getRoutes().get(i);
 			JCheckBox ch = new JCheckBox(r.route_name, true);
+			Color color = getColor(r.hex_color);
+			ch.setForeground(color);
 			this.add(
 					ch,
 					createConstraints(GridBagConstraints.HORIZONTAL, 0, i + 1,
 							-1, -1));
 		}
 
-		// day
 		// frequencies
 		JLabel label1 = new JLabel("Frequency");
 		this.add(label1,
@@ -52,7 +59,18 @@ public class FilterPanel extends JPanel {
 				createConstraints(GridBagConstraints.HORIZONTAL, 1, 1, -1, -1));
 		// delays
 		// ridership ?
+		// day
 	}
+
+	// public void notify() {
+	// for (FilterListener fl : listeners) {
+	// fl.notify();
+	// }
+	// }
+
+	// getMaxFreq
+	// getSelectedLines
+	// getMinFreq
 
 	public GridBagConstraints createConstraints(int fill, int gridx, int gridy,
 			int ipadx, int ipady) {
@@ -66,8 +84,16 @@ public class FilterPanel extends JPanel {
 		if (ipady != -1) {
 			c.ipady = ipady;
 		}
-
 		return c;
 	}
 
+	public Color getColor(String hex) {
+		return new Color(Integer.parseInt(hex.substring(0, 2), 16),
+				Integer.parseInt(hex.substring(2, 4), 16), Integer.parseInt(
+						hex.substring(4, 6), 16));
+	}
+
+	public void register(FilterListener fl) {
+		listeners.add(fl);
+	}
 }

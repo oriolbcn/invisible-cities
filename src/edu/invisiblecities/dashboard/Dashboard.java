@@ -38,4 +38,8 @@ public class Dashboard extends JFrame {
 		this.getContentPane().add(isoMap);
 		// isoMap.init();
 	}
+
+	public void registerAsFilterListener(FilterListener fl) {
+		filterPanel.register(fl);
+	}
 }

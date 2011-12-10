@@ -14,6 +14,7 @@ public class SnapshotMaker {
 	public static void main(String[] args) {
 
 		mod = new Model();
+		mod.day = "12-09-2011";
 		mod.load();
 		Writer out = null;
 
@@ -23,7 +24,7 @@ public class SnapshotMaker {
 			(new File(dir)).mkdirs(); // Create Directory
 
 			// Stations
-			out = openWriter(dir, "stations.txt");
+			out = openWriter(dir + "/" + mod.day, "stations.txt");
 
 			List<Station> stations = mod.getStations();
 			for (Station s : stations) {
