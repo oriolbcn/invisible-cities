@@ -13,9 +13,11 @@ import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import edu.invisiblecities.IsoMapStage.Route;
-import edu.invisiblecities.data.Constants;
+import edu.invisiblecities.dashboard.Dashboard;
+import edu.invisiblecities.dashboard.FilterListener;
+import edu.invisiblecities.dashboard.ICities;
 
-public class TopoMapStage extends PApplet {
+public class TopoMapStage extends PApplet implements FilterListener {
 
     public static final int     CanvasWidth = 600;
     public static final int     CanvasHeight = 600;
@@ -48,20 +50,12 @@ public class TopoMapStage extends PApplet {
     public static ArrayList<Trip>[] mTrips = new ArrayList[TotalTimeStamps];
     public static int           NumOfRoutes;
     public static int           NumOfStops;
-    public static int           mTimer;
     public static Trip[]        mListHeader;
-    public static CheckBox[]    displayCheckBoxes;
-    public static ProgressBar   progBar;
     public static boolean       FilterSelected = false;
     public static PImage        MapImage;
+    public static boolean[]     DisplayRoutes;
 
     public void initUI() {
-        displayCheckBoxes = new CheckBox[NumOfRoutes];
-        for (int i=0; i<NumOfRoutes; ++i) {
-            displayCheckBoxes[i] = new CheckBox(i, PanelLeftX + 3 + (CheckBoxOffsetX + CheckBoxWidth) * i,
-                    CheckBoxOffsetTop, true);
-        }
-        progBar = new ProgressBar(-1, ProgressBarLeft, ProgressBarY, 0, TotalTimeStamps);
         TripsCounter = new int[NumOfRoutes];
     }
     
@@ -73,27 +67,21 @@ public class TopoMapStage extends PApplet {
         map.zoomAndPanTo(new Location(MapCenterLat, MapCenterLon), ZoomLevel);
         smooth();
         frameRate(FrameRate);
-        mTimer = 0;
-        
         loadRoutes();
+        DisplayRoutes = new boolean[NumOfRoutes];
         loadTrip2Route();
-        //loadStop2Station();
         loadStop();
         loadTrip();
         loadStopDelays();
         MapImage = loadImage(Mapfilename);
         initUI();
-        
+        //Dashboard.registerAsFilterListener(this);
     }
     
     public static void addTrains() {
-        if (IsPlaying) {
-            if (mTimer == TotalTimeStamps) {
-                IsPlaying = false;
-                mTimer = 0;
-            }
-            if (mTrips[mTimer] != null) {
-                for (Trip trip: mTrips[mTimer]) {
+        if (ICities.IsPlaying) {
+            if (mTrips[ICities.timer] != null) {
+                for (Trip trip: mTrips[ICities.timer]) {
                     int rid = trip.rid;
                     Trip oriNext = mListHeader[rid].nexttrip;
                     trip.nexttrip = oriNext;
@@ -102,11 +90,10 @@ public class TopoMapStage extends PApplet {
                     if (oriNext != null) oriNext.pretrip = trip;
                 }
             }
-            int showTime = mTimer * Interval;
+            int showTime = ICities.timer * Interval;
             hour = showTime / 3600;
             minute = (showTime % 3600) / 60;
-            ++mTimer;
-            progBar.rectx = mTimer * BarLength / TotalTimeStamps;
+            ++ICities.timer;
         }
     }
     
@@ -119,7 +106,6 @@ public class TopoMapStage extends PApplet {
         rectMode(CORNER);
     }
     
-    public static boolean IsPlaying = false;
     public static int hour, minute;
     @Override
     public void draw() {
@@ -131,7 +117,7 @@ public class TopoMapStage extends PApplet {
         
         drawStops();
         //noStroke();
-        if (IsPlaying) {
+        if (ICities.IsPlaying) {
             drawTrains(1);
         } else {
             drawTrains(0);
@@ -167,13 +153,8 @@ public class TopoMapStage extends PApplet {
         fill(0);
         text("Time: " + hour + ":" + minute, 20, 20);
         text("FPS: "+frameRate, 20, 40);
-        text("mTimer: " + mTimer, 20, 60);
+        text("mTimer: " + ICities.timer, 20, 60);
         line(MapWidth, 0, MapWidth, CanvasHeight);
-        for (int i=0; i<NumOfRoutes; ++i) {
-            displayCheckBoxes[i].draw();
-            text("Trips: " + TripsCounter[i], 500, i * 20 + 20);
-        }
-        progBar.draw();
     }
     
     public static final int TripCounterSize = 200;
@@ -185,17 +166,14 @@ public class TopoMapStage extends PApplet {
             stroke(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue, 100);
             Trip pointer = mListHeader[i].nexttrip;
             TripsCounter[i] = 0;
-            float strokeWeight = 0.5f;
-            if (displayCheckBoxes[i].isChecked) {
-                Trip rec = pointer;
+            //float strokeWeight = 0.5f;
+            if (DisplayRoutes[i]) {
                 while (pointer != null) {
                     pointer.draw(cnt);
-                    strokeWeight += 0.05f;
+                    //strokeWeight += 0.05f;
                     ++TripsCounter[i];
                     pointer = pointer.nexttrip;
                 }
-                //if (rec != null)
-                //    drawLine(strokeWeight, rec);
             }
         } 
     }
@@ -210,51 +188,39 @@ public class TopoMapStage extends PApplet {
         }
     }
     
-    public boolean isInsideMap() {
-        return mouseX >= 0 && mouseX <= MapWidth 
-                && mouseY >= 0 && mouseY <= MapHeight;
-    }
-    
     @Override
     public void mousePressed() {
-        if (isInsideMap()) {
-            //IsPlaying = !IsPlaying;
-            for (int i=0; i<NumOfStops; ++i) {
-                if (mStops[i].isClicked()) return;
-            }
-            StopClicked = -1;
-            //FilterSelected = progBar.isSelected();
-        } else {
-            for (int i=0; i<NumOfRoutes; ++i) {
-                if (displayCheckBoxes[i].isClicked()) return;
-            }
+        for (int i=0; i<NumOfStops; ++i) {
+            if (mStops[i].isClicked()) return;
         }
+        StopClicked = -1;
     }    
     
     @Override
     public void keyPressed() {
-        IsPlaying = !IsPlaying;
     }
     
     @Override
     public void mouseDragged() {
-        /*if (FilterSelected) {
-            if (mouseX > progBar.rx)
-                progBar.rectx = progBar.rx;
-            else if (mouseX < progBar.lx)
-                progBar.rectlx = progBar.lx;
-            else progBar.rectx = mouseX;
-            progBar.value = (float)(progBar.rectx - progBar.lx) * (progBar.rightvalue - progBar.leftvalue) 
-                    / BarLength + progBar.leftvalue;
-            mTimer = (int)progBar.value;
-        }*/
     }
+    
+    public void filterChanged() {
+        DisplayRoutes = Dashboard.getSelectedRoutes();
+        // dashboard.getMaxFrequency();
+        // dashboard.getMinFrequency();
+        // dashboard.getMaxDelay();
+        // dashboard.getMinDelay();
+        // dashboard.getMaxRidership();
+        // dashboard.getMinRidership();
+    }
+
 ////////////// Inner Classes ///////////////////////////////////////////////////
 
     public static final float StopRadius = 8;
     public static final float StopDiameter = 16;
     public static int StopClicked = -1;
     public static final int HoursPerDay = 24;
+    public static final int StopDelayIndex = 3600 / Interval;
     public class Stop {
         public float screenX;
         public float screenY;
@@ -275,7 +241,7 @@ public class TopoMapStage extends PApplet {
         }
         public void draw() {
             fill(color, 50);
-            int index = (mTimer)/120;
+            int index = (ICities.timer)/120;
             //System.out.println("Index " + index);
             rect(screenX, screenY, diameter[index], diameter[index]);
         }
@@ -329,7 +295,7 @@ public class TopoMapStage extends PApplet {
         }
         
         public void drawLine(float strokeWeight) {
-            if (endtime < mTimer) {
+            if (endtime < ICities.timer) {
                 if (pretrip != null) {
                     pretrip.nexttrip = nexttrip;
                 }
@@ -364,104 +330,7 @@ public class TopoMapStage extends PApplet {
             stepCount += cnt;
         }
     }
-    
- // UI Components
-    public static int CheckBoxWidth = 20;
-    public static int CheckBoxHeight = 20;
-    public class CheckBox {
-        public boolean isChecked;
-        public int rid;
-        public int lx;
-        public int ty;
-        public int rx;
-        public int by;
-        public int red;
-        public int green;
-        public int blue;
-        
-        public CheckBox(int rd, int x, int y, boolean checked) {
-            rid = rd;
-            lx = x;
-            ty = y;
-            rx = lx + CheckBoxWidth;
-            by = ty + CheckBoxHeight;
-            red = mRoutes[rd].red;
-            green = mRoutes[rd].green;
-            blue = mRoutes[rd].blue;
-            isChecked = checked;
-        }
-        public void draw() {
-            strokeWeight(1);
-            fill(red, green, blue);
-            rect(lx, ty, CheckBoxWidth, CheckBoxHeight);
-            if (isChecked) {
-                stroke(0);
-                line(lx, ty, rx, by);
-                line(rx, ty, lx, by);
-            }
-        }
-        public boolean isClicked() {
-            if (mouseX >= lx && mouseX <= rx && mouseY >= ty && mouseY <= by) {
-                isChecked = !isChecked;
-                return true;
-            } else return false;
-        }
-    }
-    
-    public static final int BarThickness = 3;
-    public static final int BarLength = 200;
-    public static final int BarRectWidth = 10;
-    public static final int BarRectHeight = 20;
-    public class ProgressBar {
-        public int lx;
-        public int rx;
-        public int y;
-        public int rectx; // rectMode(CENTER)
-        public int recty;
-        public int rectlx;
-        public int rectrx;
-        public int rectty;
-        public int rectby;
-        public int leftvalue;
-        public int rightvalue;
-        public boolean isSelected;
-        public float value;
-        public ProgressBar(int rd, int x, int _y, int lv, int rv) {
-            lx = x;
-            y = _y;
-            leftvalue = lv;
-            rightvalue = rv;
-            rx = lx + BarLength;
-            rectx = lx;
-            recty = y;
-            rectlx = rectx - BarRectWidth / 2;
-            rectrx = rectx + BarRectWidth / 2;
-            rectty = recty - BarRectHeight / 2;
-            rectby = recty + BarRectHeight / 2;
-            value = rightvalue;
-            //isSelected = false;
-        }
-        public void draw() {
-            strokeWeight(5);
-            stroke(100);
-            line(lx, y, rectx, y);
-            strokeWeight(2);
-            line(rectx, y, rx, y);
-            noFill();
-            stroke(0);
-            strokeWeight(1);
-            rectMode(CENTER);
-            rect(rectx, recty, BarRectWidth, BarRectHeight);
-            rectMode(CORNER);
-        }
-        public boolean isSelected() {
-            if (mouseX >= rectx - BarRectWidth / 2 && mouseX <= rectx + BarRectWidth / 2 
-                    && mouseY >= recty - BarRectHeight / 2 && mouseY <= recty + BarRectHeight / 2) {
-                return true;
-            } else return false;
-        }
-    }
-
+       
 ////////////////////////////////////////////////////////////////////////////////
 
     /*************** Load Data ***************/
