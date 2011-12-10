@@ -465,8 +465,10 @@ public class HeatMaps extends PApplet implements FilterListener {
 			if (timeLine && ICities.timer > timerStart) {
 				stroke(255);
 				strokeWeight(4);
-				float x = iniX + (float) (ICities.timer - timerStart)
-						* chartWidth / (ICities.TotalTimeStamps - timerStart);
+				float x = (ICities.timer - timerStart) * chartWidth
+						/ (ICities.TotalTimeStamps * 19 / 24) + iniX;
+				// float x = iniX + (float) (ICities.timer - timerStart)
+				// * chartWidth / (ICities.TotalTimeStamps - timerStart);
 				line(x, iniY, x, iniY
 						+ (expanded ? chartHeightExpanded : chartHeight));
 				strokeWeight(1);
