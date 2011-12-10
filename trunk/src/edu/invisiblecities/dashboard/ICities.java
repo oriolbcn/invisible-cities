@@ -15,5 +15,4 @@ public class ICities {
 		dashboard.pack();
 		dashboard.setVisible(true);
 	}
-
 }
