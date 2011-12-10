@@ -129,8 +129,8 @@ public class FilterPanel extends JPanel implements ChangeListener,
 
 		// maps combo
 		mapCombo = new JComboBox(ICities.maps);
-		mapCombo.setSelectedIndex(ICities.INDEX_MAP_TOPO);
-		dayCombo.addActionListener(this);
+		mapCombo.setSelectedIndex(ICities.INDEX_MAP_ISO);
+		mapCombo.addActionListener(this);
 		GridBagConstraints c4 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 2, 1, -1, -1);
 		this.add(mapCombo, c4);
@@ -213,6 +213,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		int map = mapCombo.getSelectedIndex();
 		if (map != selMap) {
 			selMap = map;
+			showMap();
 		}
 		notifyListeners();
 	}
@@ -221,16 +222,18 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		boolean t = false;
 		boolean i = false;
 		boolean s = false;
-		if (selMap == 0) {
+		if (selMap == ICities.INDEX_MAP_TOPO) {
 			t = true;
-		} else if (selMap == 1) {
+		} else if (selMap == ICities.INDEX_MAP_ISO) {
 			i = true;
-		} else {
+		} else if (selMap == ICities.INDEX_MAP_SPLASH) {
 			s = true;
 		}
-
-		Dashboard.topoMap.setHide(t);
-		Dashboard.isoMap.setHide(i);
-		Dashboard.splash.setHide(s);
+		System.out.println(selMap);
+		// Dashboard.topoMap.setHide(t);
+		Dashboard.isoMap.setHide(!i);
+		Dashboard.isoMap.setVisible(i);
+		Dashboard.splash.setHide(!s);
+		Dashboard.splash.setVisible(s);
 	}
 }
