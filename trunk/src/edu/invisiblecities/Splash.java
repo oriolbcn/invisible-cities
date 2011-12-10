@@ -17,7 +17,7 @@ import edu.invisiblecities.IsoMapStage.Route;
 
 public class Splash extends PApplet {
 
-    public static final int     CanvasWidth = 800;
+    public static final int     CanvasWidth = 600;
     public static final int     CanvasHeight = 600;
     public static final int     PictureWidth = CanvasHeight;
     public static final int     PictureHeight = CanvasHeight;

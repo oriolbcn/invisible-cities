@@ -1,9 +1,5 @@
 package edu.invisiblecities;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -102,10 +98,13 @@ public class IsoMapStage extends PApplet {
                 (this, MapLeftX, 0, MapWidth, MapHeight,
                  new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
         loadRoutes();
+        
         loadStations();
+        
         initBackgroundCircle();
         
         toPositions = new float[NumOfStations][2];
+        
         updateGraph();
         for (int i=0; i<NumOfStations; ++i) if (mStations[i] != null) {
             mStations[i].curX = PictureCenterX;
@@ -262,6 +261,7 @@ public class IsoMapStage extends PApplet {
     @Override
     public void draw() {
         background(255);
+        System.out.println("test");
         drawBackgroundCircles();
 
         drawStationLines();
@@ -338,12 +338,6 @@ public class IsoMapStage extends PApplet {
             sta.curY = pv.y + PictureCenterY;
         }
     }
-    
-    public static void main(String args[]) {
-        PApplet.main(new String[] {"--present", "InvisibleCities"});
-    }
-    
-    
     
     /*************** Subclasses ***************/
     public class Station {
@@ -500,9 +494,9 @@ public class IsoMapStage extends PApplet {
 ////////////////////////////////////////////////////////////////////////////////
     
     /*************** Load Data ***************/
-    public static FileInputStream ifstream;
-    public static DataInputStream in;
-    public static BufferedReader br;
+    //public static FileInputStream ifstream;
+    //public static DataInputStream in;
+    //public static BufferedReader br;
    
     private static HashMap<String, Integer> route2Int;
     public static int findRoute(String rid) {
@@ -542,12 +536,15 @@ public class IsoMapStage extends PApplet {
         try {
             route2Int = new HashMap<String, Integer>();
             ArrayList<Route> alr = new ArrayList<Route>();
-            ifstream = new FileInputStream(Routeinfofilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] split = line.split(";");
+            //ifstream = new FileInputStream(Routeinfofilename);
+            //in = new DataInputStream(ifstream);
+            //br = new BufferedReader(new InputStreamReader(in));
+            String[] lines = loadStrings(Routeinfofilename);
+            int linelength = lines.length;
+            //while ((line = br.readLine()) != null) {
+            for (int i=0; i<linelength; ++i) {
+                String[] split = lines[i].split(";");
+                //String[] split = line.split(";");
                 Route r = new Route(split[0], split[2].substring(1), split[4], split[5]);
                 alr.add(r);
             }
@@ -562,24 +559,27 @@ public class IsoMapStage extends PApplet {
             NumOfRoutes = mRoutes.length;
             System.out.println("Load routes done\nTotal Routes: " + NumOfRoutes);
             RouteCount = new int[NumOfRoutes];
-            br.close();
-            in.close();
-            ifstream.close();
+            //br.close();
+            //in.close();
+            //ifstream.close();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
     }
 
     public void loadStations() {
-        String line = null;
+        //String line = null;
         try {
             mStations = new Station[NumOfStations];
-            ifstream = new FileInputStream(Stationinfofilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            int total = 0;
-            while ((line = br.readLine()) != null) {
-                String[] split = line.split(";"); // 0: station id; 1: route_id 2: name 3: lat 4: lon
+            //ifstream = new FileInputStream(Stationinfofilename);
+            //in = new DataInputStream(ifstream);
+            //br = new BufferedReader(new InputStreamReader(in));
+            String[] lines = loadStrings(Stationinfofilename);
+            int total = lines.length;
+            
+            //while ((line = br.readLine()) != null) {
+            for (int kk = 0; kk<total; ++kk) {
+                String[] split = lines[kk].split(";"); // 0: station id; 1: route_id 2: name 3: lat 4: lon
                 int stationId = Integer.parseInt(split[0]);
                 if (SelectedNode < 0) SelectedNode = stationId;
                 if (mStations[stationId] != null) throw new Exception();
@@ -587,10 +587,10 @@ public class IsoMapStage extends PApplet {
                 String name = split[2].substring(1, split[2].length()-1);
                 float lat = Float.parseFloat(split[3]);
                 float lon = Float.parseFloat(split[4]);
-                
                 // Read second line
-                line = br.readLine(); if (line == null) throw new Exception();
-                split = line.split(";");
+                //line = br.readLine(); if (line == null) throw new Exception();
+                ++kk;
+                split = lines[kk].split(";");
                 int len = split.length;
                 ArrayList<String> al = new ArrayList<String>(len);
                 for (int i=0; i<len; i+=2) {
@@ -610,22 +610,26 @@ public class IsoMapStage extends PApplet {
                     mStations[stationId].distance[cnt] = dist;
                     ++cnt;
                 }
-                ++total;
+                //++total;
             }
             System.out.println("Total Stations: " + total);
-            br.close();
-            in.close();
-            ifstream.close();
+            //br.close();
+            //in.close();
+            //ifstream.close();
             
             // Load bfs distance
             MaxDistance = new int[NumOfStations];
-            ifstream = new FileInputStream(Bfsinfofilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            while ((line = br.readLine()) != null) {
-                int stationid = Integer.parseInt(line);
-                line = br.readLine(); if (line == null) break;
-                String[] split = line.split(";");
+            //ifstream = new FileInputStream(Bfsinfofilename);
+            //in = new DataInputStream(ifstream);
+            //br = new BufferedReader(new InputStreamReader(in));
+            //while ((line = br.readLine()) != null) {
+            lines = loadStrings(Bfsinfofilename);
+            total = lines.length;
+            for (int kk=0; kk<total; ++kk) {
+                int stationid = Integer.parseInt(lines[kk]);
+                //line = br.readLine(); if (line == null) break;
+                ++kk;
+                String[] split = lines[kk].split(";");
                 int len = split.length;
                 for (int i=0; i<len; i+=2) {
                     if (split[i] == null) break;
@@ -636,21 +640,25 @@ public class IsoMapStage extends PApplet {
                 }
             }
             System.out.println("BFS distance done");
-            br.close();
-            in.close();
-            ifstream.close();
+            //br.close();
+            //in.close();
+            //ifstream.close();
             
             // Load SSSP
-            ifstream = new FileInputStream(SSSPfilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            
-            line = br.readLine();
-            while (true) {
-                if (line == null) break;
-                int sid = Integer.parseInt(line);
-                while ((line = br.readLine()) != null) {
-                    String[] split = line.split(";");
+            //ifstream = new FileInputStream(SSSPfilename);
+            //in = new DataInputStream(ifstream);
+            //br = new BufferedReader(new InputStreamReader(in));
+            lines = loadStrings(SSSPfilename);
+            //line = br.readLine();
+            //while (true) {
+            total = lines.length;
+            for (int kk=0; kk<total;) {
+                //if (line == null) break;
+                int sid = Integer.parseInt(lines[kk]);
+                //while ((line = br.readLine()) != null) {
+                ++kk;
+                while (kk < total) {
+                    String[] split = lines[kk].split(";");
                     int len = split.length;
                     if (len < 2) break;
                     int toid = Integer.parseInt(split[0]); // Get the destination
@@ -664,13 +672,14 @@ public class IsoMapStage extends PApplet {
                     for (int i=len-1; i>=0; --i) {
                         mStations[sid].sssp[toid][len-1-i] = Integer.parseInt(split[i]);
                     }
+                    ++kk;
                 }
             }
 
             System.out.println("SSSP done");
-            br.close();
-            in.close();
-            ifstream.close();
+            //br.close();
+            //in.close();
+            //ifstream.close();
             
             initAngleRange();
             // Load bfs positions
@@ -690,7 +699,7 @@ public class IsoMapStage extends PApplet {
             System.out.println("BFS positions done");
             
         } catch (Exception e) {
-            System.err.println(e.toString() + "\n" + line);
+            System.err.println(e.toString());
         }
     }
 

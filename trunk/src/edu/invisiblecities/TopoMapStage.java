@@ -124,6 +124,7 @@ public class TopoMapStage extends PApplet {
     @Override
     public void draw() {
         background(255);
+        //background(offset);
         image(MapImage, 0, 0);
         
         addTrains();
@@ -160,6 +161,7 @@ public class TopoMapStage extends PApplet {
         text("Name: " + stop.name, popupLeft + 5, popupTop + 20);
     }
     
+    public final static int offset = 0;
     public void drawLayout() {
         stroke(0);
         fill(0);
@@ -180,16 +182,32 @@ public class TopoMapStage extends PApplet {
     public void drawTrains(int cnt) {
         for (int i=0; i<NumOfRoutes; ++i) {
             fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
+            stroke(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue, 100);
             Trip pointer = mListHeader[i].nexttrip;
             TripsCounter[i] = 0;
-            while (pointer != null) {
-                if (displayCheckBoxes[i].isChecked) {
+            float strokeWeight = 0.5f;
+            if (displayCheckBoxes[i].isChecked) {
+                Trip rec = pointer;
+                while (pointer != null) {
                     pointer.draw(cnt);
+                    strokeWeight += 0.05f;
+                    ++TripsCounter[i];
+                    pointer = pointer.nexttrip;
                 }
-                ++TripsCounter[i];
-                pointer = pointer.nexttrip;
+                //if (rec != null)
+                //    drawLine(strokeWeight, rec);
             }
         } 
+    }
+    
+    public void drawLine(float strokeWeight, Trip rec) {
+        strokeWeight(strokeWeight);
+        int length = rec.stepLength;
+        float[] x = rec.screenX;
+        float[] y = rec.screenY;
+        for (int i=1; i<length; ++i) {
+            line(x[i-1], y[i-1], x[i], y[i]);
+        }
     }
     
     public boolean isInsideMap() {
@@ -287,8 +305,11 @@ public class TopoMapStage extends PApplet {
         public Trip nexttrip;
         public int rid;
         public String tripid;
-
-        public Trip(String tid, int rd, float[] ax, float[] ay, int col, float[] dia) {
+        public int length;
+        public int starttime;
+        public int endtime;
+        
+        public Trip(String tid, int rd, float[] ax, float[] ay, int col, float[] dia, int st) {
             tripid = tid;
             rid = rd;
             color = col;
@@ -297,12 +318,32 @@ public class TopoMapStage extends PApplet {
             stepLength = ax.length;
             stepCount = 0;
             diameter = dia;
+            starttime = st;
+            endtime = st + stepLength;
             //tail = new int[TripTailLength];
             //System.out.println("Add trip " + tripid + " start x " + sx + " y " + sy + " dur " + dur);
         }
         
         public Trip() {
             pretrip = nexttrip = null;
+        }
+        
+        public void drawLine(float strokeWeight) {
+            if (endtime < mTimer) {
+                if (pretrip != null) {
+                    pretrip.nexttrip = nexttrip;
+                }
+                if (nexttrip != null) {
+                    nexttrip.pretrip = pretrip;
+                }
+                nexttrip = pretrip = null;
+                return;
+            }
+            stroke(color, 10);
+            strokeWeight(strokeWeight);
+            for (int i=1; i<stepLength; ++i) {
+                line(screenX[i-1], screenY[i-1], screenX[i], screenY[i]);
+            }
         }
         
         public void draw(int cnt) {
@@ -571,7 +612,7 @@ public class TopoMapStage extends PApplet {
                     sy[i] = Float.valueOf(ay.get(i));
                     sd[i] = Float.valueOf(ad.get(i));
                 }
-                Trip trip = new Trip(tripid, rid, sx, sy, color, sd);
+                Trip trip = new Trip(tripid, rid, sx, sy, color, sd, mtimer);
                 if (mTrips[mtimer] == null) {
                     mTrips[mtimer] = new ArrayList<Trip>();
                 }
