@@ -1,17 +1,18 @@
 package edu.invisiblecities.data;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 
 public class Model {
 	// Connection
@@ -161,45 +162,39 @@ public class Model {
 		return routes.getRoute(stop_sequence, id);
 	}
 
+	public static FileInputStream ifstream;
+	public static DataInputStream in;
+	public static BufferedReader br;
+
 	public void loadTextRoutes() {
 		String dir = Constants.dirProcessing;
 
 		try {
-			ArrayList<String> lines = new ArrayList<String>();
-			Scanner scanner;
-			scanner = new Scanner(new FileInputStream("routes.csv"));
 
-			while (scanner.hasNextLine()) {
-				lines.add(scanner.nextLine());
-			}
-			scanner.close();
-
-			for (int i = 0; i < lines.size(); i++) {
-				String values[] = lines.get(i).split(";");
-				Route r = new Route("0", values[2], values[5]);
+			ifstream = new FileInputStream("routes.csv");
+			in = new DataInputStream(ifstream);
+			br = new BufferedReader(new InputStreamReader(in));
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] split = line.split(";");
+				Route r = new Route(split[0], split[2], split[5]);
 				getRoutes().add(r);
 			}
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void loadTextStations() {
-		String dir = Constants.dirProcessing;
 
 		try {
-			ArrayList<String> lines = new ArrayList<String>();
-			Scanner scanner;
+			ifstream = new FileInputStream("stations.txt");
+			in = new DataInputStream(ifstream);
+			br = new BufferedReader(new InputStreamReader(in));
 
-			scanner = new Scanner(new FileInputStream("stations.txt"));
-
-			while (scanner.hasNextLine()) {
-				lines.add(scanner.nextLine());
-			}
-			scanner.close();
-
-			for (int i = 0; i < lines.size(); i++) {
-				String values[] = lines.get(i).split(",");
+			String line;
+			while ((line = br.readLine()) != null) {
+				String values[] = line.split(",");
 				boolean contains = false;
 				for (Station st : getStations()) {
 					if (st.station_name.equals(values[0]))
@@ -219,7 +214,7 @@ public class Model {
 					getStations().add(st);
 				}
 			}
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
