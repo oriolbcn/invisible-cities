@@ -117,14 +117,21 @@ public class Splash extends PApplet implements FilterListener {
     
     public static boolean[] DisplayRoutes;
     
+    public static boolean isDisplayed = true;
+    
+    public static void setHide(boolean hide) {
+        isDisplayed = !hide;
+    }
+        
     @Override
     public void draw() {
-        background(255);
-        image(pg, 0, 0);
-        text(mTimer, 20, 80);
+        if (isDisplayed) {
+            background(255);
+            image(pg, 0, 0);
+            text(mTimer, 20, 80);
+        }
         if (ICities.IsPlaying) {
             if (mTimer == TotalTimeStamps) {
-                IsPlaying = false;
                 mTimer = 0;
             }
             if (mDots[mTimer] != null) {
@@ -145,24 +152,25 @@ public class Splash extends PApplet implements FilterListener {
             minute = (showTime % 3600) / 60;
             ++mTimer;
         }
-        noStroke();
-        for (int i=0; i<NumOfRoutes; ++i) {
-            fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
-            Dot pointer = mListHeader[i].nextdot;
-            float fvalue = 0.f;
-            while (pointer != null) {
-                /*if (pointer.delay > fvalue) {
-                    Dot next = pointer.nextdot;
-                    pointer.finish();
-                    pointer = next;
-                    continue;
-                }*/
-                pointer.draw();
-                pointer = pointer.nextdot;
+        if (isDisplayed) {
+            noStroke();
+            for (int i=0; i<NumOfRoutes; ++i) {
+                fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
+                Dot pointer = mListHeader[i].nextdot;
+                float fvalue = 0.f;
+                while (pointer != null) {
+                    /*if (pointer.delay > fvalue) {
+                        Dot next = pointer.nextdot;
+                        pointer.finish();
+                        pointer = next;
+                        continue;
+                    }*/
+                    pointer.draw();
+                    pointer = pointer.nextdot;
+                }
             }
-        }
-        
-        drawLayout();
+            drawLayout();
+        }   
     }
     public static final int HalfTotalTimeStamps = TotalTimeStamps / 2;
     
