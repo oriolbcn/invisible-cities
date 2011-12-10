@@ -10,7 +10,7 @@ import edu.invisiblecities.charts.HeatMaps;
 
 public class Dashboard extends JFrame {
 
-	FilterPanel filterPanel;
+	static FilterPanel filterPanel;
 
 	public Dashboard() {
 		this.getContentPane().setLayout(new GridBagLayout());
@@ -43,7 +43,7 @@ public class Dashboard extends JFrame {
 		filterPanel.register(fl);
 	}
 
-	public boolean[] getSelectedRoutes() {
+	public static boolean[] getSelectedRoutes() {
 		return filterPanel.getSelectedRoutes();
 	}
 }
