@@ -1,13 +1,17 @@
 package edu.invisiblecities.data;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Model {
 	// Connection
@@ -156,4 +160,68 @@ public class Model {
 	public Route getRoute(List<Integer> stop_sequence, String id) {
 		return routes.getRoute(stop_sequence, id);
 	}
+
+	public void loadTextRoutes() {
+		String dir = Constants.dirProcessing;
+
+		try {
+			ArrayList<String> lines = new ArrayList<String>();
+			Scanner scanner;
+			scanner = new Scanner(new FileInputStream(dir + "routes.csv"));
+
+			while (scanner.hasNextLine()) {
+				lines.add(scanner.nextLine());
+			}
+			scanner.close();
+
+			for (int i = 0; i < lines.size(); i++) {
+				String values[] = lines.get(i).split(";");
+				Route r = new Route("0", values[2], values[6]);
+				getRoutes().add(r);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void loadTextStations() {
+		String dir = Constants.dirProcessing;
+
+		try {
+			ArrayList<String> lines = new ArrayList<String>();
+			Scanner scanner;
+
+			scanner = new Scanner(new FileInputStream(dir + "stations.txt"));
+
+			while (scanner.hasNextLine()) {
+				lines.add(scanner.nextLine());
+			}
+			scanner.close();
+
+			for (int i = 0; i < lines.size(); i++) {
+				String values[] = lines.get(i).split(",");
+				boolean contains = false;
+				for (Station st : getStations()) {
+					if (st.station_name.equals(values[0]))
+						contains = true;
+				}
+				if (!contains) {
+					Station st = new Station(0, values[0], new Route("0",
+							"name", values[1]));
+					for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+						st.frequencies[j] = Integer.parseInt(values[2 + j]
+								.trim());
+					}
+					for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+						st.delays[j] = Integer.parseInt(values[2
+								+ Constants.NUM_TIME_INTERVALS + j].trim());
+					}
+					getStations().add(st);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

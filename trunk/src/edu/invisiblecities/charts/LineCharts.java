@@ -40,48 +40,14 @@ public class LineCharts extends PApplet {
 		size(1900, 1000);
 		mod = new Model();
 
-		String dir = Constants.dirProcessing;
-
-		String lines[] = loadStrings(dir + "stations.txt");
-		for (int i = 0; i < lines.length; i++) {
-			String values[] = split(lines[i], ',');
-			boolean contains = false;
-			for (Station st : mod.getStations()) {
-				if (st.station_name.equals(values[0]))
-					contains = true;
-			}
-			if (!contains) {
-				Station st = new Station(0, values[0], new Route("0", "name",
-						values[1]));
-				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-					st.frequencies[j] = Integer.parseInt(values[2 + j].trim());
-				}
-				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-					st.delays[j] = Integer.parseInt(values[2
-							+ Constants.NUM_TIME_INTERVALS + j].trim());
-				}
-				mod.getStations().add(st);
-			}
-		}
+		mod.loadTextStations();
+		mod.loadTextRoutes();
 		Collections.sort(mod.getStations(), new Comparator<Station>() {
 			public int compare(Station o1, Station o2) {
 				return o1.route.hex_color.compareTo(o2.route.hex_color);
 			}
 		});
 
-		String routesLines[] = loadStrings(dir + "routes.txt");
-		for (int i = 0; i < routesLines.length; i++) {
-			String values[] = split(routesLines[i], ',');
-			Route r = new Route("0", values[0], values[1]);
-			for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-				r.frequencies[j] = Integer.parseInt(values[2 + j].trim());
-			}
-			for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-				r.delays[j] = Integer.parseInt(values[2
-						+ Constants.NUM_TIME_INTERVALS + j].trim());
-			}
-			mod.getRoutes().add(r);
-		}
 		Collections.sort(mod.getRoutes(), new Comparator<Route>() {
 			public int compare(Route o1, Route o2) {
 				return o1.hex_color.compareTo(o2.hex_color);
