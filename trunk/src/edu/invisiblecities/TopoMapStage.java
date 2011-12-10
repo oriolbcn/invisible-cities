@@ -96,7 +96,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			int showTime = ICities.timer * Interval;
 			hour = showTime / 3600;
 			minute = (showTime % 3600) / 60;
-			++ICities.timer;
 		}
 	}
 
