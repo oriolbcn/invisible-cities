@@ -10,11 +10,13 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
 
-public class FilterPanel extends JPanel {
+public class FilterPanel extends JPanel implements ChangeListener {
 
 	SliderWithLabel freqsSlider;
 	JCheckBox routesCBs[];
@@ -43,6 +45,7 @@ public class FilterPanel extends JPanel {
 			JCheckBox ch = new JCheckBox(r.route_name, true);
 			Color color = getColor(r.hex_color);
 			ch.setForeground(color);
+			ch.addChangeListener(this);
 			this.add(
 					ch,
 					createConstraints(GridBagConstraints.HORIZONTAL, 0, i + 1,
@@ -60,12 +63,6 @@ public class FilterPanel extends JPanel {
 		// delays
 		// ridership ?
 		// day
-	}
-
-	public void notifyChange() {
-		for (FilterListener fl : listeners) {
-			fl.filterChanged();
-		}
 	}
 
 	// getMaxFreq
@@ -105,5 +102,12 @@ public class FilterPanel extends JPanel {
 
 	public void register(FilterListener fl) {
 		listeners.add(fl);
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		for (FilterListener fl : listeners) {
+			fl.filterChanged();
+		}
 	}
 }

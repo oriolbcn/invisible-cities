@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Map;
 
 import processing.core.PApplet;
+import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.dashboard.ICities;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
 import edu.invisiblecities.data.Station;
 
-public class HeatMaps extends PApplet {
+public class HeatMaps extends PApplet implements FilterListener {
 
 	private static final long serialVersionUID = 1L;
 
@@ -79,8 +80,6 @@ public class HeatMaps extends PApplet {
 		size(w, h);
 		mod = new Model();
 
-		String dir = "";// Constants.dirProcessing;
-
 		mod.loadTextStations();
 		mod.loadTextRoutes();
 		Collections.sort(mod.getStations(), new Comparator<Station>() {
@@ -102,6 +101,12 @@ public class HeatMaps extends PApplet {
 		hm2 = new Heatmap(140, 160 + chartHeight + 40, createRows(false, true),
 				createAggregatedRows(false, true), "Delays (in seconds)", 140,
 				80, "seconds");
+
+		ICities.dashboard.registerAsFilterListener(this);
+	}
+
+	public void filterChanged() {
+		println()
 	}
 
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
