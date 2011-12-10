@@ -61,6 +61,10 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 	}
 
+	public void selectionChanged(String stationId) {
+		// ...
+	}
+
 	public HeatMaps(int rectWidth, int nRects, int nRectsExpanded, int width,
 			int height, boolean timeLine) {
 		this.rectWidth = rectWidth;
@@ -110,6 +114,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 				80, "seconds");
 
 		Dashboard.registerAsFilterListener(this);
+		// TODO: Dashboard.registerAsSelectionListener(this);
 	}
 
 	public void filterChanged() {
