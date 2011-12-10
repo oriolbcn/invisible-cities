@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
@@ -29,10 +28,8 @@ public class DoubleSlider extends JPanel {
 
 	/** Size of the (square) buttons */
 	private static final int buttonSize = 16;
-	private static final int labelWidth = 35;
 
 	ArrowButton minButton, maxButton;
-	JLabel lMin, lMax;
 
 	/** Component for the track between the two buttons */
 	JComponent track;
@@ -116,12 +113,7 @@ public class DoubleSlider extends JPanel {
 
 		track = new Tracker();
 
-		lMin = new JLabel("Hello");
-		lMax = new JLabel("Bye");
-
 		add(track);
-		add(lMin);
-		add(lMax);
 		add(minButton);
 		add(maxButton);
 
@@ -735,7 +727,7 @@ public class DoubleSlider extends JPanel {
 	 */
 	private int getTrackSize() {
 		return (orientation == HORIZONTAL ? getWidth() : getHeight())
-				- buttonSize * 2 - labelWidth * 2;
+				- buttonSize * 2;
 	}
 
 	/** Convert a pixel difference to a value difference */
@@ -833,18 +825,14 @@ public class DoubleSlider extends JPanel {
 
 		switch (orientation) {
 		case HORIZONTAL:
-			lMin.setBounds(minOffset, 0, labelWidth, buttonSize);
 
-			minButton.setBounds(minOffset + labelWidth, 0, buttonSize,
-					buttonSize);
+			minButton.setBounds(minOffset, 0, buttonSize, buttonSize);
 
-			track.setBounds(minOffset + buttonSize + labelWidth, 0, width
-					- maxOffset - buttonSize * 2 - minOffset, buttonSize);
+			track.setBounds(minOffset + buttonSize, 0, width - maxOffset
+					- buttonSize * 2 - minOffset, buttonSize);
 
 			maxButton.setBounds(width - maxOffset - buttonSize, 0, buttonSize,
 					buttonSize);
-
-			lMax.setBounds(width, 0, labelWidth, buttonSize);
 			break;
 
 		case VERTICAL:
