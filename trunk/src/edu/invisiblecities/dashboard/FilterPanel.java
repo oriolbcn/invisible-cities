@@ -123,7 +123,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		GridBagConstraints c3 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 2, 0, -1, -1);
 		c3.insets = new Insets(0, 20, 0, 0);
-		c3.gridheight = 3;
+		c3.gridheight = 5;
 		this.add(dayCombo, c3);
 		// play and stop
 		// lines or dots
