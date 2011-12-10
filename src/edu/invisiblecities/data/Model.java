@@ -31,6 +31,7 @@ public class Model {
 
 	// Data
 	private Routes routes;
+	private Routes routesLong;
 	private Stations stations;
 	private ParentStations parentStations;
 	private Trips trips;
@@ -177,6 +178,24 @@ public class Model {
 			while ((line = br.readLine()) != null) {
 				String[] split = line.split(";");
 				Route r = new Route(split[0], split[2], split[5]);
+				getRoutes().add(r);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void loadTextRoutesLong() {
+
+		try {
+
+			ifstream = new FileInputStream("bin/routes.txt");
+			in = new DataInputStream(ifstream);
+			br = new BufferedReader(new InputStreamReader(in));
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] split = line.split(",");
+				Route r = new Route("0", split[0], split[1]);
 				getRoutes().add(r);
 			}
 		} catch (IOException e) {
