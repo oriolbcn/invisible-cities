@@ -30,7 +30,6 @@ public class Dashboard extends JFrame implements ActionListener {
 	static IsoMapStage isoMap;
 	static TopoMapStage topoMap;
 	static JButton playButton;
-	static JButton pauseButton;
 	static JTabbedPane tabbedPane = new JTabbedPane();
 
 	JComboBox mapCombo;
@@ -41,6 +40,7 @@ public class Dashboard extends JFrame implements ActionListener {
 	public Dashboard() {
 
 		mod = new Model();
+		mod.day = "2011-11-26";
 		mod.loadText();
 
 		this.getContentPane().setLayout(new GridBagLayout());
@@ -52,43 +52,45 @@ public class Dashboard extends JFrame implements ActionListener {
 		Color bg = new Color(255, 255, 255);
 		this.getContentPane().setBackground(bg);
 		filterPanel = new FilterPanel();
+		filterPanel = new FilterPanel();
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
 		c1.gridy = 1;
+		c1.gridheight = 3;
 		filterPanel.setBackground(bg);
 		this.getContentPane().add(filterPanel, c1);
 
-		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 600, 600, true);
+		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 670, 600, true);
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 1;
 		c2.gridy = 0;
 		c2.gridwidth = 2;
 		this.getContentPane().add(heatMaps, c2);
 		heatMaps.init();
-		
+
 		topoMap = new TopoMapStage();
-        topoMap.setHide(false);
-        topoMap.setVisible(true);
-        tabbedPane.addTab("TopoMap", topoMap);
-        topoMap.init();
-		
-        isoMap = new IsoMapStage();
-        isoMap.setHide(true);
-        isoMap.setVisible(false);
-        tabbedPane.addTab("IsoMap", isoMap);
-        isoMap.init();
-        
+		topoMap.setHide(false);
+		topoMap.setVisible(true);
+		tabbedPane.addTab("TopoMap", topoMap);
+		topoMap.init();
+
+		isoMap = new IsoMapStage();
+		isoMap.setHide(true);
+		isoMap.setVisible(false);
+		tabbedPane.addTab("IsoMap", isoMap);
+		isoMap.init();
+
 		splash = new Splash();
 		splash.setHide(true);
-        splash.setVisible(false);
-        tabbedPane.addTab("Splash", splash);
-        splash.init();
-		
-        GridBagConstraints c3 = new GridBagConstraints();
-        c3.gridx = 0;
-        c3.gridy = 0;
-        this.getContentPane().add(tabbedPane);
-		
+		splash.setVisible(false);
+		tabbedPane.addTab("Splash", splash);
+		splash.init();
+
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridx = 0;
+		c3.gridy = 0;
+		this.getContentPane().add(tabbedPane, c3);
+
 		// maps combo
 		JLabel label1 = new JLabel("Map Vis:");
 		GridBagConstraints c7 = new GridBagConstraints();
@@ -104,35 +106,43 @@ public class Dashboard extends JFrame implements ActionListener {
 		c6.gridy = 1;
 		this.getContentPane().add(mapCombo, c6);
 
-		ImageIcon playIcon = new ImageIcon("img/play.png");
-		ImageIcon pauseIcon = new ImageIcon("img/pause.png");
-		playButton = new JButton(playIcon);
+		final ImageIcon playIcon = new ImageIcon("img/play.png");
+		final ImageIcon pauseIcon = new ImageIcon("img/pause.png");
+		playButton = new JButton(pauseIcon);
 		playButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				ICities.IsPlaying = true;
+				ICities.IsPlaying = !ICities.IsPlaying;
+				if (!ICities.IsPlaying) {
+					playButton.setIcon(playIcon);
+				} else {
+					playButton.setIcon(pauseIcon);
+				}
 			}
 
 		});
 		GridBagConstraints c4 = new GridBagConstraints();
 		c4.gridx = 3;
 		c4.gridy = 1;
+		c4.gridwidth = 2;
 		this.getContentPane().add(playButton, c4);
 
-		pauseButton = new JButton(pauseIcon);
-		pauseButton.addActionListener(new ActionListener() {
+		final JFrame parent = this;
+		JButton buttLineCharts = new JButton("Details Charts");
+		buttLineCharts.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				ICities.IsPlaying = false;
+				LineChartsDialog d = new LineChartsDialog(parent);
+				d.setVisible(true);
 			}
 
 		});
-		GridBagConstraints c5 = new GridBagConstraints();
-		c5.gridx = 4;
-		c5.gridy = 1;
-		this.getContentPane().add(pauseButton, c5);
+		GridBagConstraints c8 = new GridBagConstraints();
+		c8.gridx = 2;
+		c8.gridy = 3;
+		this.getContentPane().add(buttLineCharts, c8);
 
 	}
 
@@ -144,27 +154,27 @@ public class Dashboard extends JFrame implements ActionListener {
 		return filterPanel.getSelectedRoutes();
 	}
 
-	public int getMaxFrequency() {
+	public static int getMaxFrequency() {
 		return filterPanel.getMaxFrequency();
 	}
 
-	public int getMinFrequency() {
+	public static int getMinFrequency() {
 		return filterPanel.getMinFrequency();
 	}
 
-	public int getMaxDelay() {
+	public static int getMaxDelay() {
 		return filterPanel.getMaxDelay();
 	}
 
-	public int getMinDelay() {
+	public static int getMinDelay() {
 		return filterPanel.getMinDelay();
 	}
 
-	public int getMaxRidership() {
+	public static int getMaxRidership() {
 		return filterPanel.getMaxRidership();
 	}
 
-	public int getMinRidership() {
+	public static int getMinRidership() {
 		return filterPanel.getMinRidership();
 	}
 
