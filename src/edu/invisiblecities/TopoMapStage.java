@@ -138,6 +138,9 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	    if (ICities.IsPlaying) {
 	        if (mTimer >= TotalTimeStamps) {
 	            mTimer = 0;
+	            for (int i=0; i<NumOfRoutes; ++i) {
+	                mListHeader[i] = new Trip();
+	            }
 	        }
 	        if (isDisplayed) {
 	            background(255);
@@ -176,6 +179,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		rect(popupLeft, popupTop, PopupWindowWidth, PopupWindowHeight);
 		fill(0);
 		text("Name: " + stop.name, popupLeft + 5, popupTop + 20);
+		text("Delay: " + stop.delay[mTimer / 120], popupLeft + 5, popupTop + 40);
 	}
 
 	public final static int offset = 0;
@@ -263,6 +267,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		public Route route;
 		public int color;
 		public int acolor;
+		public int[] delay;
 
 		public Stop(int si, float x, float y, String n) {
 			stopId = si;
@@ -270,7 +275,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			screenX = xy[0];
 			screenY = xy[1];
 			name = n;
-			diameter = new float[HoursPerDay + 1];
 		}
 
 		public void draw() {
@@ -621,11 +625,15 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				int stopid = stop2int.get(split[0]).intValue();
 				int size = split.length - 1;
 				float[] diameters = new float[HoursPerDay + 1];
+				int[]   delay = new int[HoursPerDay + 1];
 				for (int i = 1; i < size; ++i) {
-					diameters[i + 4] = Integer.parseInt(split[i]) * 10.f / 150;
+				    int del = Integer.parseInt(split[i]);
+					diameters[i + 4] = del * 10.f / 150;
+					delay[i + 4] = del;
 				}
 				diameters[HoursPerDay] = diameters[0];
 				mStops[stopid].diameter = diameters;
+				mStops[stopid].delay = delay;
 			}
 
 			br.close();

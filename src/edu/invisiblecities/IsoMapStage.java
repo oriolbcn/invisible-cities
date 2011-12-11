@@ -216,6 +216,8 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	        drawHover();
 	        drawIntent();
 	        drawStations();
+	        
+	        text("FPS: " + frameRate, 20, 20);
 	    }
 	}
 
