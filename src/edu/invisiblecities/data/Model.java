@@ -48,7 +48,6 @@ public class Model {
 			timepoints[i] = new LinkedList<Timepoint>();
 		}
 		this.limit = Constants.limit;
-		this.day = Constants.day;
 
 	}
 
@@ -58,6 +57,20 @@ public class Model {
 	}
 
 	public void loadText() {
+		loadTextRoutes();
+		loadTextStations();
+	}
+
+	public void reloadText() {
+		routes = new Routes(this);
+		stations = new Stations(this);
+		parentStations = new ParentStations(this);
+		trips = new Trips(this);
+		timepoints = (List<Timepoint>[]) new List[Constants.NUM_TIMEPOINTS];
+		for (int i = 0; i < Constants.NUM_TIMEPOINTS; i++) {
+			timepoints[i] = new LinkedList<Timepoint>();
+		}
+
 		loadTextRoutes();
 		loadTextStations();
 	}

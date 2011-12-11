@@ -8,52 +8,55 @@ import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SnapshotMaker {
+import edu.invisiblecities.dashboard.ICities;
 
-	static Model mod;
+public class SnapshotMaker {
 
 	public static void main(String[] args) {
 
-		mod = new Model();
-		mod.day = "2011-11-26";
-		mod.load();
-		Writer out = null;
+		for (String day : ICities.days) {
 
-		String dir = Constants.dir;
+			Model mod = new Model();
+			mod.day = day;
+			mod.load();
+			Writer out = null;
 
-		try {
-			(new File(dir + mod.day)).mkdirs(); // Create Directory
+			String dir = Constants.dir;
 
-			// Stations
-			out = openWriter(
-					dir + mod.day + System.getProperty("file.separator"),
-					"stations_freqs_delays.csv");
+			try {
+				(new File(dir + mod.day)).mkdirs(); // Create Directory
 
-			List<Station> stations = mod.getStations();
-			List<String> added = new LinkedList<String>();
-			for (Station s : stations) {
-				if (!added.contains(s.station_name)) {
-					out.write(s.station_id + "," + s.station_name + ","
-							+ s.route.route_id + ",");
-					added.add(s.station_name);
-					for (int i = 0; i < s.frequencies.length; i++) {
-						out.write(s.frequencies[i] + " , ");
-					}
-					for (int i = 0; i < s.delays.length; i++) {
-						if (i == s.delays.length - 1) {
-							out.write(String.valueOf(s.delays[i]));
-						} else {
-							out.write(s.delays[i] + " , ");
+				// Stations
+				out = openWriter(
+						dir + mod.day + System.getProperty("file.separator"),
+						"stations_freqs_delays.csv");
+
+				List<Station> stations = mod.getStations();
+				List<String> added = new LinkedList<String>();
+				for (Station s : stations) {
+					if (!added.contains(s.station_name)) {
+						out.write(s.station_id + "," + s.station_name + ","
+								+ s.route.route_id + ",");
+						added.add(s.station_name);
+						for (int i = 0; i < s.frequencies.length; i++) {
+							out.write(s.frequencies[i] + " , ");
 						}
+						for (int i = 0; i < s.delays.length; i++) {
+							if (i == s.delays.length - 1) {
+								out.write(String.valueOf(s.delays[i]));
+							} else {
+								out.write(s.delays[i] + " , ");
+							}
+						}
+						out.write(System.getProperties().getProperty(
+								"line.separator"));
 					}
-					out.write(System.getProperties().getProperty(
-							"line.separator"));
 				}
-			}
-			out.close();
+				out.close();
 
-		} catch (Exception e) {
-			e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
