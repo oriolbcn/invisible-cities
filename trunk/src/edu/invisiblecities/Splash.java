@@ -46,23 +46,36 @@ public class Splash extends PApplet implements FilterListener {
     public static int           mTimer = 0;
     
     
+    public Splash() {
+        
+        
+        loadRoutes();
+        
+        loadSplash();
+    }
+    
     @Override
     public void setup() {
         size(CanvasWidth, CanvasHeight);
-        frameRate(FrameRate);
         Ani.init(this);
+        frameRate(FrameRate);
+        
         smooth();
         noStroke();
-        loadRoutes();
-        DisplayRoutes = Dashboard.getSelectedRoutes();
-        loadSplash();
+        
+        //DisplayRoutes = Dashboard.getSelectedRoutes();
+        DisplayRoutes = new boolean[NumOfRoutes];
+        for (int i=0; i<NumOfRoutes; ++i) {
+            DisplayRoutes[i] = true;
+        }
+        
         initUI();
         clockImg = loadImage(Clockimgfilename);
         pg = createGraphics(PictureWidth, PictureHeight, P2D);
         pg.beginDraw();
         pg.image(clockImg, 0, 0);
         pg.endDraw();
-        Dashboard.registerAsFilterListener(this);
+        //Dashboard.registerAsFilterListener(this);
     }
     public boolean pause = false;
     
@@ -246,8 +259,19 @@ public class Splash extends PApplet implements FilterListener {
         }
         
         public void setAni() {
-            Ani.to(this, duration, "x", endX, Easing, "onEnd:finish");
-            Ani.to(this, duration, "y", endY, Easing);
+            try {
+                Ani.to(this, 
+                    duration, 
+                    "x", 
+                    endX, 
+                    Easing, 
+                    "onEnd:finish");
+                Ani.to(this, 
+                    duration, 
+                    "y", 
+                    endY, 
+                    Easing);
+            } catch (Exception e) {}
         }
         
         public void draw() {

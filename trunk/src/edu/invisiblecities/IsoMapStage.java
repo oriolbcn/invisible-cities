@@ -48,6 +48,14 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	public static float[][] toPositions;
 	public static float[][] AngleRanges;
 
+	public IsoMapStage() {
+	    
+        
+        loadRoutes();
+
+        loadStations();
+	}
+	
 	public int getSelection() {
 		for (int i = 0; i < NumOfStations; ++i)
 			if (mStations[i] != null) {
@@ -84,15 +92,11 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	@Override
 	public void setup() {
 		size(CanvasWidth, CanvasHeight);
+		Ani.init(this);
 		smooth();
 		// textAlign(CENTER);
 		//strokeWeight(1);
-		Ani.init(this);
 		
-		loadRoutes();
-
-		loadStations();
-
 		initBackgroundCircle();
 
 		toPositions = new float[NumOfStations][2];
@@ -335,8 +339,20 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		}
 
 		public void setAni(float _x, float _y) {
-			Ani.to(this, Duration, "curX", _x, Easing);
-			Ani.to(this, Duration, "curY", _y, Easing);
+			try {
+			    Ani.to(this, 
+			        Duration, 
+			        "curX", 
+			        _x, 
+			        Easing);
+			    Ani.to(this, 
+			        Duration, 
+			        "curY", 
+			        _y, 
+			        Easing);
+			} catch (Exception e) {
+//			    System.out.println(e.to);
+			}
 		}
 
 		public void setAniWithCallback(float _x, float _y) {
