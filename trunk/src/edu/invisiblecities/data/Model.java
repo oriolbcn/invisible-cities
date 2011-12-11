@@ -175,13 +175,13 @@ public class Model {
 
 		try {
 
-			ifstream = new FileInputStream("bin/static/routes_simple.csv");
+			ifstream = new FileInputStream("bin/routes.csv");
 			in = new DataInputStream(ifstream);
 			br = new BufferedReader(new InputStreamReader(in));
 			String line;
 			while ((line = br.readLine()) != null) {
-				String[] split = line.split(",");
-				Route r = new Route(split[0], split[1], split[2]);
+				String[] split = line.split(";");
+				Route r = new Route(split[0], split[2], split[5]);
 				getRoutes().add(r);
 			}
 		} catch (IOException e) {

@@ -83,7 +83,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 	}
 
 	public void setup() {
-		size(w, h);
+		size(700, 600);
 		frameRate(ICities.frameRate);
 
 		hm1 = new Heatmap(140, 80, createRows(true, false),
