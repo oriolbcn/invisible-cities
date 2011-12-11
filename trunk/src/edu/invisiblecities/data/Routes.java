@@ -78,4 +78,12 @@ public class Routes {
 	public List<Route> getRoutes() {
 		return routes;
 	}
+
+	public Route getRoute(String r_id) {
+		for (Route r : routes) {
+			if (r.route_id.equals(r_id))
+				return r;
+		}
+		return null;
+	}
 }

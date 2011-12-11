@@ -624,6 +624,23 @@ public class DoubleSlider extends JPanel {
 		notifyListeners();
 	}
 
+	private void layoutAndnotifyLabelUpdate() {
+		layoutMyButtons();
+		if (trackingDrag) {
+			long timeNow = System.currentTimeMillis();
+			if ((timeNow - lastNotifyTime) >= notifyInterval)
+				lastNotifyTime = timeNow;
+			else
+				return;
+		}
+
+		Iterator itr = listeners.iterator();
+
+		while (itr.hasNext()) {
+			((DoubleSliderAdjustmentListener) itr.next()).updateLabels();
+		}
+	}
+
 	/** Coordinates of last mouse coordinates during a drag */
 	private int lastX, lastY;
 
@@ -673,7 +690,7 @@ public class DoubleSlider extends JPanel {
 				else
 					lastY = newY - offset;
 
-				layoutAndNotify();
+				layoutAndnotifyLabelUpdate();
 			}
 		}
 

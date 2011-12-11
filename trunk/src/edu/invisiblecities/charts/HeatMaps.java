@@ -1,7 +1,5 @@
 package edu.invisiblecities.charts;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,6 +57,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 		chartHeightExpanded = rectHeight * nRectsExpanded;
 		chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
 
+		mod = Dashboard.mod;
+
 	}
 
 	public void selectionChanged(String stationId) {
@@ -78,32 +78,13 @@ public class HeatMaps extends PApplet implements FilterListener {
 		chartHeight = rectHeight * nRects;
 		chartHeightExpanded = rectHeight * nRectsExpanded;
 		chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
+
+		mod = Dashboard.mod;
 	}
 
 	public void setup() {
 		size(w, h);
-		mod = new Model();
 		frameRate(ICities.frameRate);
-
-		mod.loadTextStations();
-		mod.loadTextRoutesLong();
-		Collections.sort(mod.getStations(), new Comparator<Station>() {
-			public int compare(Station o1, Station o2) {
-				return o1.route.hex_color.compareTo(o2.route.hex_color);
-			}
-		});
-
-		Collections.sort(mod.getRoutes(), new Comparator<Route>() {
-			public int compare(Route o1, Route o2) {
-				return o1.hex_color.compareTo(o2.hex_color);
-			}
-		});
-
-		Collections.sort(mod.getRoutesLong(), new Comparator<Route>() {
-			public int compare(Route o1, Route o2) {
-				return o1.hex_color.compareTo(o2.hex_color);
-			}
-		});
 
 		hm1 = new Heatmap(140, 80, createRows(true, false),
 				createAggregatedRows(true, false), "Frequencies", 140, 80,
@@ -124,67 +105,60 @@ public class HeatMaps extends PApplet implements FilterListener {
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
 
 		HeatMapRow[] rows = new HeatMapRow[mod.getStations().size()];
-		for (int i = 0; i < mod.getStations().size(); i++) {
-			Station st = mod.getStations().get(i);
-			HeatMapRow row = new HeatMapRow(st.station_name.substring(1,
-					st.station_name.length() - 1),
-					st.route.hex_color.substring(2));
-			row.values = new int[Constants.NUM_TIME_INTERVALS];
-			for (int j = 0; j < st.frequencies.length; j++) {
-				int val;
-				if (freq)
-					val = st.frequencies[j];
-				else if (del)
-					val = st.delays[j];
-				else
-					val = 0;
-				row.values[j] = val;
+		int index = 0;
+		for (int ri = 0; ri < mod.getRoutes().size(); ri++) {
+			Route r = mod.getRoutes().get(ri);
+			for (int i = 0; i < r.stations.size(); i++) {
+				Station st = mod.getStations().get(i);
+				HeatMapRow row = new HeatMapRow(st.station_name.substring(1,
+						st.station_name.length() - 1), st.route.hex_color);
+				row.values = new int[Constants.NUM_TIME_INTERVALS];
+				for (int j = 0; j < st.frequencies.length; j++) {
+					int val;
+					if (freq)
+						val = st.frequencies[j];
+					else if (del)
+						val = st.delays[j];
+					else
+						val = 0;
+					row.values[j] = val;
+				}
+				rows[index] = row;
+				index++;
 			}
-			rows[i] = row;
 		}
-
 		return rows;
 
 	}
 
 	public HeatMapRow[] createAggregatedRows(boolean freq, boolean del) {
 
-		HeatMapRow[] rows = new HeatMapRow[8];
-		int[] sum = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-		int[] n = new int[Constants.NUM_TIME_INTERVALS]; // aux var
+		HeatMapRow[] rows = new HeatMapRow[mod.getRoutes().size()];
+		int[] sum = new int[Constants.NUM_TIME_INTERVALS];
 
-		Route r = mod.getRoutesLong().get(0);
-		int index = 0;
-		for (int i = 0; i < mod.getRoutesLong().size();) {
+		for (int i = 0; i < mod.getRoutes().size(); i++) {
+			Route r = mod.getRoutes().get(i);
 			for (int j = 0; j < sum.length; j++) {
 				sum[j] = 0;
-				n[j] = 0;
 			}
-			String rName = r.route_name;
-			String rColor = r.hex_color;
-			while (i < mod.getRoutesLong().size() && r.route_name.equals(rName)) {
-				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+			for (int j = 0; j < r.stations.size(); j++) {
+				for (int k = 0; k < Constants.NUM_TIME_INTERVALS; k++) {
 					int val;
 					if (freq)
-						val = r.frequencies[j];
+						val = r.stations.get(j).frequencies[k];
 					else if (del)
-						val = r.delays[j];
+						val = r.stations.get(j).delays[k];
 					else
 						val = 0;
-					sum[j] += val;
-					n[j]++;
+					sum[k] += val;
 				}
-				i++;
-				if (i < mod.getRoutesLong().size())
-					r = mod.getRoutesLong().get(i);
 			}
-			HeatMapRow row = new HeatMapRow(rName, rColor.substring(2));
+			HeatMapRow row = new HeatMapRow(r.route_name, r.hex_color);
 			row.values = new int[Constants.NUM_TIME_INTERVALS];
 			for (int j = 0; j < sum.length; j++) {
-				row.values[j] = sum[j] / n[j];
+				row.values[j] = sum[j] / r.stations.size();
 			}
-			rows[index] = row;
-			index++;
+			rows[i] = row;
 		}
 
 		return rows;
@@ -194,7 +168,23 @@ public class HeatMaps extends PApplet implements FilterListener {
 	public void draw() {
 		background(255);
 		noStroke();
-		text(ICities.timer, 20, 20);
+
+		String ap = "am";
+		int hourinterval = 3600 / ICities.Interval;
+		int hour = ICities.timer / hourinterval;
+		int mins = (ICities.timer - hour * hourinterval)
+				/ (60 / ICities.Interval);
+		if (hour == 0)
+			hour = 12;
+		else if (hour >= 12) {
+			ap = "pm";
+			if (hour > 12)
+				hour -= 12;
+		}
+		String shour = hour < 10 ? "0" + hour : hour + "";
+		String smins = mins < 10 ? "0" + mins : mins + "";
+		textSize(16);
+		text("Time: " + shour + ":" + smins + ap, 20, 20);
 		if (hm1.visible) {
 			hm1.update();
 			hm1.display();
@@ -503,6 +493,9 @@ public class HeatMaps extends PApplet implements FilterListener {
 		public int getMaxValue(HeatMapRow[] rows) {
 			int max = 0;
 			for (int i = 0; i < rows.length; i++) {
+				if (i == 33) {
+					println(i + " - " + rows.length);
+				}
 				for (int j = 0; j < rows[i].values.length; j++) {
 					if (rows[i].values[j] > max) {
 						max = rows[i].values[j];
