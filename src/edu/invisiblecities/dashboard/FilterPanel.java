@@ -77,7 +77,8 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		Color bg = new Color(255, 255, 255);
 
 		// routes
-		for (int i = 0; i < 8; i++) {
+		int numOfRoutes = mod.getRoutes().size();
+		for (int i = 0; i < numOfRoutes; i++) {
 			Route r = mod.getRoutes().get(i);
 			JCheckBox ch = new JCheckBox(r.route_name, true);
 			Color color = getColor(r.hex_color);
@@ -85,7 +86,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 			ch.addChangeListener(this);
 			GridBagConstraints c = createConstraints(
 					GridBagConstraints.HORIZONTAL, 0, i + 1, -1, -1);
-			c.insets = new Insets(0, 0, 0, 30);
+			c.insets = new Insets(0, 0, 0, 20);
 			ch.setBackground(bg);
 			this.add(ch, c);
 			routesCBs[i] = ch;
@@ -100,7 +101,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		freqsSlider = new SliderWithLabel(0, maxFreq);
 		GridBagConstraints c = createConstraints(GridBagConstraints.HORIZONTAL,
 				1, 1, -1, -1);
-		c.insets = new Insets(0, 0, 20, 0);
+		c.insets = new Insets(0, 0, 0, 0);
 		freqsSlider.setBackground(bg);
 		this.add(freqsSlider, c);
 		// delays
@@ -113,7 +114,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		delaysSlider = new SliderWithLabel(0, maxDelay);
 		GridBagConstraints c2 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 1, 3, -1, -1);
-		c2.insets = new Insets(0, 0, 20, 30);
+		c2.insets = new Insets(0, 0, 0, 30);
 		delaysSlider.setBackground(bg);
 		this.add(delaysSlider, c2);
 		// ridership ?
@@ -127,7 +128,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 				* ICities.mult, ICities.maxRidership * ICities.mult);
 		GridBagConstraints c8 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 1, 5, -1, -1);
-		c8.insets = new Insets(0, 0, 20, 30);
+		c8.insets = new Insets(0, 0, 0, 30);
 		ridershipSlider.setBackground(bg);
 		this.add(ridershipSlider, c8);
 		ridershipSlider.slider.addAdjustmentListener(this);

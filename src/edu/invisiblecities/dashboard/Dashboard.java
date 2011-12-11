@@ -18,6 +18,7 @@ import javax.swing.JTabbedPane;
 import edu.invisiblecities.IsoMapStage;
 import edu.invisiblecities.Splash;
 import edu.invisiblecities.TopoMapStage;
+import edu.invisiblecities.charts.HeatMaps;
 import edu.invisiblecities.data.Model;
 
 public class Dashboard extends JFrame implements ActionListener {
@@ -50,21 +51,20 @@ public class Dashboard extends JFrame implements ActionListener {
 	private void createComponents() {
 		Color bg = new Color(255, 255, 255);
 		this.getContentPane().setBackground(bg);
-
-		/*filterPanel = new FilterPanel();
+		filterPanel = new FilterPanel();
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
 		c1.gridy = 1;
 		filterPanel.setBackground(bg);
-		this.getContentPane().add(filterPanel, c1);*/
+		this.getContentPane().add(filterPanel, c1);
 
-		/*HeatMaps heatMaps = new HeatMaps(20, 10, 25, 600, 600, true);
+		HeatMaps heatMaps = new HeatMaps(20, 10, 25, 600, 600, true);
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 1;
 		c2.gridy = 0;
 		c2.gridwidth = 2;
 		this.getContentPane().add(heatMaps, c2);
-		heatMaps.init();*/
+		heatMaps.init();
 		
 		topoMap = new TopoMapStage();
         topoMap.setHide(false);
@@ -116,8 +116,8 @@ public class Dashboard extends JFrame implements ActionListener {
 
 		});
 		GridBagConstraints c4 = new GridBagConstraints();
-		c4.gridx = 1;
-		c4.gridy = 2;
+		c4.gridx = 3;
+		c4.gridy = 1;
 		this.getContentPane().add(playButton, c4);
 
 		pauseButton = new JButton(pauseIcon);
@@ -130,8 +130,8 @@ public class Dashboard extends JFrame implements ActionListener {
 
 		});
 		GridBagConstraints c5 = new GridBagConstraints();
-		c5.gridx = 2;
-		c5.gridy = 2;
+		c5.gridx = 4;
+		c5.gridy = 1;
 		this.getContentPane().add(pauseButton, c5);
 
 	}
