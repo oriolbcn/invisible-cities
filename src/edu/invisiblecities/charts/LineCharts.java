@@ -1,9 +1,7 @@
 package edu.invisiblecities.charts;
 
-import java.util.Collections;
-import java.util.Comparator;
-
 import processing.core.PApplet;
+import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
@@ -36,23 +34,12 @@ public class LineCharts extends PApplet {
 	// Heatmaps
 	DoubleAxisLineChartSet chartSet;
 
+	public void LineCharts() {
+		mod = Dashboard.mod;
+	}
+
 	public void setup() {
 		size(1900, 1000);
-		mod = new Model();
-
-		mod.loadTextStations();
-		mod.loadTextRoutes();
-		Collections.sort(mod.getStations(), new Comparator<Station>() {
-			public int compare(Station o1, Station o2) {
-				return o1.route.hex_color.compareTo(o2.route.hex_color);
-			}
-		});
-
-		Collections.sort(mod.getRoutes(), new Comparator<Route>() {
-			public int compare(Route o1, Route o2) {
-				return o1.hex_color.compareTo(o2.hex_color);
-			}
-		});
 
 		DoubleAxisLineChart[] charts = new DoubleAxisLineChart[mod
 				.getStations().size()];

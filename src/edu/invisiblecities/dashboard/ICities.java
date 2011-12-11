@@ -1,5 +1,6 @@
 package edu.invisiblecities.dashboard;
 
+
 public class ICities {
 
 	public static Dashboard dashboard;

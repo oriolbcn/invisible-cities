@@ -21,4 +21,6 @@ public interface DoubleSliderAdjustmentListener {
 	 *            The DoubleSlider
 	 */
 	void adjustmentValueChanged(DoubleSlider which);
+
+	void updateLabels();
 }

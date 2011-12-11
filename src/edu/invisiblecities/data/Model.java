@@ -31,7 +31,6 @@ public class Model {
 
 	// Data
 	private Routes routes;
-	private Routes routesLong;
 	private Stations stations;
 	private ParentStations parentStations;
 	private Trips trips;
@@ -41,7 +40,6 @@ public class Model {
 	public Model() {
 
 		routes = new Routes(this);
-		routesLong = new Routes(this);
 		stations = new Stations(this);
 		parentStations = new ParentStations(this);
 		trips = new Trips(this);
@@ -57,6 +55,11 @@ public class Model {
 	public void load() {
 		conn = connect();
 		__load();
+	}
+
+	public void loadText() {
+		loadTextRoutes();
+		loadTextStations();
 	}
 
 	public Connection connect() {
@@ -140,10 +143,6 @@ public class Model {
 		return routes.getRoutes();
 	}
 
-	public List<Route> getRoutesLong() {
-		return routesLong.getRoutes();
-	}
-
 	public List<Station> getStations() {
 		return stations.getStations();
 	}
@@ -176,39 +175,14 @@ public class Model {
 
 		try {
 
-			ifstream = new FileInputStream("bin/routes.csv");
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-			String line;
-			while ((line = br.readLine()) != null) {
-				String[] split = line.split(";");
-				Route r = new Route(split[0], split[2], split[5]);
-				getRoutes().add(r);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void loadTextRoutesLong() {
-
-		try {
-
-			ifstream = new FileInputStream("bin/routes.txt");
+			ifstream = new FileInputStream("bin/static/routes_simple.csv");
 			in = new DataInputStream(ifstream);
 			br = new BufferedReader(new InputStreamReader(in));
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] split = line.split(",");
-				Route r = new Route("0", split[0], split[1]);
-				for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
-					r.frequencies[i] = Integer.parseInt(split[2 + i].trim());
-				}
-				for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
-					r.delays[i] = Integer.parseInt(split[2
-							+ Constants.NUM_TIME_INTERVALS + i].trim());
-				}
-				getRoutesLong().add(r);
+				Route r = new Route(split[0], split[1], split[2]);
+				getRoutes().add(r);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -218,35 +192,29 @@ public class Model {
 	public void loadTextStations() {
 
 		try {
-			ifstream = new FileInputStream("bin/stations.txt");
+			ifstream = new FileInputStream("bin/" + day
+					+ "/stations_freqs_delays.csv");
 			in = new DataInputStream(ifstream);
 			br = new BufferedReader(new InputStreamReader(in));
 
 			String line;
 			while ((line = br.readLine()) != null) {
 				String values[] = line.split(",");
-				boolean contains = false;
-				for (Station st : getStations()) {
-					if (st.station_name.equals(values[0]))
-						contains = true;
+				Route r = routes.getRoute(values[2]);
+				Station st = new Station(Integer.parseInt(values[0].trim()),
+						values[1], r);
+				r.stations.add(st);
+				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+					st.frequencies[j] = Integer.parseInt(values[3 + j].trim());
 				}
-				if (!contains) {
-					Station st = new Station(0, values[0], new Route("0",
-							"name", values[1]));
-					for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-						st.frequencies[j] = Integer.parseInt(values[2 + j]
-								.trim());
-					}
-					for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-						st.delays[j] = Integer.parseInt(values[2
-								+ Constants.NUM_TIME_INTERVALS + j].trim());
-					}
-					getStations().add(st);
+				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
+					st.delays[j] = Integer.parseInt(values[3
+							+ Constants.NUM_TIME_INTERVALS + j].trim());
 				}
+				getStations().add(st);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
 }
