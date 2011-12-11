@@ -34,7 +34,7 @@ public class LineCharts extends PApplet {
 	// Heatmaps
 	DoubleAxisLineChartSet chartSet;
 
-	public void LineCharts() {
+	public LineCharts() {
 		mod = Dashboard.mod;
 	}
 
@@ -43,49 +43,41 @@ public class LineCharts extends PApplet {
 
 		DoubleAxisLineChart[] charts = new DoubleAxisLineChart[mod
 				.getStations().size()];
-		for (int i = 0; i < charts.length; i++) {
-			Station st = mod.getStations().get(i);
-			charts[i] = createChart(
-					st.station_name.substring(1, st.station_name.length() - 1),
-					st.route.hex_color, st.frequencies, st.delays);
+		int index = 0;
+		for (int ri = 0; ri < mod.getRoutes().size(); ri++) {
+			Route r = mod.getRoutes().get(ri);
+			for (int i = 0; i < r.stations.size(); i++) {
+				Station st = r.stations.get(i);
+				charts[index] = createChart(st.station_name.substring(1,
+						st.station_name.length() - 1), st.route.hex_color,
+						st.frequencies, st.delays);
+				index++;
+			}
 		}
 
 		DoubleAxisLineChart[] chartsAggregated = new DoubleAxisLineChart[8];
 		int[] sumFreqs = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-		int[] nFreqs = new int[Constants.NUM_TIME_INTERVALS]; // aux var
 		int[] sumDelays = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-		int[] nDelays = new int[Constants.NUM_TIME_INTERVALS]; // aux var
-		Route r = mod.getRoutes().get(0);
-		int index = 0;
-		for (int i = 0; i < mod.getRoutes().size();) {
+		for (int i = 0; i < mod.getRoutes().size(); i++) {
+			Route r = mod.getRoutes().get(i);
 			for (int j = 0; j < sumFreqs.length; j++) {
 				sumFreqs[j] = 0;
-				nFreqs[j] = 0;
 				sumDelays[j] = 0;
-				nDelays[j] = 0;
 			}
-			String rName = r.route_name;
-			String rColor = r.hex_color;
-			while (i < mod.getRoutes().size() && r.route_name.equals(rName)) {
-				for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-					sumFreqs[j] += r.frequencies[j];
-					sumDelays[j] += r.delays[j];
-					nFreqs[j]++;
-					nDelays[j]++;
+			for (int j = 0; j < r.stations.size(); j++) {
+				for (int k = 0; k < Constants.NUM_TIME_INTERVALS; k++) {
+					sumFreqs[k] += r.stations.get(j).frequencies[k];
+					sumDelays[k] += r.stations.get(j).delays[k];
 				}
-				i++;
-				if (i < mod.getRoutes().size())
-					r = mod.getRoutes().get(i);
 			}
 			int[] valuesFreq = new int[Constants.NUM_TIME_INTERVALS];
 			int[] valuesDelays = new int[Constants.NUM_TIME_INTERVALS];
 			for (int j = 0; j < Constants.NUM_TIME_INTERVALS; j++) {
-				valuesFreq[j] = sumFreqs[j] / nFreqs[j];
-				valuesDelays[j] = sumDelays[j] / nDelays[j];
+				valuesFreq[j] = sumFreqs[j] / r.stations.size();
+				valuesDelays[j] = sumDelays[j] / r.stations.size();
 			}
-			chartsAggregated[index] = createChart(rName, rColor, valuesFreq,
-					valuesDelays);
-			index++;
+			chartsAggregated[i] = createChart(r.route_name, r.hex_color,
+					valuesFreq, valuesDelays);
 		}
 
 		chartSet = new DoubleAxisLineChartSet(40, 80, charts, chartsAggregated,
@@ -110,7 +102,6 @@ public class LineCharts extends PApplet {
 			}
 			labels[i] = s;
 		}
-
 		return new DoubleAxisLineChart(labels, values1, values2, name, color);
 	}
 
@@ -261,7 +252,7 @@ public class LineCharts extends PApplet {
 
 		public void display() {
 
-			fill(unhex(color));
+			fill(unhex("FF" + color));
 			noStroke();
 			rect(iniX + chartWidth / 5, iniY - 30, 3 * chartWidth / 5, 40);
 			textSize(subtitleTextSize);

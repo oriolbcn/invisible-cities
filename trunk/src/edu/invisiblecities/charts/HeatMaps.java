@@ -1,5 +1,6 @@
 package edu.invisiblecities.charts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +44,10 @@ public class HeatMaps extends PApplet implements FilterListener {
 	// Heatmaps
 	Heatmap hm1, hm2;
 
+	// Filters
+	boolean[] selectedRoutes;
+	int minFreq, maxFreq, minDelay, maxDelay;
+
 	public HeatMaps() {
 
 		this.rectWidth = 40;
@@ -78,6 +83,10 @@ public class HeatMaps extends PApplet implements FilterListener {
 		chartHeight = rectHeight * nRects;
 		chartHeightExpanded = rectHeight * nRectsExpanded;
 		chartWidth = Constants.NUM_TIME_INTERVALS * rectWidth;
+		selectedRoutes = new boolean[8];
+		for (int i = 0; i < selectedRoutes.length; i++) {
+			selectedRoutes[i] = true;
+		}
 
 		mod = Dashboard.mod;
 	}
@@ -99,7 +108,13 @@ public class HeatMaps extends PApplet implements FilterListener {
 	}
 
 	public void filterChanged() {
-		println(Dashboard.getSelectedRoutes());
+		selectedRoutes = Dashboard.getSelectedRoutes();
+		minFreq = Dashboard.getMinFrequency();
+		maxFreq = Dashboard.getMaxFrequency();
+		minDelay = Dashboard.getMinDelay();
+		maxDelay = Dashboard.getMaxDelay();
+		hm1.updateVisibleRows();
+		hm2.updateVisibleRows();
 	}
 
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
@@ -108,10 +123,11 @@ public class HeatMaps extends PApplet implements FilterListener {
 		int index = 0;
 		for (int ri = 0; ri < mod.getRoutes().size(); ri++) {
 			Route r = mod.getRoutes().get(ri);
+			println(r.route_id);
 			for (int i = 0; i < r.stations.size(); i++) {
-				Station st = mod.getStations().get(i);
+				Station st = r.stations.get(i);
 				HeatMapRow row = new HeatMapRow(st.station_name.substring(1,
-						st.station_name.length() - 1), st.route.hex_color);
+						st.station_name.length() - 1), st.route.hex_color, ri);
 				row.values = new int[Constants.NUM_TIME_INTERVALS];
 				for (int j = 0; j < st.frequencies.length; j++) {
 					int val;
@@ -153,7 +169,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 					sum[k] += val;
 				}
 			}
-			HeatMapRow row = new HeatMapRow(r.route_name, r.hex_color);
+			HeatMapRow row = new HeatMapRow(r.route_name, r.hex_color, i);
 			row.values = new int[Constants.NUM_TIME_INTERVALS];
 			for (int j = 0; j < sum.length; j++) {
 				row.values[j] = sum[j] / r.stations.size();
@@ -230,6 +246,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 		// Data
 		HeatMapRow[] rows;
 		HeatMapRow[] rowsAggregated;
+		HeatMapRow[] visibleRows;
+		HeatMapRow[] visibleRowsAggregated;
 		Map<String, Integer> maxColor;
 		Map<String, Integer> maxColorAggregated;
 
@@ -278,6 +296,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 			aggregated = true;
 			visible = true;
 			expanded = false;
+			this.visibleRows = rows;
+			this.visibleRowsAggregated = rowsAggregated;
 
 			maxColor = new HashMap<String, Integer>();
 			maxColorAggregated = new HashMap<String, Integer>();
@@ -319,16 +339,18 @@ public class HeatMaps extends PApplet implements FilterListener {
 				expandButton.iniY = iniY - 60;
 			}
 			if (!aggregated) {
-				if (expanded) {
-					float sbarPos = sbarExpanded.getPos();
-					int numSteps = rows.length - nRectsExpanded;
-					rowNum = (int) (sbarPos / ((float) (chartHeightExpanded - 2) / (float) numSteps));
-					sbarExpanded.update();
-				} else {
-					float sbarPos = sbar.getPos();
-					int numSteps = rows.length - nRects;
-					rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
-					sbar.update();
+				if (visibleRows.length > shownRects) {
+					if (expanded) {
+						float sbarPos = sbarExpanded.getPos();
+						int numSteps = visibleRows.length - nRectsExpanded;
+						rowNum = (int) (sbarPos / ((float) (chartHeightExpanded - 2) / (float) numSteps));
+						sbarExpanded.update();
+					} else {
+						float sbarPos = sbar.getPos();
+						int numSteps = visibleRows.length - nRects;
+						rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
+						sbar.update();
+					}
 				}
 				updateTooltipValue();
 			} else {
@@ -338,26 +360,53 @@ public class HeatMaps extends PApplet implements FilterListener {
 		}
 
 		public void updateTooltipValue() {
+			int currH = visibleRows.length < shownRects ? rectHeight
+					* visibleRows.length : h;
 			if (mouseX > iniX && mouseX < iniX + chartWidth && mouseY > iniY
-					&& mouseY < iniY + h) {
+					&& mouseY < iniY + currH) {
 				int x = (mouseX - iniX) / rectWidth;
 				int y = (mouseY - iniY) / rectHeight;
-				tooltipValue = rows[y + rowNum].values[x];
+				tooltipValue = visibleRows[y + rowNum].values[x];
 			} else {
 				tooltipValue = -1;
 			}
 		}
 
 		public void updateTooltipValueAggregated() {
-			if (mouseX > iniX && mouseX < iniX + chartWidth && mouseY > iniY
-					&& mouseY < iniY + rectHeight * 8) {
+			if (mouseX > iniX
+					&& mouseX < iniX + chartWidth
+					&& mouseY > iniY
+					&& mouseY < iniY + rectHeight
+							* visibleRowsAggregated.length) {
 				int x = (mouseX - iniX) / rectWidth;
 				int y = (mouseY - iniY) / rectHeight;
-				tooltipValue = rowsAggregated[y].values[x];
+				tooltipValue = visibleRowsAggregated[y].values[x];
 			} else {
 				tooltipValue = -1;
 			}
 
+		}
+
+		public void updateVisibleRows() {
+			ArrayList<HeatMapRow> ro = new ArrayList<HeatMapRow>();
+			ArrayList<HeatMapRow> roAggr = new ArrayList<HeatMapRow>();
+			for (int i = 0; i < rows.length; i++) {
+				HeatMapRow r = rows[i];
+				r.visible = selectedRoutes[r.r_index];
+				if (r.visible)
+					ro.add(r);
+			}
+			for (int i = 0; i < rowsAggregated.length; i++) {
+				HeatMapRow r = rowsAggregated[i];
+				r.visible = selectedRoutes[r.r_index];
+				if (r.visible)
+					roAggr.add(r);
+			}
+
+			visibleRows = new HeatMapRow[ro.size()];
+			visibleRowsAggregated = new HeatMapRow[roAggr.size()];
+			ro.toArray(visibleRows);
+			roAggr.toArray(visibleRowsAggregated);
 		}
 
 		public void display() {
@@ -391,15 +440,17 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 			List<String> colors = new LinkedList<String>();
 			int nRectsAux = aggregated ? 8 : shownRects;
-			for (int i = 0; i < nRectsAux; i++) {
+			for (int i = 0; i < nRectsAux
+					&& (i + rowNum) < (aggregated ? visibleRowsAggregated.length
+							: visibleRows.length);) {
 				HeatMapRow row;
 				if (aggregated) {
-					row = rowsAggregated[i + rowNum];
+					row = visibleRowsAggregated[i + rowNum];
 				} else {
-					row = rows[i + rowNum];
+					row = visibleRows[i + rowNum];
 				}
 
-				// Write station name
+				// Write station/route name
 				textAlign(LEFT);
 				fill(0);
 				float w = textWidth(row.label);
@@ -419,6 +470,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 							rectWidth, rectHeight);
 				}
 				colorMode(RGB, 255, 255, 255);
+				i++;
 
 			}
 
@@ -448,7 +500,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 				k++;
 			}
 
-			if (!aggregated)
+			if (!aggregated && visibleRows.length > shownRects)
 				if (expanded)
 					sbarExpanded.display();
 				else
@@ -559,10 +611,14 @@ public class HeatMaps extends PApplet implements FilterListener {
 		String label;
 		String color;
 		int[] values;
+		int r_index;
+		boolean visible;
 
-		public HeatMapRow(String l, String c) {
+		public HeatMapRow(String l, String c, int ri) {
 			label = l;
 			color = c;
+			r_index = ri;
+			visible = true;
 		}
 
 	}
