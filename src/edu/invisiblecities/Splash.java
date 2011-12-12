@@ -1,9 +1,5 @@
 package edu.invisiblecities;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,6 +28,9 @@ public class Splash extends PApplet implements FilterListener {
     public static final Easing  Easing = Ani.QUINT_OUT;
     public static final int     Interval = 30;
     public static final int     TotalTimeStamps = 24 * 3600 / Interval;
+    public static final int     FrameRate = 30;
+    public static final int     ClockInnerDiameter = 100;
+    
     
     @SuppressWarnings("unchecked")
     public static ArrayList<Dot>[] mDots = new ArrayList[TotalTimeStamps];
@@ -42,15 +41,12 @@ public class Splash extends PApplet implements FilterListener {
     public static int           selectedFilter;
     public static PImage        clockImg;
     public static final String  Clockimgfilename = "clock.png";
-    public static PGraphics     pg;
+    public static PGraphics[]     pg;
     public static int           mTimer = 0;
     
     
     public Splash() {
-        
-        
         loadRoutes();
-        
         loadSplash();
     }
     
@@ -63,19 +59,19 @@ public class Splash extends PApplet implements FilterListener {
         smooth();
         noStroke();
         
-        //DisplayRoutes = Dashboard.getSelectedRoutes();
-        DisplayRoutes = new boolean[NumOfRoutes];
-        for (int i=0; i<NumOfRoutes; ++i) {
-            DisplayRoutes[i] = true;
-        }
+        DisplayRoutes = Dashboard.getSelectedRoutes();
+        //DisplayRoutes = new boolean[NumOfRoutes];
+        //for (int i=0; i<NumOfRoutes; ++i) {
+        //    DisplayRoutes[i] = true;
+        //}
         
         initUI();
         clockImg = loadImage(Clockimgfilename);
-        pg = createGraphics(PictureWidth, PictureHeight, P2D);
-        pg.beginDraw();
-        pg.image(clockImg, 0, 0);
-        pg.endDraw();
-        //Dashboard.registerAsFilterListener(this);
+        pg = new PGraphics[NumOfRoutes];
+        for (int i=0; i<NumOfRoutes; ++i) {
+            pg[i] = createGraphics(PictureWidth, PictureHeight, P2D);
+        }
+        Dashboard.registerAsFilterListener(this);
     }
     public boolean pause = false;
     
@@ -94,22 +90,10 @@ public class Splash extends PApplet implements FilterListener {
         text(hour + ":" + minute, 20, 40);
         stroke(0);
         line(PictureWidth, 0, PictureWidth, PictureHeight);
-        rectMode(CENTER);
-        rectMode(CORNER);
     }
     
     public static final int ClockDiameter = PictureWidth - 10;
     public static final int ClockRadius = ClockDiameter / 2;
-    public static final int ClockTwelveX = PictureCenterX;
-    public static final int ClockTwelveY = PictureCenterY - ClockRadius + 20;
-    public static final int ClockThreeX  = PictureCenterX + ClockRadius - 10;
-    public static final int ClockThreeY  = PictureCenterY;
-    public static final int ClockSixX    = PictureCenterX;
-    public static final int ClockSixY    = PictureCenterY + ClockRadius - 20;
-    public static final int ClockNineX   = 20;
-    public static final int ClockNineY   = PictureCenterY;
-    public static final int HourRadius   = ClockRadius - 140;
-    public static final int MinuteRadius = ClockRadius - 50;
     public void drawBackgroundClock() {
         PFont pf = loadFont("Apple-Chancery-28.vlw");
         textFont(pf, 28);
@@ -119,13 +103,29 @@ public class Splash extends PApplet implements FilterListener {
         stroke(0);
         strokeWeight(2);
         ellipse(PictureCenterX, PictureCenterY, ClockDiameter, ClockDiameter);
+        fill(0, 100);
         textAlign(CENTER);
-        text("12", ClockTwelveX, ClockTwelveY);
-        text("3", ClockThreeX, ClockThreeY);
-        text("6", ClockSixX, ClockSixY);
-        text("9", ClockNineX, ClockNineY);
+        int t;
+        for (int i=0; i<12; ++i) {
+            if (i == 0) t = 12;
+            else t = i;
+            float theta = map(i, 0, 12, -HALF_PI, TWO_PI-HALF_PI);
+            float x = (ClockRadius - 15) * cos(theta) + PictureCenterX;
+            float y = (ClockRadius - 15) * sin(theta) + PictureCenterY + 5;
+            text("" + t, x, y);
+        }
+        noFill();
+        stroke(0, 100);
+        int slice = (ClockDiameter - ClockInnerDiameter) / 2 / 12;
+        textSize(15);
+        for (int i=0; i<12; ++i) {
+            int diameter = 2 * slice * i + ClockInnerDiameter;
+            ellipse(PictureCenterX, PictureCenterY, diameter, diameter);
+            text("" + (i * 2), PictureCenterX + diameter / 2, PictureCenterY);
+        }
         textAlign(LEFT);
-        save("clock.png");
+        //save("clock.png");
+
     }
     
     public static boolean[] DisplayRoutes;
@@ -140,7 +140,11 @@ public class Splash extends PApplet implements FilterListener {
     public void draw() {
         if (isDisplayed) {
             background(255);
-            image(pg, 0, 0);
+            image(clockImg, 0, 0);
+            for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i])
+                image(pg[i], 0, 0);
+            //image(pg[0], 0, 0);
+            //image(pg[1], 0, 0);
             text(mTimer, 20, 80);
         }
         if (ICities.IsPlaying) {
@@ -148,7 +152,7 @@ public class Splash extends PApplet implements FilterListener {
                 mTimer = 0;
             }
             if (mDots[mTimer] != null) {
-                for (Dot dot : mDots[mTimer]) if (DisplayRoutes[dot.rid]) {
+                for (Dot dot : mDots[mTimer]) {
                     dot.x = PictureCenterX;
                     dot.y = PictureCenterY;
                     int rid = dot.rid;
@@ -167,22 +171,17 @@ public class Splash extends PApplet implements FilterListener {
         }
         if (isDisplayed) {
             noStroke();
-            for (int i=0; i<NumOfRoutes; ++i) {
+            for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i]) {
                 fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
                 Dot pointer = mListHeader[i].nextdot;
-                float fvalue = 0.f;
+                //float fvalue = 0.f;
                 while (pointer != null) {
-                    /*if (pointer.delay > fvalue) {
-                        Dot next = pointer.nextdot;
-                        pointer.finish();
-                        pointer = next;
-                        continue;
-                    }*/
                     pointer.draw();
                     pointer = pointer.nextdot;
                 }
             }
             drawLayout();
+            
         }   
     }
     public static final int HalfTotalTimeStamps = TotalTimeStamps / 2;
@@ -197,8 +196,8 @@ public class Splash extends PApplet implements FilterListener {
     
     public void filterChanged() {
         DisplayRoutes = Dashboard.getSelectedRoutes();
-        for (int i=0; i<NumOfRoutes; ++i)
-            System.out.println(mRoutes[i].name + " " + DisplayRoutes[i]);
+        //for (int i=0; i<NumOfRoutes; ++i)
+        //    System.out.println(mRoutes[i].name + " " + DisplayRoutes[i]);
         // dashboard.getSelectedRoutes();
         // dashboard.getMaxFrequency();
         // dashboard.getMinFrequency();
@@ -250,7 +249,7 @@ public class Splash extends PApplet implements FilterListener {
             rid = rd;
             route = mRoutes[rid];
             delay = de;
-            color = color(red, green, blue, 30);
+            color = color(red, green, blue);
             diameter = dia;
         }
         
@@ -281,12 +280,12 @@ public class Splash extends PApplet implements FilterListener {
         }
         
         public void finish() {
-            pg.beginDraw();
-            pg.fill(color);
-            pg.noStroke();
-            pg.smooth();
-            pg.ellipse(endX, endY, diameter, diameter);
-            pg.endDraw();
+            pg[rid].beginDraw();
+            pg[rid].fill(color);
+            pg[rid].noStroke();
+            pg[rid].smooth();
+            pg[rid].ellipse(endX, endY, diameter, diameter);
+            pg[rid].endDraw();
             if (predot != null) {
                 predot.nextdot = nextdot;
             }
@@ -296,31 +295,22 @@ public class Splash extends PApplet implements FilterListener {
         }
     }
     
-    
-    
 ////////////////////////////////////////////////////////////////////////////////
-    public static FileInputStream ifstream;
-    public static DataInputStream in;
-    public static BufferedReader br;
+  
     public static int NumOfRoutes;
     public static HashMap<String, Integer> route2Int;
-    public static final String  Routeinfofilename = "bin/routes.csv";
-    public static final String  Splashfilename = "bin/splash.csv";
-    public static final int FrameRate = 30;
-    public static final int ClockInnerDiameter = 100;
-    
+    public static final String  Routeinfofilename = "routes.csv";
+    public static final String  Splashfilename = "splash.csv";
     
     public void loadSplash() {
         try {
-            ifstream = new FileInputStream(Splashfilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            String line;
+            String[] lines = loadStrings(Splashfilename);
             int slot = 3600/Interval;
             int totalTrips = 0;
             int maxTrips = 0;
-            while ((line = br.readLine()) != null) {
-                String[] split = line.split(";");
+            int linelength = lines.length;
+           for (int kk=0; kk<linelength; ++kk) {
+                String[] split = lines[kk].split(";");
                 int rid = findRoute(split[0]);
                 int starttime = Integer.parseInt(split[2]);
                 int endtime = Integer.parseInt(split[3]);
@@ -329,7 +319,7 @@ public class Splash extends PApplet implements FilterListener {
                 
                 // Since delay for each trip is not available, change this to start hour
                 //float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
-                float hour = (starttime / 3600.f) / 24 * ((ClockDiameter - ClockInnerDiameter)/ 2) + ClockInnerDiameter / 2;
+                float hour = (starttime / 3600.f) / 24 * ((ClockDiameter - ClockInnerDiameter) / 2) + ClockInnerDiameter / 2;
                 float x = hour * cos(theta) + PictureCenterX;
                 float y = hour * sin(theta) + PictureCenterY;
                 // TODO Ridership
@@ -365,12 +355,10 @@ public class Splash extends PApplet implements FilterListener {
         try {
             route2Int = new HashMap<String, Integer>();
             ArrayList<Route> alr = new ArrayList<Route>();
-            ifstream = new FileInputStream(Routeinfofilename);
-            in = new DataInputStream(ifstream);
-            br = new BufferedReader(new InputStreamReader(in));
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] split = line.split(";");
+            String[] lines = loadStrings(Routeinfofilename);
+            int linelength = lines.length;
+            for (int kk=0; kk<linelength; ++kk) {
+                String[] split = lines[kk].split(";");
                 Route r = new Route(split[0], split[2].substring(1), split[4], split[5]);
                 alr.add(r);
                 route2Int.put(r.id, new Integer(alr.size()));
@@ -385,9 +373,6 @@ public class Splash extends PApplet implements FilterListener {
             }
             NumOfRoutes = mRoutes.length;
             System.out.println("Load routes done\nTotal Routes: " + NumOfRoutes);
-            br.close();
-            in.close();
-            ifstream.close();
             mListHeader = new Dot[NumOfRoutes];
             for (int i=0; i<NumOfRoutes; ++i) {
                 mListHeader[i] = new Dot();

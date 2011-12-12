@@ -1,9 +1,5 @@
 package edu.invisiblecities;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -37,7 +33,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static final int ProgressBarY = CanvasHeight - 50;
 	public static final int CheckBoxOffsetX = 5;
 	public static final int CheckBoxOffsetTop = 5;
-	public static final String Mapfilename = "bin/map.png";
+	public static final String Mapfilename = "map.png";
 
 	public static de.fhpotsdam.unfolding.Map map;
 	public static Stop[]   mStops;
@@ -280,7 +276,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		public void draw() {
 			fill(color, 50);
 			int index = mTimer / 120;
-			// System.out.println("Index " + index);
+			ellipse(screenX, screenY, 5, 5);
 			rect(screenX, screenY, diameter[index], diameter[index]);
 		}
 
@@ -302,7 +298,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		}
 	}
 
-	// public static final int TripTailLength = 6;
 	public class Trip {
 		public float[] screenX;
 		public float[] screenY;
@@ -330,9 +325,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			diameter = dia;
 			starttime = st;
 			endtime = st + stepLength;
-			// tail = new int[TripTailLength];
-			// System.out.println("Add trip " + tripid + " start x " + sx +
-			// " y " + sy + " dur " + dur);
 		}
 
 		public Trip() {
@@ -376,9 +368,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	// //////////////////////////////////////////////////////////////////////////////
 
 	/*************** Load Data ***************/
-	public static FileInputStream ifstream;
-	public static DataInputStream in;
-	public static BufferedReader br;
 
 	public static int findRoute(String rid) {
 		for (int i = 0; i < NumOfRoutes; ++i) {
@@ -389,17 +378,15 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		return -1;
 	}
 
-	public static final String Routeinfofilename = "bin/routes.csv";
+	public static final String Routeinfofilename = "routes.csv";
 
 	public void loadRoutes() {
 		try {
 			ArrayList<Route> alr = new ArrayList<Route>();
-			ifstream = new FileInputStream(Routeinfofilename);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-			String line;
-			while ((line = br.readLine()) != null) {
-				String[] split = line.split(";");
+			String[] lines = loadStrings(Routeinfofilename);
+			int linelength = lines.length;
+			for (int i=0; i<linelength; ++i) {
+				String[] split = lines[i].split(";");
 				Route r = new Route(split[0], split[2].substring(1), split[4],
 						split[5]);
 				alr.add(r);
@@ -418,34 +405,25 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				mListHeader[i] = new Trip();
 			}
 			System.out.println("Load routes done\nTotal Routes: " + NumOfRoutes);
-			br.close();
-			in.close();
-			ifstream.close();
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
 	}
 
-	public static final String Triproutefilename = "bin/routetrip.csv";
+	public static final String Triproutefilename = "routetrip.csv";
 	public static HashMap<String, String> trip2route;
 
 	public void loadTrip2Route() {
 		try {
-			ifstream = new FileInputStream(Triproutefilename);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-			String line;
 			trip2route = new HashMap<String, String>();
+			String[] lines = loadStrings(Triproutefilename);
 			int total = 0;
-			while ((line = br.readLine()) != null) {
-				String[] split = line.split(";");
-
+			int linelength = lines.length;
+			for (int i=0; i<linelength; ++i) {
+				String[] split = lines[i].split(";");
 				trip2route.put(split[1], split[0]);
 				++total;
 			}
-			in.close();
-			br.close();
-			ifstream.close();
 			System.out.println("Trip2Route done " + total);
 		} catch (Exception e) {
 			System.out.println(e.toString());
@@ -454,19 +432,17 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	public static final float RidershipUpper = 12;
 	public static final float RidershipLower = 4;
-	public static final String Tripstoplatlon = "bin/tripstoplatlontime.csv";
+	public static final String Tripstoplatlon = "tripstoplatlontime.csv";
 
 	public void loadTrip() {
 		try {
-			ifstream = new FileInputStream(Tripstoplatlon);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-			String line = br.readLine();
+		    String[] lines = loadStrings(Tripstoplatlon);
 			int total = 1;
-			while (true) {
-				if (line == null)
+			int linelength = lines.length;
+			for (int kk=0; kk<linelength;) {
+				if (lines[kk] == null)
 					break;
-				String[] split = line.split(";"); // 0:trip 1:time 2:lat 3:lon
+				String[] split = lines[kk].split(";"); // 0:trip 1:time 2:lat 3:lon
 													// 4:stopid
 				String tripid = split[0];
 				int rid = findRoute(trip2route.get(tripid));
@@ -485,18 +461,17 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				ArrayList<Float> ay = new ArrayList<Float>(); // y
 				ay.add(new Float(xy[1]));
 				ArrayList<Float> ad = new ArrayList<Float>(); // diameter
-				float diameter = random(RidershipLower, RidershipUpper); // TODO
-																			// Ridership
+				float diameter = random(RidershipLower, RidershipUpper); // TODO Ridership
 				ad.add(new Float(diameter));
 				int stopid = stop2int.get(split[4]).intValue();
-				// mStops[stopid].diameter[mtimer] += diameter;
 				mStops[stopid].acolor = scolor;
 				mStops[stopid].color = color;
 				float prex = xy[0];
 				float prey = xy[1];
 				int pret = starttime;
-				while ((line = br.readLine()) != null) {
-					String[] cursplit = line.split(";");
+				++kk;
+				while (kk < linelength) {
+					String[] cursplit = lines[kk].split(";");
 					if (!cursplit[0].equals(tripid))
 						break;
 					xy = map.getScreenPositionFromLocation(new Location(Float
@@ -522,9 +497,9 @@ public class TopoMapStage extends PApplet implements FilterListener {
 					pret = curt;
 					prex = curx;
 					prey = cury;
-					diameter = random(RidershipLower, RidershipUpper); // TODO
-																		// Ridership
+					diameter = random(RidershipLower, RidershipUpper); // TODO Ridership
 					++total;
+					++kk;
 				}
 				int stepcnt = ax.size();
 				float[] sx = new float[stepcnt];
@@ -542,52 +517,42 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				mTrips[mtimer].add(trip);
 			}
 			System.out.println("Load Trip done " + total);
-			br.close();
-			in.close();
-			ifstream.close();
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
 	}
 
 	public static HashMap<String, String> stop2station;
-	public static final String Stopstationfilename = "bin/stopstation.csv";
+	public static final String Stopstationfilename = "stopstation.csv";
 
 	public void loadStop2Station() {
 		try {
-			ifstream = new FileInputStream(Stopstationfilename);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-			String line;
+		    String[] lines = loadStrings(Stopstationfilename);
+		    int linelength = lines.length;
 			int total = 0;
 			stop2station = new HashMap<String, String>();
-			while ((line = br.readLine()) != null) {
-				String[] split = line.split(";");
+			for (int i=0; i<linelength; ++i) {
+				String[] split = lines[i].split(";");
 				stop2station.put(split[0], split[1]);
 				++total;
 			}
 			System.out.println("Load Stop2station done " + total);
-			br.close();
-			in.close();
-			ifstream.close();
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
 	}
 
-	public static final String stopsfilename = "bin/stopsInfo.csv";
+	public static final String stopsfilename = "stopsInfo.csv";
 	public static HashMap<String, Integer> stop2int;
 
 	public void loadStop() {
 		try {
 			stop2int = new HashMap<String, Integer>();
-			ifstream = new FileInputStream(stopsfilename);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
 			ArrayList<String> lines = new ArrayList<String>();
-			String line;
-			while ((line = br.readLine()) != null) {
-				lines.add(line);
+			String[] line = loadStrings(stopsfilename);
+			int linelength = line.length;
+			for (int i=0; i<linelength; ++i) {
+				lines.add(line[i]);
 			}
 			NumOfStops = lines.size();
 			mStops = new Stop[NumOfStops];
@@ -601,27 +566,20 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				mStops[i] = new Stop(i, x, y, name);
                 System.out.println("testing" + lines.get(i));
 			}
-			
-			br.close();
-			in.close();
-			ifstream.close();
 			System.out.println("Total stops " + mStops.length);
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
 	}
 
-	public static final String stopdelayfilename = "bin/stationsdelay.csv";
+	public static final String stopdelayfilename = "stationsdelay.csv";
 
 	public void loadStopDelays() {
 		try {
-			ifstream = new FileInputStream(stopdelayfilename);
-			in = new DataInputStream(ifstream);
-			br = new BufferedReader(new InputStreamReader(in));
-
-			String line;
-			while ((line = br.readLine()) != null) {
-				String[] split = line.split(";");
+			String[] lines = loadStrings(stopdelayfilename);
+			int linelength = lines.length;
+			for (int kk=0; kk<linelength; ++kk) {
+				String[] split = lines[kk].split(";");
 				int stopid = stop2int.get(split[0]).intValue();
 				int size = split.length - 1;
 				float[] diameters = new float[HoursPerDay + 1];
@@ -635,10 +593,6 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				mStops[stopid].diameter = diameters;
 				mStops[stopid].delay = delay;
 			}
-
-			br.close();
-			in.close();
-			ifstream.close();
 			System.out.println("Stop delays done");
 		} catch (Exception e) {
 			System.out.println(e.toString());
