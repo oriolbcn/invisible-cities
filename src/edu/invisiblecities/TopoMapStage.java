@@ -123,7 +123,6 @@ public class TopoMapStage extends PApplet implements FilterListener,
 		int showTime = mTimer * Interval;
 		hour = showTime / 3600;
 		minute = (showTime % 3600) / 60;
-		++mTimer;
 	}
 
 	public void drawStops() {
@@ -151,20 +150,28 @@ public class TopoMapStage extends PApplet implements FilterListener,
 			}
 		}
 	}
+	
+	public void resetMap() {
+	    mTimer = 0;
+	    INC = 1;
+        for (int i = 0; i < NumOfRoutes; ++i) {
+            mListHeader[i].nexttrip = mListHeader[i].pretrip = null;
+        }
+	}
 
+	public static int INC = 1;
+	
 	@Override
 	public void draw() {
 		if (ICities.IsPlaying) {
 			if (mTimer >= TotalTimeStamps) {
-				mTimer = 0;
-				for (int i = 0; i < NumOfRoutes; ++i) {
-					mListHeader[i] = new Trip();
-				}
+				INC = 0;
 			}
 			if (isDisplayed) {
 				image(MapImage, 0, 0);
 			}
-			addTrains();
+			if (INC != 0)
+			    addTrains();
 
 			if (isDisplayed) {
 				drawStops();
@@ -173,7 +180,9 @@ public class TopoMapStage extends PApplet implements FilterListener,
 					drawClickedStop();
 				drawLayout();
 			}
-			increaseStepCount();
+			if (INC != 0)
+			    increaseStepCount();
+			mTimer += INC;
 		} else {
 			if (isDisplayed) {
 				background(255);

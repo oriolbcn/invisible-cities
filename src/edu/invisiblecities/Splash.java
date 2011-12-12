@@ -135,7 +135,18 @@ public class Splash extends PApplet implements FilterListener {
     public static void setHide(boolean hide) {
         isDisplayed = !hide;
     }
-        
+    
+    public void resetMap() {
+        mTimer = 0;
+        INC = 1;
+        pg = new PGraphics[NumOfRoutes];
+        for (int i=0; i<NumOfRoutes; ++i) {
+            pg[i] = createGraphics(PictureWidth, PictureHeight, P2D);
+        }
+    }
+    
+    public static int INC = 1;
+    
     @Override
     public void draw() {
         if (isDisplayed) {
@@ -147,13 +158,9 @@ public class Splash extends PApplet implements FilterListener {
         }
         if (ICities.IsPlaying) {
             if (mTimer == TotalTimeStamps) {
-                mTimer = 0;
-                pg = new PGraphics[NumOfRoutes];
-                for (int i=0; i<NumOfRoutes; ++i) {
-                    pg[i] = createGraphics(PictureWidth, PictureHeight, P2D);
-                }
+                INC = 0;
             }
-            if (mDots[mTimer] != null) {
+            else if (mDots[mTimer] != null) {
                 for (Dot dot : mDots[mTimer]) {
                     dot.x = PictureCenterX;
                     dot.y = PictureCenterY;
@@ -169,21 +176,19 @@ public class Splash extends PApplet implements FilterListener {
             int showTime = mTimer * Interval;
             hour = showTime / 3600;
             minute = (showTime % 3600) / 60;
-            ++mTimer;
+            mTimer += INC;
         }
         if (isDisplayed) {
             noStroke();
             for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i]) {
                 fill(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
                 Dot pointer = mListHeader[i].nextdot;
-                //float fvalue = 0.f;
                 while (pointer != null) {
                     pointer.draw();
                     pointer = pointer.nextdot;
                 }
             }
             drawLayout();
-            
         }   
     }
     public static final int HalfTotalTimeStamps = TotalTimeStamps / 2;
@@ -321,7 +326,7 @@ public class Splash extends PApplet implements FilterListener {
                 
                 // Since delay for each trip is not available, change this to start hour
                 //float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
-                float hour = (ClockDiameter - (starttime / 3600.f) * (ClockDiameter - ClockInnerDiameter) / 24) / 2;
+                float hour = (ClockDiameter - (endtime / 3600.f) * (ClockDiameter - ClockInnerDiameter) / 24) / 2;
                 float x = hour * cos(theta) + PictureCenterX;
                 float y = hour * sin(theta) + PictureCenterY;
                 // TODO Ridership
