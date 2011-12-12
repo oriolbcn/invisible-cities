@@ -59,11 +59,11 @@ public class Splash extends PApplet implements FilterListener {
         smooth();
         noStroke();
         
+        MaxRidership = Dashboard.getMaxRidership() / ICities.mult;
+        MinRidership = Dashboard.getMinRidership() / ICities.mult;
         DisplayRoutes = Dashboard.getSelectedRoutes();
         //DisplayRoutes = new boolean[NumOfRoutes];
-        //for (int i=0; i<NumOfRoutes; ++i) {
-        //    DisplayRoutes[i] = true;
-        //}
+        //for (int i=0; i<NumOfRoutes; ++i) DisplayRoutes[i] = true;
         
         initUI();
         clockImg = loadImage(Clockimgfilename);
@@ -161,17 +161,19 @@ public class Splash extends PApplet implements FilterListener {
                 INC = 0;
             }
             else if (mDots[mTimer] != null) {
-                for (Dot dot : mDots[mTimer]) {
-                    dot.x = PictureCenterX;
-                    dot.y = PictureCenterY;
-                    int rid = dot.rid;
-                    Dot oriNext = mListHeader[rid].nextdot;
-                    dot.nextdot = oriNext;
-                    dot.predot = mListHeader[rid];
-                    mListHeader[rid].nextdot = dot;
-                    if (oriNext != null) oriNext.predot = dot;
-                    dot.setAni();
-                }
+                for (Dot dot : mDots[mTimer]) 
+                    if (dot.diameter >= MinRidership 
+                        && dot.diameter <= MaxRidership) {
+                        dot.x = PictureCenterX;
+                        dot.y = PictureCenterY;
+                        int rid = dot.rid;
+                        Dot oriNext = mListHeader[rid].nextdot;
+                        dot.nextdot = oriNext;
+                        dot.predot = mListHeader[rid];
+                        mListHeader[rid].nextdot = dot;
+                        if (oriNext != null) oriNext.predot = dot;
+                        dot.setAni();
+                    }
             }
             int showTime = mTimer * Interval;
             hour = showTime / 3600;
@@ -201,17 +203,13 @@ public class Splash extends PApplet implements FilterListener {
     public void mouseDragged() {
     }
     
+    public static int MinRidership;
+    public static int MaxRidership;
+    
     public void filterChanged() {
         DisplayRoutes = Dashboard.getSelectedRoutes();
-        //for (int i=0; i<NumOfRoutes; ++i)
-        //    System.out.println(mRoutes[i].name + " " + DisplayRoutes[i]);
-        // dashboard.getSelectedRoutes();
-        // dashboard.getMaxFrequency();
-        // dashboard.getMinFrequency();
-        // dashboard.getMaxDelay();
-        // dashboard.getMinDelay();
-        // dashboard.getMaxRidership();
-        // dashboard.getMinRidership();
+        MaxRidership = Dashboard.getMaxRidership() / ICities.mult;
+        MinRidership = Dashboard.getMinRidership() / ICities.mult;
     }
     
 ////////////////// Inner Class /////////////////////////////////////////////////

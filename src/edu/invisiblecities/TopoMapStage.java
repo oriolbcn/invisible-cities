@@ -80,6 +80,9 @@ public class TopoMapStage extends PApplet implements FilterListener,
 		loadStop();
 		loadTrip();
 		loadStopDelays();
+		
+		MaxDelay = Dashboard.getMaxDelay();
+		MinDelay = Dashboard.getMinDelay();
 		DisplayRoutes = Dashboard.getSelectedRoutes();
 		//DisplayRoutes = new boolean[NumOfRoutes];
 		//for (int i=0; i<NumOfRoutes; ++i) DisplayRoutes[i] = true;
@@ -129,7 +132,12 @@ public class TopoMapStage extends PApplet implements FilterListener,
 		noStroke();
 		rectMode(CENTER);
 		for (int i = 0; i < NumOfStops; ++i) {
-			mStops[i].draw();
+		    int index = mTimer / 120;
+		    Stop stop = mStops[i];
+		    stop.draw();
+		    if (stop.diameter[index] * 15 >= MinDelay && stop.diameter[index] * 15 <= MaxDelay){
+		        stop.drawDelay(index);
+		    }
 		}
 		rectMode(CORNER);
 	}
@@ -178,7 +186,6 @@ public class TopoMapStage extends PApplet implements FilterListener,
 				drawTrains();
 				if (StopClicked >= 0)
 					drawClickedStop();
-				drawLayout();
 			}
 			if (INC != 0)
 			    increaseStepCount();
@@ -280,15 +287,15 @@ public class TopoMapStage extends PApplet implements FilterListener,
 	public void mouseDragged() {
 	}
 
+	public static int MaxDelay;
+	public static int MinDelay;
+	
 	public void filterChanged() {
 		DisplayRoutes = Dashboard.getSelectedRoutes();
 		DrawDots = Dashboard.dotsSelected();
-		// dashboard.getMaxFrequency();
-		// dashboard.getMinFrequency();
-		// dashboard.getMaxDelay();
-		// dashboard.getMinDelay();
-		// dashboard.getMaxRidership();
-		// dashboard.getMinRidership();
+		MaxDelay = Dashboard.getMaxDelay();
+		MinDelay = Dashboard.getMinDelay();
+		System.out.println("Max " + MaxDelay + " Min " + MinDelay);
 	}
 
 	// //////////// Inner Classes
@@ -354,9 +361,12 @@ public class TopoMapStage extends PApplet implements FilterListener,
 		}
 
 		public void draw() {
+		    fill(color);
+		    ellipse(screenX, screenY, 5, 5);
+		}
+		
+		public void drawDelay(int index) {
 			fill(color, 50);
-			int index = mTimer / 120;
-			ellipse(screenX, screenY, 5, 5);
 			rect(screenX, screenY, diameter[index], diameter[index]);
 		}
 
