@@ -177,6 +177,11 @@ public class TopoMapStage extends PApplet implements FilterListener,
 				drawLayout();
 			}
 			increaseStepCount();
+		} else {
+			if (isDisplayed) {
+				if (StopClicked >= 0)
+					drawClickedStop();
+			}
 		}
 	}
 

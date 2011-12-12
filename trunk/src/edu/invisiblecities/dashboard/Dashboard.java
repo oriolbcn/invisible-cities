@@ -16,6 +16,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import edu.invisiblecities.IsoMapStage;
+import edu.invisiblecities.SideMap;
 import edu.invisiblecities.Splash;
 import edu.invisiblecities.TopoMapStage;
 import edu.invisiblecities.charts.HeatMaps;
@@ -30,6 +31,7 @@ public class Dashboard extends JFrame implements ChangeListener {
 	static IsoMapStage isoMap;
 	static TopoMapStage topoMap;
 	static JButton playButton;
+	static SideMap sideMap;
 
 	static JTabbedPane tabbedPane = new JTabbedPane();
 	public int selMap = 0;
@@ -110,7 +112,7 @@ public class Dashboard extends JFrame implements ChangeListener {
 
 		});
 		GridBagConstraints c4 = new GridBagConstraints();
-		c4.gridx = 2;
+		c4.gridx = 1;
 		c4.gridy = 1;
 		c4.gridwidth = 2;
 		c4.ipadx = 60;
@@ -129,9 +131,17 @@ public class Dashboard extends JFrame implements ChangeListener {
 
 		});
 		GridBagConstraints c8 = new GridBagConstraints();
-		c8.gridx = 2;
+		c8.gridx = 1;
 		c8.gridy = 2;
 		this.getContentPane().add(buttLineCharts, c8);
+
+		sideMap = new SideMap();
+		sideMap.init();
+		GridBagConstraints c10 = new GridBagConstraints();
+		c10.gridx = 3;
+		c10.gridy = 1;
+		c10.gridwidth = 2;
+		this.getContentPane().add(sideMap, c10);
 
 	}
 
