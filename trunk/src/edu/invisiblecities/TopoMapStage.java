@@ -564,11 +564,10 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			for (int i=0; i<NumOfStops; ++i) {
 				String[] split = lines.get(i).split(";");
 				stop2int.put(split[0], new Integer(i));
-				String name = split[1];
+				String name = split[1].substring(1, split[1].length() - 1);
 				float x = Float.parseFloat(split[2]);
 				float y = Float.parseFloat(split[3]);
 				mStops[i] = new Stop(Integer.parseInt(split[0]), i, x, y, name);
-                System.out.println("testing" + lines.get(i));
 			}
 			System.out.println("Total stops " + mStops.length);
 		} catch (Exception e) {
