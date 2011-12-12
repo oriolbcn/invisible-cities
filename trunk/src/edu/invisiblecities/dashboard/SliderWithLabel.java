@@ -47,4 +47,17 @@ public class SliderWithLabel extends JPanel {
 		lMax.setText(max + " (" + (int) slider.getSelectedMaximum() + ")");
 	}
 
+	public void updateMax(int val) {
+
+		int selMax = (int) slider.getSelectedMaximum();
+		int selMin = (int) slider.getSelectedMinimum();
+		slider.setAbsoluteMaximum(val);
+		if (val >= selMax) {
+			slider.setSelectedMaximum(selMax);
+		}
+		slider.setSelectedMinimum(selMin);
+		max = val;
+		updateLabels();
+	}
+
 }

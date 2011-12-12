@@ -1,14 +1,18 @@
 package edu.invisiblecities.charts;
 
+import java.util.ArrayList;
+
 import processing.core.PApplet;
 import edu.invisiblecities.dashboard.Dashboard;
+import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
 import edu.invisiblecities.data.Station;
 
-public class LineCharts extends PApplet {
-
+public class LineCharts extends PApplet implements FilterListener {
+	// TODO: filter data
+	// TODO: select data
 	// Constants
 	final int textSize = 12;
 	final int titleTextSize = 16;
@@ -31,16 +35,44 @@ public class LineCharts extends PApplet {
 
 	Model mod;
 
-	// Heatmaps
+	// Line Charts
 	DoubleAxisLineChartSet chartSet;
 
+	// Filters
+	boolean[] selectedRoutes;
+	String day;
+
 	public LineCharts() {
+		selectedRoutes = new boolean[8];
+		for (int i = 0; i < selectedRoutes.length; i++) {
+			selectedRoutes[i] = true;
+		}
+
 		mod = Dashboard.mod;
+		day = mod.day;
 	}
 
 	public void setup() {
 		size(1900, 1000);
 
+		DoubleAxisLineChart[] charts = createCharts();
+
+		DoubleAxisLineChart[] chartsAggregated = createAggregatedCharts();
+
+		chartSet = new DoubleAxisLineChartSet(40, 80, charts, chartsAggregated,
+				"Frequencies", "Delays (in seconds)");
+
+		selectedRoutes = Dashboard.getSelectedRoutes();
+		int minFreq = Dashboard.getMinFrequency();
+		int maxFreq = Dashboard.getMaxFrequency();
+		int minDelay = Dashboard.getMinDelay();
+		int maxDelay = Dashboard.getMaxDelay();
+		chartSet.updateVisibleCharts(minFreq, maxFreq, minDelay, maxDelay);
+
+		Dashboard.registerAsFilterListener(this);
+	}
+
+	public DoubleAxisLineChart[] createCharts() {
 		DoubleAxisLineChart[] charts = new DoubleAxisLineChart[mod
 				.getStations().size()];
 		int index = 0;
@@ -50,11 +82,15 @@ public class LineCharts extends PApplet {
 				Station st = r.stations.get(i);
 				charts[index] = createChart(st.station_name.substring(1,
 						st.station_name.length() - 1), st.route.hex_color,
-						st.frequencies, st.delays);
+						st.frequencies, st.delays, ri);
 				index++;
 			}
 		}
 
+		return charts;
+	}
+
+	public DoubleAxisLineChart[] createAggregatedCharts() {
 		DoubleAxisLineChart[] chartsAggregated = new DoubleAxisLineChart[8];
 		int[] sumFreqs = new int[Constants.NUM_TIME_INTERVALS]; // aux var
 		int[] sumDelays = new int[Constants.NUM_TIME_INTERVALS]; // aux var
@@ -77,15 +113,31 @@ public class LineCharts extends PApplet {
 				valuesDelays[j] = sumDelays[j] / r.stations.size();
 			}
 			chartsAggregated[i] = createChart(r.route_name, r.hex_color,
-					valuesFreq, valuesDelays);
+					valuesFreq, valuesDelays, i);
 		}
 
-		chartSet = new DoubleAxisLineChartSet(40, 80, charts, chartsAggregated,
-				"Frequencies", "Delays (in seconds)");
+		return chartsAggregated;
+	}
+
+	public void filterChanged() {
+		String d = Dashboard.getDay();
+		if (!d.equals(day)) {
+			day = d;
+			chartSet.charts = createCharts();
+			chartSet.chartsAggregated = createAggregatedCharts();
+			chartSet.modelUpdated();
+		} else {
+			selectedRoutes = Dashboard.getSelectedRoutes();
+			int minFreq = Dashboard.getMinFrequency();
+			int maxFreq = Dashboard.getMaxFrequency();
+			int minDelay = Dashboard.getMinDelay();
+			int maxDelay = Dashboard.getMaxDelay();
+			chartSet.updateVisibleCharts(minFreq, maxFreq, minDelay, maxDelay);
+		}
 	}
 
 	public DoubleAxisLineChart createChart(String name, String color,
-			int[] values1, int[] values2) {
+			int[] values1, int[] values2, int ri) {
 		String labels[] = new String[Constants.NUM_TIME_INTERVALS];
 		for (int i = 0; i < Constants.NUM_TIME_INTERVALS; i++) {
 			String s;
@@ -102,7 +154,8 @@ public class LineCharts extends PApplet {
 			}
 			labels[i] = s;
 		}
-		return new DoubleAxisLineChart(labels, values1, values2, name, color);
+		return new DoubleAxisLineChart(labels, values1, values2, name, color,
+				ri);
 	}
 
 	public void draw() {
@@ -125,6 +178,8 @@ public class LineCharts extends PApplet {
 		VScrollbar sbar;
 		DoubleAxisLineChart[] charts;
 		DoubleAxisLineChart[] chartsAggregated;
+		DoubleAxisLineChart[] visibleCharts;
+		DoubleAxisLineChart[] visibleChartsAggregated;
 		CheckBox cbox;
 
 		int iniX;
@@ -134,6 +189,7 @@ public class LineCharts extends PApplet {
 		int totalWidth;
 
 		boolean aggregated;
+		int currMaxFreq, currMinFreq, currMaxDelay, currMinDelay;
 
 		DoubleAxisLineChartSet(int iniX, int iniY,
 				DoubleAxisLineChart[] charts,
@@ -154,25 +210,102 @@ public class LineCharts extends PApplet {
 			sbar = new VScrollbar(iniX + totalWidth + chartsSep, iniY, 20,
 					totalHeight, 3 * 5 + 1);
 			cbox = new CheckBox("Routes", iniX + 40, iniY - 40, 20);
+
+			currMinFreq = 0;
+			currMinDelay = 0;
+			setMaxValues();
+			visibleCharts = charts;
+			visibleChartsAggregated = chartsAggregated;
 		}
 
 		public void update() {
 			aggregated = cbox.checked;
 			if (!aggregated) {
-				float sbarPos = sbar.getPos();
-				int numSteps = ceil(charts.length / chartsInRow)
-						- chartsInColumn + 1;
-				rowNum = (int) (sbarPos / ((float) (totalHeight - 2) / (float) numSteps));
-				sbar.update();
+				if (visibleCharts.length > chartsInRow * chartsInColumn) {
+					float sbarPos = sbar.getPos();
+					int numSteps = ceil(visibleCharts.length / chartsInRow)
+							- chartsInColumn + 1;
+					rowNum = (int) (sbarPos / ((float) (totalHeight - 2) / (float) numSteps));
+					sbar.update();
+				}
 			} else {
 				rowNum = 0;
 			}
 		}
 
+		public void updateVisibleCharts(int minVal1, int maxVal1, int minVal2,
+				int maxVal2) {
+
+			ArrayList<DoubleAxisLineChart> chs = new ArrayList<DoubleAxisLineChart>();
+			ArrayList<DoubleAxisLineChart> chsAggr = new ArrayList<DoubleAxisLineChart>();
+			for (int i = 0; i < charts.length; i++) {
+				DoubleAxisLineChart ch = charts[i];
+				boolean v = selectedRoutes[ch.r_index];
+				if (v) {
+					v = false;
+					for (int j = 0; j < ch.values1.length; j++) {
+						if (ch.values1[j] >= minVal1
+								&& ch.values1[j] <= maxVal1) {
+							v = true;
+							break;
+						}
+					}
+					if (v) {
+						v = false;
+						for (int j = 0; j < ch.values2.length; j++) {
+							if (ch.values2[j] >= minVal2
+									&& ch.values2[j] <= maxVal2) {
+								v = true;
+								break;
+							}
+						}
+					}
+				}
+				if (v)
+					chs.add(ch);
+			}
+			for (int i = 0; i < chartsAggregated.length; i++) {
+				DoubleAxisLineChart ch = chartsAggregated[i];
+				boolean v = selectedRoutes[ch.r_index];
+				if (v) {
+					v = false;
+					for (int j = 0; j < ch.values1.length; j++) {
+						if (ch.values1[j] >= minVal1
+								&& ch.values1[j] <= maxVal1) {
+							v = true;
+							break;
+						}
+					}
+					if (v) {
+						v = false;
+						for (int j = 0; j < ch.values2.length; j++) {
+							if (ch.values2[j] >= minVal2
+									&& ch.values2[j] <= maxVal2) {
+								v = true;
+								break;
+							}
+						}
+					}
+				}
+				if (v)
+					chsAggr.add(ch);
+			}
+
+			visibleCharts = new DoubleAxisLineChart[chs.size()];
+			visibleChartsAggregated = new DoubleAxisLineChart[chsAggr.size()];
+			chs.toArray(visibleCharts);
+			chsAggr.toArray(visibleChartsAggregated);
+
+			currMaxFreq = maxVal1;
+			currMaxDelay = maxVal2;
+			currMinFreq = minVal1;
+			currMinDelay = minVal2;
+		}
+
 		public void display() {
 
-			DoubleAxisLineChart[] charts = aggregated ? this.chartsAggregated
-					: this.charts;
+			DoubleAxisLineChart[] charts = aggregated ? this.visibleChartsAggregated
+					: this.visibleCharts;
 			textSize(titleTextSize);
 			float wTitle = textWidth(var1 + " vs. " + var2);
 			textAlign(LEFT);
@@ -200,10 +333,29 @@ public class LineCharts extends PApplet {
 					}
 				}
 			}
-			if (!aggregated) {
+			if (!aggregated
+					&& visibleCharts.length > chartsInRow * chartsInColumn) {
 				sbar.display();
 			}
 			cbox.display();
+		}
+
+		public void setMaxValues() {
+			currMaxFreq = 0;
+			currMaxDelay = 0;
+			for (int i = 0; i < charts.length; i++) {
+				if (charts[i].maxValue1 > currMaxFreq) {
+					currMaxFreq = charts[i].maxValue1;
+				}
+				if (charts[i].maxValue2 > currMaxDelay) {
+					currMaxDelay = charts[i].maxValue2;
+				}
+			}
+		}
+
+		public void modelUpdated() {
+			updateVisibleCharts(currMinFreq, currMaxFreq, currMinDelay,
+					currMaxDelay);
 		}
 	}
 
@@ -228,8 +380,10 @@ public class LineCharts extends PApplet {
 		int step1;
 		int step2;
 
+		int r_index;
+
 		DoubleAxisLineChart(String[] labels, int[] values1, int[] values2,
-				String title, String color) {
+				String title, String color, int r_index) {
 			this.values1 = values1;
 			this.values2 = values2;
 			maxValue1 = getMaxValue(values1);
@@ -243,6 +397,7 @@ public class LineCharts extends PApplet {
 			step2 = max / nSteps;
 			this.Y1labels = getYLabels(maxValue1, step1);
 			this.Y2labels = getYLabels(maxValue2, step2);
+			this.r_index = r_index;
 
 		}
 
