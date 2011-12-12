@@ -10,12 +10,14 @@ import processing.core.PApplet;
 import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.dashboard.ICities;
+import edu.invisiblecities.dashboard.SelectionListener;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
 import edu.invisiblecities.data.Station;
 
-public class HeatMaps extends PApplet implements FilterListener {
+public class HeatMaps extends PApplet implements FilterListener,
+		SelectionListener {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,8 +68,13 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 	}
 
-	public void selectionChanged(String stationId) {
-		// ...
+	public void stationSelectionChanged(int stationId, String stationName) {
+		hm1.selectedStation = stationName;
+		hm2.selectedStation = stationName;
+	}
+
+	public void routeSelectionChanged(String routeId, String routeName) {
+		// Do nothing...
 	}
 
 	public HeatMaps(int rectWidth, int nRects, int nRectsExpanded, int width,
@@ -105,7 +112,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 				80, "seconds");
 
 		Dashboard.registerAsFilterListener(this);
-		// TODO: Dashboard.registerAsSelectionListener(this);
+		Dashboard.registerAsSelectionListener(this);
 	}
 
 	public void filterChanged() {
@@ -287,6 +294,9 @@ public class HeatMaps extends PApplet implements FilterListener {
 		int currMax;
 		int currMin;
 
+		// Selection
+		String selectedStation;
+
 		Heatmap(int iniX, int iniY, HeatMapRow[] rows,
 				HeatMapRow[] rowsAggregated, String title, int iniXExpanded,
 				int iniYExpanded, String unit) {
@@ -315,6 +325,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 			expanded = false;
 			this.visibleRows = rows;
 			this.visibleRowsAggregated = rowsAggregated;
+			selectedStation = null;
 
 			maxColor = new HashMap<String, Integer>();
 			maxColorAggregated = new HashMap<String, Integer>();
