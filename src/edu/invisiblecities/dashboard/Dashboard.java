@@ -10,10 +10,10 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import edu.invisiblecities.IsoMapStage;
 import edu.invisiblecities.Splash;
@@ -21,7 +21,7 @@ import edu.invisiblecities.TopoMapStage;
 import edu.invisiblecities.charts.HeatMaps;
 import edu.invisiblecities.data.Model;
 
-public class Dashboard extends JFrame implements ActionListener {
+public class Dashboard extends JFrame implements ChangeListener {
 
 	public static Model mod;
 
@@ -30,9 +30,8 @@ public class Dashboard extends JFrame implements ActionListener {
 	static IsoMapStage isoMap;
 	static TopoMapStage topoMap;
 	static JButton playButton;
-	static JTabbedPane tabbedPane = new JTabbedPane();
 
-	JComboBox mapCombo;
+	static JTabbedPane tabbedPane = new JTabbedPane();
 	public int selMap = 0;
 
 	public static List<SelectionListener> selectionListeners;
@@ -56,7 +55,8 @@ public class Dashboard extends JFrame implements ActionListener {
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
 		c1.gridy = 1;
-		c1.gridheight = 3;
+		c1.gridheight = 2;
+		c1.gridwidth = 2;
 		filterPanel.setBackground(bg);
 		this.getContentPane().add(filterPanel, c1);
 
@@ -86,25 +86,12 @@ public class Dashboard extends JFrame implements ActionListener {
 		tabbedPane.addTab("Splash", splash);
 		splash.init();
 
+		tabbedPane.addChangeListener(this);
+
 		GridBagConstraints c3 = new GridBagConstraints();
 		c3.gridx = 0;
 		c3.gridy = 0;
 		this.getContentPane().add(tabbedPane, c3);
-
-		// maps combo
-		JLabel label1 = new JLabel("Map Vis:");
-		GridBagConstraints c7 = new GridBagConstraints();
-		c7.gridx = 1;
-		c7.gridy = 1;
-		this.getContentPane().add(label1, c7);
-
-		mapCombo = new JComboBox(ICities.maps);
-		mapCombo.setSelectedIndex(ICities.INDEX_MAP_TOPO);
-		mapCombo.addActionListener(this);
-		GridBagConstraints c6 = new GridBagConstraints();
-		c6.gridx = 2;
-		c6.gridy = 1;
-		this.getContentPane().add(mapCombo, c6);
 
 		final ImageIcon playIcon = new ImageIcon("img/play.png");
 		final ImageIcon pauseIcon = new ImageIcon("img/pause.png");
@@ -123,9 +110,10 @@ public class Dashboard extends JFrame implements ActionListener {
 
 		});
 		GridBagConstraints c4 = new GridBagConstraints();
-		c4.gridx = 3;
+		c4.gridx = 2;
 		c4.gridy = 1;
 		c4.gridwidth = 2;
+		c4.ipadx = 60;
 		this.getContentPane().add(playButton, c4);
 
 		final JFrame parent = this;
@@ -142,7 +130,7 @@ public class Dashboard extends JFrame implements ActionListener {
 		});
 		GridBagConstraints c8 = new GridBagConstraints();
 		c8.gridx = 2;
-		c8.gridy = 3;
+		c8.gridy = 2;
 		this.getContentPane().add(buttLineCharts, c8);
 
 	}
@@ -200,14 +188,6 @@ public class Dashboard extends JFrame implements ActionListener {
 		}
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		int map = mapCombo.getSelectedIndex();
-		if (map != selMap) {
-			selMap = map;
-			showMap();
-		}
-	}
-
 	public void showMap() {
 		boolean t = false;
 		boolean i = false;
@@ -219,13 +199,19 @@ public class Dashboard extends JFrame implements ActionListener {
 		} else if (selMap == ICities.INDEX_MAP_SPLASH) {
 			s = true;
 		}
-		tabbedPane.setSelectedIndex(selMap);
-		System.out.println(selMap);
 		Dashboard.topoMap.setHide(!t);
 		Dashboard.topoMap.setVisible(t);
 		Dashboard.isoMap.setHide(!i);
 		Dashboard.isoMap.setVisible(i);
 		Dashboard.splash.setHide(!s);
 		Dashboard.splash.setVisible(s);
+	}
+
+	public void stateChanged(ChangeEvent arg0) {
+		int map = tabbedPane.getSelectedIndex();
+		if (map != selMap) {
+			selMap = map;
+			showMap();
+		}
 	}
 }
