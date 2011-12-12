@@ -237,6 +237,8 @@ public class HeatMaps extends PApplet implements FilterListener,
 			++ICities.timer;
 			if (ICities.timer == ICities.TotalTimeStamps) {
 				ICities.timer = 0;
+				ICities.IsPlaying = false;
+				Dashboard.timeUp();
 			}
 		}
 

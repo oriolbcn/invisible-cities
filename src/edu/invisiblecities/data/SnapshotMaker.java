@@ -14,7 +14,9 @@ public class SnapshotMaker {
 
 	public static void main(String[] args) {
 
-		for (String day : ICities.days) {
+		for (int d = 14; d < ICities.days.length - 1; d++) {
+
+			String day = ICities.days[d];
 
 			Model mod = new Model();
 			mod.day = day;
