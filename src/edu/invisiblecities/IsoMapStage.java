@@ -122,8 +122,6 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 	public void stationSelectionChanged(int stationId, String stationName) {
 		if (SelectedNode != -1)
 			mStations[SelectedNode].isSelected = false;
-		if (IntentNode != -1)
-			mStations[IntentNode].isIntent = false;
 		SelectedNode = getSelectionByName(stationName);
 		println(SelectedNode);
 		if (SelectedNode != -1) {
