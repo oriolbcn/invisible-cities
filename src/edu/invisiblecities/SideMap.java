@@ -1,54 +1,49 @@
 package edu.invisiblecities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import processing.core.PApplet;
+import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import edu.invisiblecities.IsoMapStage.Route;
 import edu.invisiblecities.IsoMapStage.Station;
-import processing.core.PApplet;
 
 public class SideMap extends PApplet {
 
-	private static final long serialVersionUID = 1L;
-	public static final int CanvasWidth = 300;
-	public static final int CanvasHeight = 200;
-	public static final int ParentCanvasHeight = 600;
-	public static final int PictureWidth = ParentCanvasHeight;
+	private static final long  serialVersionUID = 1L;
+	public static final int    CanvasWidth = 200;
+	public static final int    CanvasHeight = 200;
+	public static final int    ParentCanvasHeight = 600;
+	public static final int    PictureWidth = ParentCanvasHeight;
 
 	public static final String Stationinfofilename = "stationrelationship.csv";
-	public static Station[] mStations;
-	public static int NumOfStations = 170; // Hard code for this case
+	public static Station[]    mStations;
+	public static Route[]      mRoutes;
+	public static int          NumOfRoutes;
+	public static int          NumOfStations;
+	public static int          SelectedNode;
 
 	public SideMap() {
+	    loadRoutes();
 		loadStations();
 	}
 
     public void setup() {
-    	size(CanvasWidth, CanvasHeight);
-        map = new de.fhpotsdam.unfolding.Map(this, MapLeftX, 0, MapWidth,
-            MapHeight, new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
+    	size(CanvasWidth, CanvasHeight, GLConstants.GLGRAPHICS);
+        map = new de.fhpotsdam.unfolding.Map(this, 0, 0, CanvasWidth,
+            CanvasHeight, new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
     }
     
     public static int radarDiameter = 0;
     public static de.fhpotsdam.unfolding.Map map;
-    
-    public static final int MapLeftX = PictureWidth;
-    public static final int MapWidth = CanvasWidth - PictureWidth;
-    public static final int MapHeight = CanvasHeight / 2;
-    public static final int MapBottomY = MapHeight;
-    public static final int MapRightX = MapLeftX + MapWidth;
-    
-    public static final int SideTableLeftX = MapLeftX;
-    public static final int SideTableTopY = MapHeight;
-    public static final int SideTableWidth = MapWidth;
-    public static final int SideTableHeight = MapHeight;
-    
     public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
     public static final int OpenMapID = 40077;
     public static final int ZoomLevel = 10;
-    public static final int SideMapDiameter = 6;
-    public static final int SideMapRadius = SideMapDiameter / 2;
+    public static final int StationDiameter = 6;
+    public static final int StationRadius = StationDiameter / 2;
+    
     public static Location loc = new Location(0, 0);
     
     public void draw() {
@@ -86,51 +81,75 @@ public class SideMap extends PApplet {
                     }
                 }
             }
-        }
+        
     }
 
-	public static final int StationOffsetY = 20;
-	public static final int StationNameOffsetX = SideTableLeftX + 20;
-	public static final int StationNameOffsetY = SideTableTopY + StationOffsetY;
-	public static final int StationCapacityOffsetX = StationNameOffsetX;
-	public static final int StationCapacityOffsetY = StationNameOffsetY
-			+ StationOffsetY;
 
-	public void drawSideTable() {
-		fill(255);
-		rect(SideTableLeftX, SideTableTopY, SideTableWidth, SideTableHeight);
-		fill(0);
-		Station sta = mStations[SelectedNode];
-		// text(sta.name + " " + sta.diameter, StationNameOffsetX,
-		// StationNameOffsetY);
-		if (hoverId >= 0) {
-			int len = sta.sssp[hoverId].length;
-			for (int i = 0; i < len; ++i) {
-				Station ssp = mStations[sta.sssp[hoverId][i]];
-				text(ssp.name + " " + ssp.diameter, StationNameOffsetX,
-						StationNameOffsetY + i * StationOffsetY);
-			}
-		}
+////////////////////// Inner Classes ///////////////////////////////////////////
+	public class Station {
+	    public float lat;
+	    public float lon;
+	    public float screenX;
+	    public float screenY;
+	    public int   color;
+	    public String name;
+	    public int   rid;
+	    
+	    public Station(float la, float lo, int col) {
+	        lat = la;
+	        lon = lo;
+	        color = col;
+	    }
+	    
+	    public boolean isInside() {
+	        if (screenX + StationRadius >= mouseX && screenX - StationRadius <= mouseX
+                    && screenY + StationRadius >= mouseY && screenY - StationRadius <= mouseY)
+	            return true;
+	        return false;
+	    }
 	}
-
-	public void drawLayoutAndText() {
-		fill(0);
-		text("Mouse x: " + mouseX + " y: " + mouseY, 20, 20);
-		text("Scale " + FixedScale, 20, 40);
-		text("FPS: " + frameRate, 20, 60);
-		stroke(0);
-		strokeWeight(0);
-		line(PictureWidth, 0, PictureWidth, PictureHeight);
-		line(MapLeftX, MapBottomY, MapRightX, MapBottomY);
-	}
-
-	/*
-	 * station: if (screenX + SideMapRadius >= sx && screenX - SideMapRadius <=
-	 * sx && screenY + SideMapRadius >= sy && screenY - SideMapRadius <= sy)
-	 * return true;
-	 */
-
+	
+////////////////////////////////////////////////////////////////////////////////
 	// load data
+	private static HashMap<String, Integer> route2Int;
+	
+	public static int findRoute(String rid) {
+	    for (int i = 0; i < NumOfRoutes; ++i) {
+	        if (mRoutes[i].id.equalsIgnoreCase(rid)) {
+	            return i;
+	        }
+	    }
+	    return -1;
+	}
+	
+	public void loadRoutes() {
+	    try {
+	        route2Int = new HashMap<String, Integer>();
+	        ArrayList<Route> alr = new ArrayList<Route>();
+	        String[] lines = loadStrings(IsoMapStage.Routeinfofilename);
+	        int linelength = lines.length;
+	        for (int i = 0; i < linelength; ++i) {
+	            String[] split = lines[i].split(";");
+	            Route r = new Route(split[0], split[2].substring(1), split[4],
+	                    split[5]);
+	            alr.add(r);
+	        }
+	        int size = alr.size();
+	        // mRoutes = (Route[]) alr.toArray(); //??
+	        mRoutes = new Route[size];
+	        for (int i = 0; i < size; ++i) {
+	            Route r = alr.get(i);
+	            mRoutes[i] = new Route(r.id, r.name, r.url, r.red, r.green,
+	                    r.blue);
+	            route2Int.put(r.id, new Integer(i));
+	        }
+	        NumOfRoutes = mRoutes.length;
+	        System.out.println("Load routes done\nTotal Routes: " + NumOfRoutes);
+	    } catch (Exception e) {
+	        System.out.println(e.toString());
+	    }
+	}
+	
 	public void loadStations() {
 		try {
 			mStations = new Station[NumOfStations];
@@ -141,8 +160,7 @@ public class SideMap extends PApplet {
 														// route_id 2: name 3:
 														// lat 4: lon
 				int stationId = Integer.parseInt(split[0]);
-				if (mStations[stationId] != null)
-					throw new Exception();
+				if (mStations[stationId] != null) throw new Exception();
 				String routeId = split[1];
 				String name = split[2].substring(1, split[2].length() - 1);
 				float lat = Float.parseFloat(split[3]);
@@ -160,8 +178,7 @@ public class SideMap extends PApplet {
 				int size = al.size();
 				int rid = findRoute(routeId);
 				Route r = mRoutes[rid];
-				mStations[stationId] = new Station(r, name, size, r.red,
-						r.green, r.blue, rid, lat, lon);
+				mStations[stationId] = new Station();
 				int cnt = 0;
 				for (String s : al) {
 					String[] twoparts = s.split(" ");
