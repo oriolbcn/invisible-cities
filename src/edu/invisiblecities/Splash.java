@@ -143,13 +143,15 @@ public class Splash extends PApplet implements FilterListener {
             image(clockImg, 0, 0);
             for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i])
                 image(pg[i], 0, 0);
-            //image(pg[0], 0, 0);
-            //image(pg[1], 0, 0);
             text(mTimer, 20, 80);
         }
         if (ICities.IsPlaying) {
             if (mTimer == TotalTimeStamps) {
                 mTimer = 0;
+                pg = new PGraphics[NumOfRoutes];
+                for (int i=0; i<NumOfRoutes; ++i) {
+                    pg[i] = createGraphics(PictureWidth, PictureHeight, P2D);
+                }
             }
             if (mDots[mTimer] != null) {
                 for (Dot dot : mDots[mTimer]) {
@@ -283,7 +285,7 @@ public class Splash extends PApplet implements FilterListener {
             pg[rid].beginDraw();
             pg[rid].fill(color);
             pg[rid].noStroke();
-            pg[rid].smooth();
+            //pg[rid].smooth();
             pg[rid].ellipse(endX, endY, diameter, diameter);
             pg[rid].endDraw();
             if (predot != null) {
@@ -319,7 +321,7 @@ public class Splash extends PApplet implements FilterListener {
                 
                 // Since delay for each trip is not available, change this to start hour
                 //float delay = ClockDiameter * random(0.3f, 1.0f) / 2;
-                float hour = (starttime / 3600.f) / 24 * ((ClockDiameter - ClockInnerDiameter) / 2) + ClockInnerDiameter / 2;
+                float hour = (ClockDiameter - (starttime / 3600.f) * (ClockDiameter - ClockInnerDiameter) / 24) / 2;
                 float x = hour * cos(theta) + PictureCenterX;
                 float y = hour * sin(theta) + PictureCenterY;
                 // TODO Ridership

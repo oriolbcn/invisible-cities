@@ -120,11 +120,11 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 	}
 
 	public void stationSelectionChanged(int stationId, String stationName) {
-		if (SelectedNode != -1)
-			mStations[SelectedNode].isSelected = false;
-		SelectedNode = getSelectionByName(stationName);
-		println(SelectedNode);
-		if (SelectedNode != -1) {
+		int id = getSelectionByName(stationName);
+		if (id != -1) {
+            mStations[SelectedNode].isSelected = false;
+		    SelectedNode = id;
+		    mStations[SelectedNode].isSelected = true;
 			updateGraph();
 			for (int i = 0; i < NumOfStations; ++i)
 				if (mStations[i] != null && i != SelectedNode)

@@ -81,10 +81,9 @@ public class TopoMapStage extends PApplet implements FilterListener,
 		loadTrip();
 		loadStopDelays();
 		DisplayRoutes = Dashboard.getSelectedRoutes();
-		// DisplayRoutes = new boolean[NumOfRoutes];
-		// for (int i=0; i<NumOfRoutes; ++i) {
-		// DisplayRoutes[i] = true;
-		// }
+		//DisplayRoutes = new boolean[NumOfRoutes];
+		//for (int i=0; i<NumOfRoutes; ++i) DisplayRoutes[i] = true;
+		
 		MapImage = loadImage(Mapfilename);
 		initUI();
 		Dashboard.registerAsFilterListener(this);
@@ -109,13 +108,13 @@ public class TopoMapStage extends PApplet implements FilterListener,
 	public static HashMap<Integer, Float> PathWeight = new HashMap();
 
 	public static void addTrains() {
-		// PathWeight.clear();
 		if (mTrips[mTimer] != null) {
 			for (Trip trip : mTrips[mTimer]) {
 				int rid = trip.rid;
 				Trip oriNext = mListHeader[rid].nexttrip;
 				trip.nexttrip = oriNext;
 				trip.pretrip = mListHeader[rid];
+				trip.stepCount = 0;
 				mListHeader[rid].nexttrip = trip;
 				if (oriNext != null)
 					oriNext.pretrip = trip;
@@ -163,8 +162,6 @@ public class TopoMapStage extends PApplet implements FilterListener,
 				}
 			}
 			if (isDisplayed) {
-				background(255);
-				// background(0);
 				image(MapImage, 0, 0);
 			}
 			addTrains();
