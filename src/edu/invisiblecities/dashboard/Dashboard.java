@@ -175,6 +175,14 @@ public class Dashboard extends JFrame implements ChangeListener {
 		return filterPanel.getDay();
 	}
 
+	public static boolean dotsSelected() {
+		return filterPanel.dotsSelected();
+	}
+
+	public static boolean linesSelected() {
+		return filterPanel.linesSelected();
+	}
+
 	// To be called by Topo and Iso maps when a station is selected
 	public static void noitifyStationSelection(int stationId, String stationName) {
 		for (SelectionListener l : selectionListeners) {
