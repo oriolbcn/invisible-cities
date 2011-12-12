@@ -50,6 +50,9 @@ public class HeatMaps extends PApplet implements FilterListener,
 	boolean[] selectedRoutes;
 	String day;
 
+	// Selection
+	String selectedStation;
+
 	public HeatMaps() {
 
 		this.rectWidth = 40;
@@ -69,8 +72,8 @@ public class HeatMaps extends PApplet implements FilterListener,
 	}
 
 	public void stationSelectionChanged(int stationId, String stationName) {
-		hm1.selectedStation = stationName;
-		hm2.selectedStation = stationName;
+		hm1.selectStation(stationName);
+		hm2.selectStation(stationName);
 	}
 
 	public void routeSelectionChanged(String routeId, String routeName) {
@@ -244,10 +247,22 @@ public class HeatMaps extends PApplet implements FilterListener,
 		if (hm1.visible) {
 			hm1.cbox.update();
 			hm1.expandButton.update();
+			stationSelected(hm1.getSelection());
+
 		}
 		if (hm2.visible) {
 			hm2.cbox.update();
 			hm2.expandButton.update();
+			stationSelected(hm2.getSelection());
+		}
+	}
+
+	public void stationSelected(String sel) {
+		if (sel != null) {
+			if (!sel.equals(selectedStation)) {
+				selectedStation = sel;
+				Dashboard.noitifyStationSelection(-1, sel);
+			}
 		}
 	}
 
@@ -293,9 +308,6 @@ public class HeatMaps extends PApplet implements FilterListener,
 		boolean aggregated;
 		int currMax;
 		int currMin;
-
-		// Selection
-		String selectedStation;
 
 		Heatmap(int iniX, int iniY, HeatMapRow[] rows,
 				HeatMapRow[] rowsAggregated, String title, int iniXExpanded,
@@ -379,6 +391,8 @@ public class HeatMaps extends PApplet implements FilterListener,
 						rowNum = (int) (sbarPos / ((float) (chartHeight - 2) / (float) numSteps));
 						sbar.update();
 					}
+				} else {
+					rowNum = 0;
 				}
 				updateTooltipValue();
 			} else {
@@ -413,6 +427,22 @@ public class HeatMaps extends PApplet implements FilterListener,
 				tooltipValue = -1;
 			}
 
+		}
+
+		public String getSelection() {
+			if (aggregated) {
+				return null;
+			} else {
+				int currH = visibleRows.length < shownRects ? rectHeight
+						* visibleRows.length : h;
+				if (mouseX > iniX && mouseX < iniX + chartWidth
+						&& mouseY > iniY && mouseY < iniY + currH) {
+					int y = (mouseY - iniY) / rectHeight;
+					return visibleRows[y + rowNum].label;
+				} else {
+					return null;
+				}
+			}
 		}
 
 		public void updateVisibleRows(int minVal, int maxVal) {
@@ -463,6 +493,42 @@ public class HeatMaps extends PApplet implements FilterListener,
 			currMin = minVal;
 		}
 
+		public void selectStation(String stationName) {
+			selectedStation = stationName;
+			if (!aggregated && visibleRows.length > shownRects) {
+				if (expanded) {
+					int rn = getRowNum(stationName);
+					if (rn != -1) {
+						int numSteps = visibleRows.length - nRectsExpanded;
+						rowNum = rn;
+						if (rowNum > numSteps)
+							rowNum = numSteps;
+						int sbarPos = (int) (((float) (float) (chartHeightExpanded - 2) / (float) numSteps) * rowNum);
+						sbarExpanded.move(sbarPos);
+					}
+				} else {
+					int rn = getRowNum(stationName);
+					if (rn != -1) {
+						int numSteps = visibleRows.length - nRects;
+						rowNum = rn;
+						if (rowNum > numSteps)
+							rowNum = numSteps;
+						int sbarPos = (int) ((float) ((float) (chartHeight - 2) / (float) numSteps) * rowNum);
+						sbar.move(sbarPos);
+					}
+				}
+			}
+		}
+
+		public int getRowNum(String station_name) {
+			for (int i = 0; i < visibleRows.length; i++) {
+				if (visibleRows[i].label.equals(station_name)) {
+					return i;
+				}
+			}
+			return -1;
+		}
+
 		public void display() {
 
 			textSize(titleTextSize);
@@ -505,9 +571,16 @@ public class HeatMaps extends PApplet implements FilterListener,
 				}
 
 				// Write station/route name
+				float w = textWidth(row.label);
+
+				if (row.label.equals(selectedStation)) {
+					fill(127, 50);
+					rect(iniX - w - 5, iniY + rectHeight * i + 6, w + 5,
+							rectHeight);
+				}
 				textAlign(LEFT);
 				fill(0);
-				float w = textWidth(row.label);
+
 				text(row.label, iniX - w, iniY + rectHeight * (i + 1));
 
 				colorMode(HSB, 360, 100, 100);
@@ -723,6 +796,12 @@ public class HeatMaps extends PApplet implements FilterListener,
 			if (abs(newspos - spos) > 1) {
 				spos = spos + (newspos - spos) / loose;
 			}
+		}
+
+		public void move(int pos) {
+			spos = pos;
+			spos = ((float) pos + ypos * ratio) / ratio;
+			newspos = spos;
 		}
 
 		int constrain(int val, int minv, int maxv) {

@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import processing.core.PApplet;
 import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
+import edu.invisiblecities.dashboard.SelectionListener;
 import edu.invisiblecities.data.Constants;
 import edu.invisiblecities.data.Model;
 import edu.invisiblecities.data.Route;
 import edu.invisiblecities.data.Station;
 
-public class LineCharts extends PApplet implements FilterListener {
-	// TODO: filter data
-	// TODO: select data
+public class LineCharts extends PApplet implements FilterListener,
+		SelectionListener {
 	// Constants
 	final int textSize = 12;
 	final int titleTextSize = 16;
@@ -42,6 +42,8 @@ public class LineCharts extends PApplet implements FilterListener {
 	boolean[] selectedRoutes;
 	String day;
 
+	String selectedStation;
+
 	public LineCharts() {
 		selectedRoutes = new boolean[8];
 		for (int i = 0; i < selectedRoutes.length; i++) {
@@ -70,6 +72,15 @@ public class LineCharts extends PApplet implements FilterListener {
 		chartSet.updateVisibleCharts(minFreq, maxFreq, minDelay, maxDelay);
 
 		Dashboard.registerAsFilterListener(this);
+		Dashboard.registerAsSelectionListener(this);
+	}
+
+	public void stationSelectionChanged(int stationId, String stationName) {
+		chartSet.selectStation(stationName);
+	}
+
+	public void routeSelectionChanged(String routeId, String routeName) {
+
 	}
 
 	public DoubleAxisLineChart[] createCharts() {
@@ -167,6 +178,16 @@ public class LineCharts extends PApplet implements FilterListener {
 
 	public void mousePressed() {
 		chartSet.cbox.update();
+		stationSelected(chartSet.getSelection());
+	}
+
+	public void stationSelected(String sel) {
+		if (sel != null) {
+			if (!sel.equals(selectedStation)) {
+				selectedStation = sel;
+				Dashboard.noitifyStationSelection(-1, sel);
+			}
+		}
 	}
 
 	class DoubleAxisLineChartSet {
@@ -216,6 +237,7 @@ public class LineCharts extends PApplet implements FilterListener {
 			setMaxValues();
 			visibleCharts = charts;
 			visibleChartsAggregated = chartsAggregated;
+			selectedStation = null;
 		}
 
 		public void update() {
@@ -227,6 +249,8 @@ public class LineCharts extends PApplet implements FilterListener {
 							- chartsInColumn + 1;
 					rowNum = (int) (sbarPos / ((float) (totalHeight - 2) / (float) numSteps));
 					sbar.update();
+				} else {
+					rowNum = 0;
 				}
 			} else {
 				rowNum = 0;
@@ -302,6 +326,55 @@ public class LineCharts extends PApplet implements FilterListener {
 			currMinDelay = minVal2;
 		}
 
+		public String getSelection() {
+			if (aggregated) {
+				return null;
+			} else {
+
+				if (mouseX > iniX && mouseX < iniX + totalWidth
+						&& mouseY > iniY && mouseY < iniY + totalHeight) {
+					int y = (mouseY - iniY) / (chartHeight + 60);
+					int x = (mouseX - iniX) / (chartWidth + 50);
+					int ind = rowNum * chartsInRow + y * chartsInRow + x;
+					if (ind < visibleCharts.length) {
+						return visibleCharts[ind].title;
+					} else {
+						return null;
+					}
+				} else {
+					return null;
+				}
+			}
+		}
+
+		public void selectStation(String stationName) {
+			selectedStation = stationName;
+			if (!aggregated
+					&& visibleCharts.length > chartsInRow * chartsInColumn) {
+				int rn = getRowNum(stationName);
+				if (rn != -1) {
+					rn = ceil(rn / chartsInRow);
+					int numSteps = ceil(visibleCharts.length / chartsInRow)
+							- chartsInColumn + 1;
+					rowNum = rn;
+					if (rowNum > numSteps)
+						rowNum = numSteps;
+					int sbarPos = (int) ((float) ((float) (totalHeight - 2) / (float) numSteps) * rowNum);
+					sbar.move(sbarPos);
+				}
+
+			}
+		}
+
+		public int getRowNum(String station_name) {
+			for (int i = 0; i < visibleCharts.length; i++) {
+				if (visibleCharts[i].title.equals(station_name)) {
+					return i;
+				}
+			}
+			return -1;
+		}
+
 		public void display() {
 
 			DoubleAxisLineChart[] charts = aggregated ? this.visibleChartsAggregated
@@ -362,6 +435,8 @@ public class LineCharts extends PApplet implements FilterListener {
 	// Double Axis Line Chart
 	class DoubleAxisLineChart {
 
+		DoubleAxisLineChartSet parent;
+
 		String title;
 		String color;
 
@@ -407,8 +482,13 @@ public class LineCharts extends PApplet implements FilterListener {
 
 		public void display() {
 
-			fill(unhex("FF" + color));
 			noStroke();
+			if (title.equals(selectedStation)) {
+				fill(127, 50);
+				rect(iniX - 30, iniY - 40, chartWidth + 60, chartHeight + 70);
+			}
+
+			fill(unhex("FF" + color));
 			rect(iniX + chartWidth / 5, iniY - 30, 3 * chartWidth / 5, 40);
 			textSize(subtitleTextSize);
 			fill(255);
@@ -548,6 +628,12 @@ public class LineCharts extends PApplet implements FilterListener {
 
 		int constrain(int val, int minv, int maxv) {
 			return min(max(val, minv), maxv);
+		}
+
+		public void move(int pos) {
+			spos = pos;
+			spos = ((float) pos + ypos * ratio) / ratio;
+			newspos = spos;
 		}
 
 		boolean over() {
