@@ -35,7 +35,7 @@ public class Dashboard extends JFrame implements ActionListener {
 	JComboBox mapCombo;
 	public int selMap = 0;
 
-	List<SelectionListener> selectionListeners;
+	public static List<SelectionListener> selectionListeners;
 
 	public Dashboard() {
 
@@ -151,6 +151,10 @@ public class Dashboard extends JFrame implements ActionListener {
 		filterPanel.register(fl);
 	}
 
+	public static void registerAsSelectionListener(SelectionListener sl) {
+		selectionListeners.add(sl);
+	}
+
 	public static boolean[] getSelectedRoutes() {
 		return filterPanel.getSelectedRoutes();
 	}
@@ -184,14 +188,14 @@ public class Dashboard extends JFrame implements ActionListener {
 	}
 
 	// To be called by Topo and Iso maps when a station is selected
-	public void noitifyStationSelection(int stationId, String stationName) {
+	public static void noitifyStationSelection(int stationId, String stationName) {
 		System.out.println("NOTIFY SELECTION!!!");
 		for (SelectionListener l : selectionListeners) {
 			l.stationSelectionChanged(stationId, stationName);
 		}
 	}
 
-	public void noitifyRouteSelection(String routeId, String routeName) {
+	public static void noitifyRouteSelection(String routeId, String routeName) {
 		for (SelectionListener l : selectionListeners) {
 			l.routeSelectionChanged(routeId, routeName);
 		}
