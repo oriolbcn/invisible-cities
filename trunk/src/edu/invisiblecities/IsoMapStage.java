@@ -5,13 +5,9 @@ import java.util.HashMap;
 
 import processing.core.PApplet;
 import processing.core.PVector;
-import de.fhpotsdam.unfolding.geo.Location;
-import de.fhpotsdam.unfolding.providers.OpenStreetMap;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
-import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
-import edu.invisiblecities.dashboard.ICities;
 
 public class IsoMapStage extends PApplet implements FilterListener {
 
@@ -30,7 +26,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	public static final String SSSPfilename = "SSSP.csv";
 	public static final int RadarDiameterMax = 50;
 	public static final int RadarStrokeWeight = 1;
-	public static final int NumOfBackgroundCircles = 10;
+	public static final int NumOfBackgroundCircles = 15;
 
 	// Animation
 	public static final float Duration = 1.f;
@@ -49,10 +45,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	public static float[][] AngleRanges;
 
 	public IsoMapStage() {
-	    
-        
-        loadRoutes();
-
+	    loadRoutes();
         loadStations();
 	}
 	
@@ -82,7 +75,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		for (int i = 0; i < NumOfBackgroundCircles; ++i) {
 			if (i % 2 == 1)
 				bgCircles[i] = new BackgroundCircle(i
-						* BackgroundCircleInterval, 255);
+						* BackgroundCircleInterval, 255, "" + (i * BackgroundCircleInterval / 2));
 			else
 				bgCircles[i] = new BackgroundCircle(i
 						* BackgroundCircleInterval, 220);
@@ -94,8 +87,6 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		size(CanvasWidth, CanvasHeight);
 		Ani.init(this);
 		smooth();
-		// textAlign(CENTER);
-		//strokeWeight(1);
 		
 		initBackgroundCircle();
 
@@ -118,13 +109,6 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	}
 	
 	public void filterChanged() {
-		// dashboard.getSelectedRoutes();
-		// dashboard.getMaxFrequency();
-		// dashboard.getMinFrequency();
-		// dashboard.getMaxDelay();
-		// dashboard.getMinDelay();
-		// dashboard.getMaxRidership();
-		// dashboard.getMinRidership();
 	}
 	
 	public static boolean isDisplayed = true;
@@ -160,6 +144,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		sta.isHover = true;
 		textAlign(CENTER);
 		text(sta.name, sta.curX, sta.curY + 25);
+		text(sta.bfsDistance[SelectedNode], sta.curX, sta.curY + 45);
 		textAlign(LEFT);
 	}
 
@@ -195,9 +180,11 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	}
 
 	public void drawBackgroundCircles() {
+	    textAlign(CENTER);
 		for (int i = NumOfBackgroundCircles - 1; i >= 0; --i) {
 			bgCircles[i].draw();
 		}
+		textAlign(LEFT);
 	}
 
 	public void drawIntent() {
@@ -278,16 +265,16 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			float y = -1.0f;
 			if (mouseY - PictureCenterY >= 0.f)
 				y = 1.0f;
-			System.out.println("y " + y);
+			//System.out.println("y " + y);
 			float x = mx * y / my;
-			System.out.println("x " + x);
+			//System.out.println("x " + x);
 			pv.x = x;
 			pv.y = y;
 			pv.normalize();
 			Station sta = mStations[IntentNode];
 			pv.mult(mStations[SelectedNode].bfsDistance[IntentNode]
 					/ FixedScale);
-			System.out.println("pvx " + pv.x + " pvy " + pv.y);
+			//System.out.println("pvx " + pv.x + " pvy " + pv.y);
 			sta.curX = pv.x + PictureCenterX;
 			sta.curY = pv.y + PictureCenterY;
 		}
@@ -322,6 +309,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		public int[] bfsDistance = new int[NumOfStations];
 		public float[][] bfsPosition = new float[NumOfStations][2];
 		public int[][] sssp = new int[NumOfStations][];
+		public final static int RescaleOffset = 4000;
 
 		public Station(Route rt, String nm, int size, int r, int g, int b,
 				int id, float la, float lo) {
@@ -364,7 +352,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 
 		public void reScale(Ani theAni) {
 			if (theAni.isEnded()) {
-				FixedScale = MaxDistance[SelectedNode] / PictureHalfHeight;
+				FixedScale = (MaxDistance[SelectedNode] + RescaleOffset) / PictureHalfHeight;
 				updateGraph();
 				for (int i = 0; i < NumOfStations; ++i)
 					if (mStations[i] != null)
@@ -435,12 +423,21 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		public float diameter;
 		public float rDiameter;
 		public int gray;
+		public String distance;
 
 		public BackgroundCircle(float d, int g) {
 			rDiameter = d;
 			diameter = rDiameter / FixedScale;
 			gray = g;
+			distance = "";
 		}
+		
+		public BackgroundCircle(float d, int g, String dis) {
+            rDiameter = d;
+            diameter = rDiameter / FixedScale;
+            gray = g;
+            distance = dis;
+        }
 
 		public void setAni() {
 			float _d = rDiameter / FixedScale;
@@ -451,15 +448,14 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			noStroke();
 			fill(gray);
 			ellipse(PictureCenterX, PictureCenterY, diameter, diameter);
+			fill(0);
+			text(distance, PictureCenterX + diameter / 2, PictureCenterY);
 		}
 	}
 
 	// //////////////////////////////////////////////////////////////////////////////
 
 	/*************** Load Data ***************/
-	// public static FileInputStream ifstream;
-	// public static DataInputStream in;
-	// public static BufferedReader br;
 
 	private static HashMap<String, Integer> route2Int;
 
@@ -500,15 +496,10 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		try {
 			route2Int = new HashMap<String, Integer>();
 			ArrayList<Route> alr = new ArrayList<Route>();
-			// ifstream = new FileInputStream(Routeinfofilename);
-			// in = new DataInputStream(ifstream);
-			// br = new BufferedReader(new InputStreamReader(in));
 			String[] lines = loadStrings(Routeinfofilename);
 			int linelength = lines.length;
-			// while ((line = br.readLine()) != null) {
 			for (int i = 0; i < linelength; ++i) {
 				String[] split = lines[i].split(";");
-				// String[] split = line.split(";");
 				Route r = new Route(split[0], split[2].substring(1), split[4],
 						split[5]);
 				alr.add(r);
@@ -526,9 +517,6 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			System.out
 					.println("Load routes done\nTotal Routes: " + NumOfRoutes);
 			RouteCount = new int[NumOfRoutes];
-			// br.close();
-			// in.close();
-			// ifstream.close();
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
@@ -538,13 +526,8 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		// String line = null;
 		try {
 			mStations = new Station[NumOfStations];
-			// ifstream = new FileInputStream(Stationinfofilename);
-			// in = new DataInputStream(ifstream);
-			// br = new BufferedReader(new InputStreamReader(in));
 			String[] lines = loadStrings(Stationinfofilename);
 			int total = lines.length;
-
-			// while ((line = br.readLine()) != null) {
 			for (int kk = 0; kk < total; ++kk) {
 				String[] split = lines[kk].split(";"); // 0: station id; 1:
 														// route_id 2: name 3:
@@ -559,8 +542,6 @@ public class IsoMapStage extends PApplet implements FilterListener {
 				float lat = Float.parseFloat(split[3]);
 				float lon = Float.parseFloat(split[4]);
 				// Read second line
-				// line = br.readLine(); if (line == null) throw new
-				// Exception();
 				++kk;
 				split = lines[kk].split(";");
 				int len = split.length;
@@ -584,24 +565,15 @@ public class IsoMapStage extends PApplet implements FilterListener {
 					mStations[stationId].distance[cnt] = dist;
 					++cnt;
 				}
-				// ++total;
 			}
 			System.out.println("Total Stations: " + total);
-			// br.close();
-			// in.close();
-			// ifstream.close();
-
+	
 			// Load bfs distance
 			MaxDistance = new int[NumOfStations];
-			// ifstream = new FileInputStream(Bfsinfofilename);
-			// in = new DataInputStream(ifstream);
-			// br = new BufferedReader(new InputStreamReader(in));
-			// while ((line = br.readLine()) != null) {
 			lines = loadStrings(Bfsinfofilename);
 			total = lines.length;
 			for (int kk = 0; kk < total; ++kk) {
 				int stationid = Integer.parseInt(lines[kk]);
-				// line = br.readLine(); if (line == null) break;
 				++kk;
 				String[] split = lines[kk].split(";");
 				int len = split.length;
@@ -616,22 +588,12 @@ public class IsoMapStage extends PApplet implements FilterListener {
 				}
 			}
 			System.out.println("BFS distance done");
-			// br.close();
-			// in.close();
-			// ifstream.close();
-
+		
 			// Load SSSP
-			// ifstream = new FileInputStream(SSSPfilename);
-			// in = new DataInputStream(ifstream);
-			// br = new BufferedReader(new InputStreamReader(in));
 			lines = loadStrings(SSSPfilename);
-			// line = br.readLine();
-			// while (true) {
 			total = lines.length;
 			for (int kk = 0; kk < total;) {
-				// if (line == null) break;
 				int sid = Integer.parseInt(lines[kk]);
-				// while ((line = br.readLine()) != null) {
 				++kk;
 				while (kk < total) {
 					String[] split = lines[kk].split(";");
@@ -657,10 +619,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			}
 
 			System.out.println("SSSP done");
-			// br.close();
-			// in.close();
-			// ifstream.close();
-
+			
 			initAngleRange();
 			// Load bfs positions
 			for (int i = 0; i < NumOfStations; ++i)
@@ -671,18 +630,10 @@ public class IsoMapStage extends PApplet implements FilterListener {
 							Station sj = mStations[j];
 							float theta = random(AngleRanges[sj.rid][0],
 									AngleRanges[sj.rid][1]);
-							// float theta = (AngleRanges[sj.rid][1] -
-							// AngleRanges[sj.rid][0]) /
-							// RouteCount[sj.rid] * accAngle[sj.rid] +
-							// AngleRanges[sj.rid][0];
 							sta.bfsPosition[j][0] = sta.bfsDistance[j]
 									* cos(theta);
 							sta.bfsPosition[j][1] = sta.bfsDistance[j]
 									* sin(theta);
-							// System.out.println("id " + sj.rid + " x " +
-							// sta.bfsPosition[j][0] + " y " +
-							// sta.bfsPosition[j][1]);
-							// ++accAngle[sj.rid];
 						}
 				}
 			System.out.println("BFS positions done");
