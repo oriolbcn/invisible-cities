@@ -135,6 +135,7 @@ public class Dashboard extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				LineChartsDialog d = new LineChartsDialog(parent);
+				d.setModal(false);
 				d.setVisible(true);
 			}
 
@@ -178,8 +179,13 @@ public class Dashboard extends JFrame implements ActionListener {
 		return filterPanel.getMinRidership();
 	}
 
+	public static String getDay() {
+		return filterPanel.getDay();
+	}
+
 	// To be called by Topo and Iso maps when a station is selected
 	public void noitifyStationSelection(int stationId, String stationName) {
+		System.out.println("NOTIFY SELECTION!!!");
 		for (SelectionListener l : selectionListeners) {
 			l.stationSelectionChanged(stationId, stationName);
 		}

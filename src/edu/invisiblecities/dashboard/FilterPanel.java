@@ -72,6 +72,29 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		maxRidership = ICities.maxRidership * ICities.mult;
 	}
 
+	public void reloadModel() {
+		mod.reloadText();
+
+		maxFreq = 0;
+		for (Station st : mod.getStations()) {
+			for (int i = 0; i < st.frequencies.length; i++) {
+				if (st.frequencies[i] > maxFreq)
+					maxFreq = st.frequencies[i];
+			}
+		}
+
+		maxDelay = 0;
+		for (Station st : mod.getStations()) {
+			for (int i = 0; i < st.delays.length; i++) {
+				if (st.delays[i] > maxDelay)
+					maxDelay = st.delays[i];
+			}
+		}
+
+		freqsSlider.updateMax(maxFreq);
+		delaysSlider.updateMax(maxDelay);
+	}
+
 	public void createComponents() {
 
 		Color bg = new Color(255, 255, 255);
@@ -139,8 +162,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		this.add(label5,
 				createConstraints(GridBagConstraints.HORIZONTAL, 2, 0, -1, -1));
 		dayCombo = new JComboBox(ICities.days);
-		dayCombo.setSelectedIndex(2);
-		dayCombo.addActionListener(this);
+		dayCombo.setSelectedIndex(0);
 		dayCombo.addActionListener(this);
 		GridBagConstraints c3 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 2, 1, -1, -1);
@@ -259,7 +281,22 @@ public class FilterPanel extends JPanel implements ChangeListener,
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		String d = (String) dayCombo.getSelectedItem();
+		boolean d_changed = false;
+		boolean was_playing = false;
+		if (!d.equals(mod.day)) {
+			mod.day = d;
+			reloadModel();
+			d_changed = true;
+			was_playing = ICities.IsPlaying;
+			if (was_playing)
+				ICities.IsPlaying = false;
+			ICities.timer = 0;
+		}
 		notifyListeners();
+		if (d_changed && was_playing) {
+			ICities.IsPlaying = true;
+		}
 	}
 
 	public void adjustmentValueChanged(DoubleSlider ds) {

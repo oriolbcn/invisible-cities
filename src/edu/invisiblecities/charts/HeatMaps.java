@@ -46,7 +46,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 	// Filters
 	boolean[] selectedRoutes;
-	int minFreq, maxFreq, minDelay, maxDelay;
+	String day;
 
 	public HeatMaps() {
 
@@ -89,6 +89,7 @@ public class HeatMaps extends PApplet implements FilterListener {
 		}
 
 		mod = Dashboard.mod;
+		day = mod.day;
 	}
 
 	public void setup() {
@@ -108,13 +109,25 @@ public class HeatMaps extends PApplet implements FilterListener {
 	}
 
 	public void filterChanged() {
-		selectedRoutes = Dashboard.getSelectedRoutes();
-		minFreq = Dashboard.getMinFrequency();
-		maxFreq = Dashboard.getMaxFrequency();
-		minDelay = Dashboard.getMinDelay();
-		maxDelay = Dashboard.getMaxDelay();
-		hm1.updateVisibleRows();
-		hm2.updateVisibleRows();
+		String d = Dashboard.getDay();
+		if (!d.equals(day)) {
+			day = d;
+			hm1.rows = createRows(true, false);
+			hm1.rowsAggregated = createAggregatedRows(true, false);
+			hm1.modelUpdated();
+
+			hm2.rows = createRows(false, true);
+			hm2.rowsAggregated = createAggregatedRows(false, true);
+			hm2.modelUpdated();
+		} else {
+			selectedRoutes = Dashboard.getSelectedRoutes();
+			int minFreq = Dashboard.getMinFrequency();
+			int maxFreq = Dashboard.getMaxFrequency();
+			int minDelay = Dashboard.getMinDelay();
+			int maxDelay = Dashboard.getMaxDelay();
+			hm1.updateVisibleRows(minFreq, maxFreq);
+			hm2.updateVisibleRows(minDelay, maxDelay);
+		}
 	}
 
 	public HeatMapRow[] createRows(boolean freq, boolean del) {
@@ -271,6 +284,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 		// Rows to show
 		int rowNum;
 		boolean aggregated;
+		int currMax;
+		int currMin;
 
 		Heatmap(int iniX, int iniY, HeatMapRow[] rows,
 				HeatMapRow[] rowsAggregated, String title, int iniXExpanded,
@@ -287,6 +302,8 @@ public class HeatMaps extends PApplet implements FilterListener {
 			this.rowsAggregated = rowsAggregated;
 			maxValue = getMaxValue(rows);
 			maxValueAggregated = getMaxValue(rowsAggregated);
+			currMax = maxValue;
+			currMin = 0;
 			this.rowNum = 0;
 			this.title = title;
 			this.unit = unit;
@@ -387,18 +404,38 @@ public class HeatMaps extends PApplet implements FilterListener {
 
 		}
 
-		public void updateVisibleRows() {
+		public void updateVisibleRows(int minVal, int maxVal) {
 			ArrayList<HeatMapRow> ro = new ArrayList<HeatMapRow>();
 			ArrayList<HeatMapRow> roAggr = new ArrayList<HeatMapRow>();
 			for (int i = 0; i < rows.length; i++) {
 				HeatMapRow r = rows[i];
-				r.visible = selectedRoutes[r.r_index];
+				boolean v = selectedRoutes[r.r_index];
+				if (v) {
+					v = false;
+					for (int j = 0; j < r.values.length; j++) {
+						if (r.values[j] >= minVal && r.values[j] <= maxVal) {
+							v = true;
+							break;
+						}
+					}
+				}
+				r.visible = v;
 				if (r.visible)
 					ro.add(r);
 			}
 			for (int i = 0; i < rowsAggregated.length; i++) {
 				HeatMapRow r = rowsAggregated[i];
-				r.visible = selectedRoutes[r.r_index];
+				boolean v = selectedRoutes[r.r_index];
+				if (v) {
+					v = false;
+					for (int j = 0; j < r.values.length; j++) {
+						if (r.values[j] >= minVal && r.values[j] <= maxVal) {
+							v = true;
+							break;
+						}
+					}
+				}
+				r.visible = v;
 				if (r.visible)
 					roAggr.add(r);
 			}
@@ -407,6 +444,12 @@ public class HeatMaps extends PApplet implements FilterListener {
 			visibleRowsAggregated = new HeatMapRow[roAggr.size()];
 			ro.toArray(visibleRows);
 			roAggr.toArray(visibleRowsAggregated);
+
+			calcMaxColors(maxColor, visibleRows);
+			calcMaxColors(maxColorAggregated, visibleRowsAggregated);
+
+			currMax = maxVal;
+			currMin = minVal;
 		}
 
 		public void display() {
@@ -545,9 +588,6 @@ public class HeatMaps extends PApplet implements FilterListener {
 		public int getMaxValue(HeatMapRow[] rows) {
 			int max = 0;
 			for (int i = 0; i < rows.length; i++) {
-				if (i == 33) {
-					println(i + " - " + rows.length);
-				}
 				for (int j = 0; j < rows[i].values.length; j++) {
 					if (rows[i].values[j] > max) {
 						max = rows[i].values[j];
@@ -556,6 +596,12 @@ public class HeatMaps extends PApplet implements FilterListener {
 			}
 
 			return max;
+		}
+
+		public void modelUpdated() {
+			updateVisibleRows(currMin, currMax);
+			maxValue = getMaxValue(rows);
+			maxValueAggregated = getMaxValue(rowsAggregated);
 		}
 
 		public void calcMaxColors(Map<String, Integer> maxColor,
