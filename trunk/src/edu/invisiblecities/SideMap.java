@@ -7,23 +7,31 @@ import processing.core.PApplet;
 import codeanticode.glgraphics.GLConstants;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.OpenStreetMap;
+import de.fhpotsdam.unfolding.utils.MapUtils;
 import edu.invisiblecities.IsoMapStage.Route;
-import edu.invisiblecities.IsoMapStage.Station;
+import edu.invisiblecities.dashboard.Dashboard;
+import edu.invisiblecities.dashboard.SelectionListener;
 
-public class SideMap extends PApplet {
+public class SideMap extends PApplet implements SelectionListener {
 
-	private static final long  serialVersionUID = 1L;
 	public static final int    CanvasWidth = 200;
 	public static final int    CanvasHeight = 200;
-	public static final int    ParentCanvasHeight = 600;
-	public static final int    PictureWidth = ParentCanvasHeight;
-
 	public static final String Stationinfofilename = "stationrelationship.csv";
+    public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
+    public static final int    OpenMapID = 44094;
+    public static final int    ZoomLevel = 10;
+    public static final int    StationDiameter = 6;
+    public static final int    StationRadius = StationDiameter / 2;
+    public static final int    RadarDiameterMax = 20;
+    public static final int    FrameRate = 20;
+    
+    public static de.fhpotsdam.unfolding.Map map;
+    public static int          radarDiameter = 0;
 	public static Station[]    mStations;
 	public static Route[]      mRoutes;
 	public static int          NumOfRoutes;
 	public static int          NumOfStations;
-	public static int          SelectedNode;
+	public static int          SelectedNode = -1;
 
 	public SideMap() {
 	    loadRoutes();
@@ -34,54 +42,93 @@ public class SideMap extends PApplet {
     	size(CanvasWidth, CanvasHeight, GLConstants.GLGRAPHICS);
         map = new de.fhpotsdam.unfolding.Map(this, 0, 0, CanvasWidth,
             CanvasHeight, new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
+        // MapUtils.createDefaultEventDispatcher(this, map);
+        smooth();
+        noStroke();
+        updateLocations(0);
+        frameRate(FrameRate);
+        Dashboard.registerAsSelectionListener(this);
     }
     
-    public static int radarDiameter = 0;
-    public static de.fhpotsdam.unfolding.Map map;
-    public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
-    public static final int OpenMapID = 40077;
-    public static final int ZoomLevel = 10;
-    public static final int StationDiameter = 6;
-    public static final int StationRadius = StationDiameter / 2;
-    
-    public static Location loc = new Location(0, 0);
-    
-    public void draw() {
-        map.draw();
-        Station sta = mStations[SelectedNode];
-        // parent.noFill();
-        noStroke();
-        // parent.strokeWeight(RadarStrokeWeight);
-        loc.setLat(sta.lat);
-        loc.setLon(sta.lon);
-        map.zoomAndPanTo(loc, ZoomLevel);
-        float[] xy = map.getScreenPositionFromLocation(loc);
-        sta.screenX = xy[0];
-        sta.screenY = xy[1];
-        radarDiameter = (radarDiameter + 1) % RadarDiameterMax;
-        fill(sta.fred, sta.fgreen, sta.fblue, 100);
-        ellipse(sta.screenX, sta.screenY, radarDiameter, radarDiameter);
+    public int getSelectionByName(String stationName) {
         for (int i = 0; i < NumOfStations; ++i)
             if (mStations[i] != null) {
-                sta = mStations[i];
-                loc.setLat(sta.lat);
-                loc.setLon(sta.lon);
-                xy = map.getScreenPositionFromLocation(loc);
-                sta.screenX = xy[0];
-                sta.screenY = xy[1];
-                if (sta.isInsideSideMap()) {
-                    if (sta.isHover) {
-                        fill(sta.fred, sta.fgreen, sta.fblue);
-                        ellipse(sta.screenX, sta.screenY, SideMapDiameter + 4,
-                                SideMapDiameter + 4);
-                    } else {
-                        fill(sta.fred, sta.fgreen, sta.fblue, 100);
-                        ellipse(sta.screenX, sta.screenY, SideMapDiameter,
-                                SideMapDiameter);
-                    }
-                }
+                if (mStations[i].name.equals(stationName))
+                    return i;
             }
+        return -1;
+    }
+    
+    @Override
+    public void stationSelectionChanged(int stationId, String stationName) {
+        SelectedNode = getSelectionByName(stationName);
+        if (SelectedNode != -1) {
+            updateLocations(SelectedNode);
+        }
+    }
+
+    @Override
+    public void routeSelectionChanged(String routeId, String routeName) {
+        // TODO Auto-generated method stub
         
+    }
+    
+    public static Location loc = new Location(0, 0);
+    public void updateLocations(int selected) {
+        System.out.println("Selected Node " + selected + " lat " + mStations[selected].lat 
+                + " lon " + mStations[selected].lon);
+        loc.setLat(mStations[selected].lat);
+        loc.setLon(mStations[selected].lon);
+        map.zoomAndPanTo(loc, ZoomLevel);
+        for (int i=0; i<NumOfStations; ++i) {
+            Station sta = mStations[i];
+            loc.setLat(sta.lat);
+            loc.setLon(sta.lon);
+            float[] xy = map.getScreenPositionFromLocation(loc);
+            sta.screenX = xy[0];
+            sta.screenY = xy[1];
+        }
+    }
+    
+    public void draw() {
+        background(255);
+        map.draw();
+        for (int i=0; i<NumOfStations; ++i)
+            mStations[i].draw();
+        if (SelectedNode >= 0) {
+            drawRadar();
+        }
+        radarDiameter = (radarDiameter + 1) % RadarDiameterMax;
+    }
+    
+    public void drawRadar() {
+        Station sta = mStations[SelectedNode];
+        fill(sta.color, 100);
+        ellipse(sta.screenX, sta.screenY, radarDiameter, radarDiameter);
+    }
+    
+    public int getSelection() {
+        for (int i = 0; i < NumOfStations; ++i)
+            if (mStations[i] != null) {
+                if (mStations[i].isInside())
+                    return i;
+            }
+        return -1;
+    }
+    
+    public void mousePressed() {
+        
+    }
+    
+    @Override
+    public void mouseReleased() {
+        int id = getSelection();
+        System.out.println("Node Selected " + id);
+        if (id >= 0) {
+            SelectedNode = id;
+            updateLocations(SelectedNode);
+            radarDiameter = 0;
+        }
     }
 
 
@@ -94,11 +141,19 @@ public class SideMap extends PApplet {
 	    public int   color;
 	    public String name;
 	    public int   rid;
+	    public int   id;
 	    
-	    public Station(float la, float lo, int col) {
+	    public Station(int id, float la, float lo, int col, String name) {
+	        this.id = id;
 	        lat = la;
 	        lon = lo;
 	        color = col;
+	        this.name = name;
+	    }
+	    
+	    public void draw() {
+	        fill(color);
+	        ellipse(screenX, screenY, StationDiameter, StationDiameter);
 	    }
 	    
 	    public boolean isInside() {
@@ -152,117 +207,32 @@ public class SideMap extends PApplet {
 	
 	public void loadStations() {
 		try {
-			mStations = new Station[NumOfStations];
 			String[] lines = loadStrings(Stationinfofilename);
-			int total = lines.length;
-			for (int kk = 0; kk < total; ++kk) {
-				String[] split = lines[kk].split(";"); // 0: station id; 1:
+			NumOfStations = lines.length / 2;
+			mStations = new Station[NumOfStations];
+			for (int kk = 0; kk < NumOfStations; ++kk) {
+				String[] split = lines[kk*2].split(";"); // 0: station id; 1:
 														// route_id 2: name 3:
 														// lat 4: lon
-				int stationId = Integer.parseInt(split[0]);
+				int stationId = kk;//Integer.parseInt(split[0]);
 				if (mStations[stationId] != null) throw new Exception();
 				String routeId = split[1];
-				String name = split[2].substring(1, split[2].length() - 1);
+				String name = split[2].substring(1, split[2].length() - 1); // remove the "s
 				float lat = Float.parseFloat(split[3]);
 				float lon = Float.parseFloat(split[4]);
-				// Read second line
-				++kk;
-				split = lines[kk].split(";");
-				int len = split.length;
-				ArrayList<String> al = new ArrayList<String>(len);
-				for (int i = 0; i < len; i += 2) {
-					if (split[i] == null)
-						break;
-					al.add("" + split[i] + " " + split[i + 1]);
-				}
-				int size = al.size();
+				// Skip the second line
 				int rid = findRoute(routeId);
 				Route r = mRoutes[rid];
-				mStations[stationId] = new Station();
-				int cnt = 0;
-				for (String s : al) {
-					String[] twoparts = s.split(" ");
-					int stid = Integer.parseInt(twoparts[0]);
-					int dist = Integer.parseInt(twoparts[1]);
-					mStations[stationId].connected[cnt] = stid;
-					mStations[stationId].distance[cnt] = dist;
-					++cnt;
-				}
+				int color = color(mRoutes[rid].red, mRoutes[rid].green, mRoutes[rid].blue);
+				mStations[stationId] = new Station(stationId, lat, lon, color, name);
 			}
-			System.out.println("Total Stations: " + total);
-
-			// Load bfs distance
-			MaxDistance = new int[NumOfStations];
-			lines = loadStrings(Bfsinfofilename);
-			total = lines.length;
-			for (int kk = 0; kk < total; ++kk) {
-				int stationid = Integer.parseInt(lines[kk]);
-				++kk;
-				String[] split = lines[kk].split(";");
-				int len = split.length;
-				for (int i = 0; i < len; i += 2) {
-					if (split[i] == null)
-						break;
-					int sid = Integer.parseInt(split[i]);
-					int acc = Integer.parseInt(split[i + 1]);
-					mStations[stationid].bfsDistance[sid] = acc;
-					if (MaxDistance[stationid] < acc)
-						MaxDistance[stationid] = acc;
-				}
-			}
-			System.out.println("BFS distance done");
-
-			// Load SSSP
-			lines = loadStrings(SSSPfilename);
-			total = lines.length;
-			for (int kk = 0; kk < total;) {
-				int sid = Integer.parseInt(lines[kk]);
-				++kk;
-				while (kk < total) {
-					String[] split = lines[kk].split(";");
-					int len = split.length;
-					if (len < 2)
-						break;
-					int toid = Integer.parseInt(split[0]); // Get the
-															// destination
-					if (len == 2 && split[1].equals("-1")) {
-						mStations[sid].sssp[toid] = new int[1];
-						mStations[sid].sssp[toid][0] = sid;
-						++kk;
-						continue;
-					}
-					mStations[sid].sssp[toid] = new int[len];
-					// Since the path in csv is in reversed order
-					for (int i = len - 1; i >= 0; --i) {
-						mStations[sid].sssp[toid][len - 1 - i] = Integer
-								.parseInt(split[i]);
-					}
-					++kk;
-				}
-			}
-
-			System.out.println("SSSP done");
-
-			initAngleRange();
-			// Load bfs positions
-			for (int i = 0; i < NumOfStations; ++i)
-				if (mStations[i] != null) {
-					Station sta = mStations[i];
-					for (int j = 0; j < NumOfStations; ++j)
-						if (mStations[j] != null) {
-							Station sj = mStations[j];
-							float theta = random(AngleRanges[sj.rid][0],
-									AngleRanges[sj.rid][1]);
-							sta.bfsPosition[j][0] = sta.bfsDistance[j]
-									* cos(theta);
-							sta.bfsPosition[j][1] = sta.bfsDistance[j]
-									* sin(theta);
-						}
-				}
-			System.out.println("BFS positions done");
-
+			System.out.println("Total Stations: " + NumOfStations);
 		} catch (Exception e) {
 			System.err.println(e.toString());
 		}
 	}
+	
+
+    private static final long  serialVersionUID = 1L;
+
 }
