@@ -189,7 +189,6 @@ public class Dashboard extends JFrame implements ActionListener {
 
 	// To be called by Topo and Iso maps when a station is selected
 	public static void noitifyStationSelection(int stationId, String stationName) {
-		System.out.println("NOTIFY SELECTION!!!");
 		for (SelectionListener l : selectionListeners) {
 			l.stationSelectionChanged(stationId, stationName);
 		}
