@@ -8,9 +8,9 @@ import processing.core.PVector;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
 import edu.invisiblecities.dashboard.Dashboard;
-import edu.invisiblecities.dashboard.FilterListener;
+import edu.invisiblecities.dashboard.SelectionListener;
 
-public class IsoMapStage extends PApplet implements FilterListener {
+public class IsoMapStage extends PApplet implements SelectionListener {
 
 	public static final int BackgroundCircleInterval = 30000;
 	public static final int CanvasWidth = 600;
@@ -46,14 +46,23 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	public static float[][] AngleRanges;
 
 	public IsoMapStage() {
-	    loadRoutes();
-        loadStations();
+		loadRoutes();
+		loadStations();
 	}
-	
+
 	public int getSelection() {
 		for (int i = 0; i < NumOfStations; ++i)
 			if (mStations[i] != null) {
 				if (mStations[i].isInside(mouseX, mouseY))
+					return i;
+			}
+		return -1;
+	}
+
+	public int getSelectionByName(String stationName) {
+		for (int i = 0; i < NumOfStations; ++i)
+			if (mStations[i] != null) {
+				if (mStations[i].name.equals(stationName))
 					return i;
 			}
 		return -1;
@@ -76,7 +85,8 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		for (int i = 0; i < NumOfBackgroundCircles; ++i) {
 			if (i % 2 == 1)
 				bgCircles[i] = new BackgroundCircle(i
-						* BackgroundCircleInterval, 255, "" + (i * BackgroundCircleInterval / 2));
+						* BackgroundCircleInterval, 255, ""
+						+ (i * BackgroundCircleInterval / 2));
 			else
 				bgCircles[i] = new BackgroundCircle(i
 						* BackgroundCircleInterval, 220);
@@ -88,7 +98,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 		size(CanvasWidth, CanvasHeight);
 		Ani.init(this);
 		smooth();
-		
+
 		initBackgroundCircle();
 
 		toPositions = new float[NumOfStations][2];
@@ -106,15 +116,28 @@ public class IsoMapStage extends PApplet implements FilterListener {
 				toPositions[SelectedNode][0], toPositions[SelectedNode][1]);
 		hoverId = SelectedNode;
 
-		//Dashboard.registerAsFilterListener(this);
+		Dashboard.registerAsSelectionListener(this);
 	}
-	
-	public void filterChanged() {
+
+	public void stationSelectionChanged(int stationId, String stationName) {
+		mStations[SelectedNode].isSelected = false;
+		SelectedNode = getSelectionByName(stationName);
+		updateGraph();
+		for (int i = 0; i < NumOfStations; ++i)
+			if (mStations[i] != null && i != SelectedNode)
+				mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+		mStations[SelectedNode].setAniWithCallback(
+				toPositions[SelectedNode][0], toPositions[SelectedNode][1]);
 	}
-	
+
+	public void routeSelectionChanged(String routeId, String routeName) {
+		// Do nothing
+	}
+
 	public static boolean isDisplayed = true;
+
 	public static void setHide(boolean hide) {
-	    isDisplayed = !hide;
+		isDisplayed = !hide;
 	}
 
 	public static int hoverId = -1;
@@ -172,7 +195,6 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			}
 	}
 
-
 	public void drawStations() {
 		for (int i = 0; i < NumOfStations; ++i)
 			if (mStations[i] != null && i != SelectedNode)
@@ -181,7 +203,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 	}
 
 	public void drawBackgroundCircles() {
-	    textAlign(CENTER);
+		textAlign(CENTER);
 		for (int i = NumOfBackgroundCircles - 1; i >= 0; --i) {
 			bgCircles[i].draw();
 		}
@@ -196,17 +218,17 @@ public class IsoMapStage extends PApplet implements FilterListener {
 
 	@Override
 	public void draw() {
-	    if (isDisplayed) {
-	        background(255);
-	        drawBackgroundCircles();
+		if (isDisplayed) {
+			background(255);
+			drawBackgroundCircles();
 
-	        drawStationLines();
-	        drawHover();
-	        drawIntent();
-	        drawStations();
-	        
-	        text("FPS: " + frameRate, 20, 20);
-	    }
+			drawStationLines();
+			drawHover();
+			drawIntent();
+			drawStations();
+
+			text("FPS: " + frameRate, 20, 20);
+		}
 	}
 
 	@Override
@@ -217,7 +239,8 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			if (id >= 0) {
 				mStations[SelectedNode].isSelected = false;
 				SelectedNode = id;
-				Dashboard.noitifyStationSelection(-1, mStations[SelectedNode].name);
+				Dashboard.noitifyStationSelection(-1,
+						mStations[SelectedNode].name);
 				updateGraph();
 				for (int i = 0; i < NumOfStations; ++i)
 					if (mStations[i] != null && i != SelectedNode)
@@ -267,16 +290,16 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			float y = -1.0f;
 			if (mouseY - PictureCenterY >= 0.f)
 				y = 1.0f;
-			//System.out.println("y " + y);
+			// System.out.println("y " + y);
 			float x = mx * y / my;
-			//System.out.println("x " + x);
+			// System.out.println("x " + x);
 			pv.x = x;
 			pv.y = y;
 			pv.normalize();
 			Station sta = mStations[IntentNode];
 			pv.mult(mStations[SelectedNode].bfsDistance[IntentNode]
 					/ FixedScale);
-			//System.out.println("pvx " + pv.x + " pvy " + pv.y);
+			// System.out.println("pvx " + pv.x + " pvy " + pv.y);
 			sta.curX = pv.x + PictureCenterX;
 			sta.curY = pv.y + PictureCenterY;
 		}
@@ -332,18 +355,10 @@ public class IsoMapStage extends PApplet implements FilterListener {
 
 		public void setAni(float _x, float _y) {
 			try {
-			    Ani.to(this, 
-			        Duration, 
-			        "curX", 
-			        _x, 
-			        Easing);
-			    Ani.to(this, 
-			        Duration, 
-			        "curY", 
-			        _y, 
-			        Easing);
+				Ani.to(this, Duration, "curX", _x, Easing);
+				Ani.to(this, Duration, "curY", _y, Easing);
 			} catch (Exception e) {
-//			    System.out.println(e.to);
+				// System.out.println(e.to);
 			}
 		}
 
@@ -354,7 +369,8 @@ public class IsoMapStage extends PApplet implements FilterListener {
 
 		public void reScale(Ani theAni) {
 			if (theAni.isEnded()) {
-				FixedScale = (MaxDistance[SelectedNode] + RescaleOffset) / PictureHalfHeight;
+				FixedScale = (MaxDistance[SelectedNode] + RescaleOffset)
+						/ PictureHalfHeight;
 				updateGraph();
 				for (int i = 0; i < NumOfStations; ++i)
 					if (mStations[i] != null)
@@ -433,13 +449,13 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			gray = g;
 			distance = "";
 		}
-		
+
 		public BackgroundCircle(float d, int g, String dis) {
-            rDiameter = d;
-            diameter = rDiameter / FixedScale;
-            gray = g;
-            distance = dis;
-        }
+			rDiameter = d;
+			diameter = rDiameter / FixedScale;
+			gray = g;
+			distance = dis;
+		}
 
 		public void setAni() {
 			float _d = rDiameter / FixedScale;
@@ -569,7 +585,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 				}
 			}
 			System.out.println("Total Stations: " + total);
-	
+
 			// Load bfs distance
 			MaxDistance = new int[NumOfStations];
 			lines = loadStrings(Bfsinfofilename);
@@ -590,7 +606,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 				}
 			}
 			System.out.println("BFS distance done");
-		
+
 			// Load SSSP
 			lines = loadStrings(SSSPfilename);
 			total = lines.length;
@@ -621,7 +637,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			}
 
 			System.out.println("SSSP done");
-			
+
 			initAngleRange();
 			// Load bfs positions
 			for (int i = 0; i < NumOfStations; ++i)
