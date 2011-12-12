@@ -120,15 +120,20 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 	}
 
 	public void stationSelectionChanged(int stationId, String stationName) {
-		mStations[SelectedNode].isSelected = false;
-		mStations[IntentNode].isIntent = false;
+		if (SelectedNode != -1)
+			mStations[SelectedNode].isSelected = false;
+		if (IntentNode != -1)
+			mStations[IntentNode].isIntent = false;
 		SelectedNode = getSelectionByName(stationName);
-		updateGraph();
-		for (int i = 0; i < NumOfStations; ++i)
-			if (mStations[i] != null && i != SelectedNode)
-				mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
-		mStations[SelectedNode].setAniWithCallback(
-				toPositions[SelectedNode][0], toPositions[SelectedNode][1]);
+		println(SelectedNode);
+		if (SelectedNode != -1) {
+			updateGraph();
+			for (int i = 0; i < NumOfStations; ++i)
+				if (mStations[i] != null && i != SelectedNode)
+					mStations[i].setAni(toPositions[i][0], toPositions[i][1]);
+			mStations[SelectedNode].setAniWithCallback(
+					toPositions[SelectedNode][0], toPositions[SelectedNode][1]);
+		}
 	}
 
 	public void routeSelectionChanged(String routeId, String routeName) {
@@ -169,7 +174,8 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 		sta.isHover = true;
 		textAlign(CENTER);
 		text(sta.name, sta.curX, sta.curY + 25);
-		text(sta.bfsDistance[SelectedNode], sta.curX, sta.curY + 45);
+		String d = (int) (sta.bfsDistance[SelectedNode] * 0.3048 / 1000) + "km";
+		text(d, sta.curX, sta.curY + 45);
 		textAlign(LEFT);
 	}
 
@@ -455,7 +461,7 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 			rDiameter = d;
 			diameter = rDiameter / FixedScale;
 			gray = g;
-			distance = dis;
+			distance = (int) (Integer.parseInt(dis) * 0.3048 / 1000) + "km";
 		}
 
 		public void setAni() {
