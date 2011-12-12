@@ -11,8 +11,10 @@ import edu.invisiblecities.IsoMapStage.Route;
 import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
 import edu.invisiblecities.dashboard.ICities;
+import edu.invisiblecities.dashboard.SelectionListener;
 
-public class TopoMapStage extends PApplet implements FilterListener {
+public class TopoMapStage extends PApplet implements FilterListener,
+		SelectionListener {
 
 	public static final int CanvasWidth = 600;
 	public static final int CanvasHeight = 600;
@@ -21,7 +23,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static final int MapWidth = 600;
 	public static final int MapHeight = CanvasHeight;
 	public static final float MapCenterLat = 41.895156f;
-    public static final float MapCenterLon = -87.69999f;
+	public static final float MapCenterLon = -87.69999f;
 	public static final int PanelLeftX = MapLeftX + MapWidth;
 	public static final int PanelTopY = 0;
 	public static final int PanelWidth = CanvasWidth - MapWidth;
@@ -36,83 +38,99 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static final String Mapfilename = "map.png";
 
 	public static de.fhpotsdam.unfolding.Map map;
-	public static Stop[]   mStops;
-	public static Route[]  mRoutes;
+	public static Stop[] mStops;
+	public static Route[] mRoutes;
 	@SuppressWarnings("unchecked")
 	public static ArrayList<Trip>[] mTrips = new ArrayList[TotalTimeStamps];
-	public static int      NumOfRoutes;
-	public static int      NumOfStops;
-	public static Trip[]   mListHeader;
-	public static boolean  FilterSelected = false;
-	public static PImage   MapImage;
+	public static int NumOfRoutes;
+	public static int NumOfStops;
+	public static Trip[] mListHeader;
+	public static boolean FilterSelected = false;
+	public static PImage MapImage;
 	public static boolean[] DisplayRoutes;
-	public static int      mTimer = 0;
+	public static int mTimer = 0;
 
 	public static final String API_KEY = "d3e0942376a3438b8d5fce7378307b58";
-    public static final int OpenMapID = 44094;
-    public static final int ZoomLevel = 11;
-    public static Path[]   mPaths;
-    
-    public void initUI() {
+	public static final int OpenMapID = 44094;
+	public static final int ZoomLevel = 11;
+	public static Path[] mPaths;
+
+	public void initUI() {
 		TripsCounter = new int[NumOfRoutes];
 	}
 
 	public TopoMapStage() {
-	    
-	    loadRoutes();
-	    loadTrip2Route();
-        
-        System.out.println("TopoMap construction done");
+
+		loadRoutes();
+		loadTrip2Route();
+
+		System.out.println("TopoMap construction done");
 	}
-	
+
 	@Override
 	public void setup() {
 		size(CanvasWidth, CanvasHeight);
 		smooth();
 		frameRate(FrameRate);
-		map = new de.fhpotsdam.unfolding.Map(this,MapLeftX, MapTopY, MapWidth,
-                MapHeight, new OpenStreetMap.CloudmadeProvider(API_KEY, OpenMapID));
-        map.zoomAndPanTo(new Location(MapCenterLat, MapCenterLon), ZoomLevel);
-        mPaths = new Path[NumOfRoutes];
-        loadStop();
-        loadTrip();
-        loadStopDelays();
+		map = new de.fhpotsdam.unfolding.Map(this, MapLeftX, MapTopY, MapWidth,
+				MapHeight, new OpenStreetMap.CloudmadeProvider(API_KEY,
+						OpenMapID));
+		map.zoomAndPanTo(new Location(MapCenterLat, MapCenterLon), ZoomLevel);
+		mPaths = new Path[NumOfRoutes];
+		loadStop();
+		loadTrip();
+		loadStopDelays();
 		DisplayRoutes = Dashboard.getSelectedRoutes();
-		//DisplayRoutes = new boolean[NumOfRoutes];
-        //for (int i=0; i<NumOfRoutes; ++i) {
-        //    DisplayRoutes[i] = true;
-        //}
+		// DisplayRoutes = new boolean[NumOfRoutes];
+		// for (int i=0; i<NumOfRoutes; ++i) {
+		// DisplayRoutes[i] = true;
+		// }
 		MapImage = loadImage(Mapfilename);
 		initUI();
 		Dashboard.registerAsFilterListener(this);
+		Dashboard.registerAsSelectionListener(this);
 		System.out.println("TopoMap setup done");
 	}
 
+	public void stationSelectionChanged(int stationId, String stationName) {
+		for (int i = 0; i < NumOfStops; ++i) {
+			if (mStops[i].name.equals(stationName)) {
+				StopClicked = mStops[i].stopId;
+				return;
+			}
+		}
+		StopClicked = -1;
+	}
+
+	public void routeSelectionChanged(String routeId, String routeName) {
+		// Do nothing
+	}
+
 	public static HashMap<Integer, Float> PathWeight = new HashMap();
-	
+
 	public static void addTrains() {
-	    //PathWeight.clear();
-	    if (mTrips[mTimer] != null) {
-	        for (Trip trip : mTrips[mTimer]) {
-	            int rid = trip.rid;
-	            Trip oriNext = mListHeader[rid].nexttrip;
-	            trip.nexttrip = oriNext;
-	            trip.pretrip = mListHeader[rid];
-	            mListHeader[rid].nexttrip = trip;
-	            if (oriNext != null)
-	                oriNext.pretrip = trip;
-	        }
-	    }
-	    int showTime = mTimer * Interval;
-	    hour = showTime / 3600;
-	    minute = (showTime % 3600) / 60;
-	    ++mTimer;
+		// PathWeight.clear();
+		if (mTrips[mTimer] != null) {
+			for (Trip trip : mTrips[mTimer]) {
+				int rid = trip.rid;
+				Trip oriNext = mListHeader[rid].nexttrip;
+				trip.nexttrip = oriNext;
+				trip.pretrip = mListHeader[rid];
+				mListHeader[rid].nexttrip = trip;
+				if (oriNext != null)
+					oriNext.pretrip = trip;
+			}
+		}
+		int showTime = mTimer * Interval;
+		hour = showTime / 3600;
+		minute = (showTime % 3600) / 60;
+		++mTimer;
 	}
 
 	public void drawStops() {
 		noStroke();
 		rectMode(CENTER);
-		for (int i=0; i<NumOfStops; ++i) {
+		for (int i = 0; i < NumOfStops; ++i) {
 			mStops[i].draw();
 		}
 		rectMode(CORNER);
@@ -120,45 +138,46 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	public static int hour, minute;
 	public static boolean isDisplayed = true;
+
 	public static void setHide(boolean hide) {
-	    isDisplayed = !hide;
+		isDisplayed = !hide;
 	}
-	
+
 	public static void increaseStepCount() {
-	    for (int i=0; i<NumOfRoutes; ++i) {
-            Trip pointer = mListHeader[i].nexttrip;
-            while (pointer != null) {
-                ++pointer.stepCount;
-                pointer = pointer.nexttrip;
-            }
-        }
+		for (int i = 0; i < NumOfRoutes; ++i) {
+			Trip pointer = mListHeader[i].nexttrip;
+			while (pointer != null) {
+				++pointer.stepCount;
+				pointer = pointer.nexttrip;
+			}
+		}
 	}
-	
+
 	@Override
 	public void draw() {
-	    if (ICities.IsPlaying) {
-	        if (mTimer >= TotalTimeStamps) {
-	            mTimer = 0;
-	            for (int i=0; i<NumOfRoutes; ++i) {
-	                mListHeader[i] = new Trip();
-	            }
-	        }
-	        if (isDisplayed) {
-	            background(255);
-	            //background(0);
-	            image(MapImage, 0, 0);
-	        }
-	        addTrains();
-	        
-    		if (isDisplayed) {
-    		    drawStops();
-    			drawTrains();
-    		    if (StopClicked >= 0)
-    		        drawClickedStop();
-    		    drawLayout();
-    		}
-    		increaseStepCount();
-	    }
+		if (ICities.IsPlaying) {
+			if (mTimer >= TotalTimeStamps) {
+				mTimer = 0;
+				for (int i = 0; i < NumOfRoutes; ++i) {
+					mListHeader[i] = new Trip();
+				}
+			}
+			if (isDisplayed) {
+				background(255);
+				// background(0);
+				image(MapImage, 0, 0);
+			}
+			addTrains();
+
+			if (isDisplayed) {
+				drawStops();
+				drawTrains();
+				if (StopClicked >= 0)
+					drawClickedStop();
+				drawLayout();
+			}
+			increaseStepCount();
+		}
 	}
 
 	public static final int PopupWindowWidth = 200;
@@ -197,39 +216,41 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static boolean DrawDots = true;
 
 	public void drawTrains() {
-	    for (int i=0; i<NumOfRoutes; ++i) {
+		for (int i = 0; i < NumOfRoutes; ++i) {
 			TripsCounter[i] = 0;
 			if (DisplayRoutes[i]) {
-                Trip pointer = mListHeader[i].nexttrip;
-                while (pointer != null) {
-                    ++TripsCounter[i];
-                    pointer = pointer.nexttrip;
-                }
-			    int color = color(mRoutes[i].red, mRoutes[i].green, mRoutes[i].blue);
-			    fill(color);
-			    stroke(color, 50);
-                pointer = mListHeader[i].nexttrip;
-                float strokeweight = TripsCounter[i] / 30.f;
-                if (DrawDots) {
-                    while (pointer != null) {
-                        pointer.draw();
-                        pointer = pointer.nexttrip;
-                    }
-                } else {
-                    strokeWeight(strokeweight);
-                    mPaths[i].draw();
-                }
+				Trip pointer = mListHeader[i].nexttrip;
+				while (pointer != null) {
+					++TripsCounter[i];
+					pointer = pointer.nexttrip;
+				}
+				int color = color(mRoutes[i].red, mRoutes[i].green,
+						mRoutes[i].blue);
+				fill(color);
+				stroke(color, 50);
+				pointer = mListHeader[i].nexttrip;
+				float strokeweight = TripsCounter[i] / 30.f;
+				if (DrawDots) {
+					while (pointer != null) {
+						pointer.draw();
+						pointer = pointer.nexttrip;
+					}
+				} else {
+					strokeWeight(strokeweight);
+					mPaths[i].draw();
+				}
 			}
 		}
-	    strokeWeight(1);
+		strokeWeight(1);
 	}
-	
+
 	@Override
 	public void mousePressed() {
 		for (int i = 0; i < NumOfStops; ++i) {
 			if (mStops[i].isClicked()) {
-			    Dashboard.noitifyStationSelection(mStops[i].ori_stop_id, mStops[i].name);
-			    return;
+				Dashboard.noitifyStationSelection(mStops[i].ori_stop_id,
+						mStops[i].name);
+				return;
 			}
 		}
 		StopClicked = -1;
@@ -256,7 +277,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	// //////////// Inner Classes
 	// ///////////////////////////////////////////////////
-	
+
 	public static final float StopRadius = 8;
 	public static final float StopDiameter = 16;
 	public static int StopClicked = -1;
@@ -264,37 +285,37 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	public static final int StopDelayIndex = 3600 / Interval;
 
 	public class Path {
-	    public ArrayList<float[][]> paths;
-	    public int rid;
-	    
-	    public Path(int rd, float[][] p) {
-	        rid = rd;
-	        paths = new ArrayList<float[][]>();
-	        paths.add(p);
-	    }
-	    
-	    public void insert(float[][] p) {
-	        for (float[][] path : paths) {
-	            int length = path.length;
-	            if (length != p.length) continue;
-	            for (int j=0; j<length; ++j) 
-	                if (p[j][0] == path[j][0] 
-	                    && p[j][1] == path[j][1]) {
-	                    return;
-	                }
-	        }
-	        paths.add(p);
-	    }
-	    
-	    public void draw() {
-	        for (float[][] path : paths) {
-	            int length = path.length;
-	            for (int j=1; j<length; ++j) 
-	                line(path[j-1][0], path[j-1][1], path[j][0], path[j][1]);
-	        }
-	    }
+		public ArrayList<float[][]> paths;
+		public int rid;
+
+		public Path(int rd, float[][] p) {
+			rid = rd;
+			paths = new ArrayList<float[][]>();
+			paths.add(p);
+		}
+
+		public void insert(float[][] p) {
+			for (float[][] path : paths) {
+				int length = path.length;
+				if (length != p.length)
+					continue;
+				for (int j = 0; j < length; ++j)
+					if (p[j][0] == path[j][0] && p[j][1] == path[j][1]) {
+						return;
+					}
+			}
+			paths.add(p);
+		}
+
+		public void draw() {
+			for (float[][] path : paths) {
+				int length = path.length;
+				for (int j = 1; j < length; ++j)
+					line(path[j - 1][0], path[j - 1][1], path[j][0], path[j][1]);
+			}
+		}
 	}
-	
+
 	public class Stop {
 		public float screenX;
 		public float screenY;
@@ -309,7 +330,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 		public Stop(int ori_si, int si, float x, float y, String n) {
 			ori_stop_id = ori_si;
-		    stopId = si;
+			stopId = si;
 			float[] xy = map.getScreenPositionFromLocation(new Location(x, y));
 			screenX = xy[0];
 			screenY = xy[1];
@@ -355,7 +376,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		public int length;
 		public int starttime;
 		public int endtime;
-		
+
 		public Trip(String tid, int rd, float[] ax, float[] ay, int col,
 				float[] dia, int st) {
 			tripid = tid;
@@ -410,7 +431,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			ArrayList<Route> alr = new ArrayList<Route>();
 			String[] lines = loadStrings(Routeinfofilename);
 			int linelength = lines.length;
-			for (int i=0; i<linelength; ++i) {
+			for (int i = 0; i < linelength; ++i) {
 				String[] split = lines[i].split(";");
 				Route r = new Route(split[0], split[2].substring(1), split[4],
 						split[5]);
@@ -429,7 +450,8 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			for (int i = 0; i < NumOfRoutes; ++i) {
 				mListHeader[i] = new Trip();
 			}
-			System.out.println("Load routes done\nTotal Routes: " + NumOfRoutes);
+			System.out
+					.println("Load routes done\nTotal Routes: " + NumOfRoutes);
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
@@ -444,7 +466,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			String[] lines = loadStrings(Triproutefilename);
 			int total = 0;
 			int linelength = lines.length;
-			for (int i=0; i<linelength; ++i) {
+			for (int i = 0; i < linelength; ++i) {
 				String[] split = lines[i].split(";");
 				trip2route.put(split[1], split[0]);
 				++total;
@@ -461,14 +483,15 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	public void loadTrip() {
 		try {
-		    String[] lines = loadStrings(Tripstoplatlon);
+			String[] lines = loadStrings(Tripstoplatlon);
 			int total = 1;
 			int linelength = lines.length;
-			for (int kk=0; kk<linelength;) {
+			for (int kk = 0; kk < linelength;) {
 				if (lines[kk] == null)
 					break;
-				String[] split = lines[kk].split(";"); // 0:trip 1:time 2:lat 3:lon
-													// 4:stopid
+				String[] split = lines[kk].split(";"); // 0:trip 1:time 2:lat
+														// 3:lon
+														// 4:stopid
 				String tripid = split[0];
 				int rid = findRoute(trip2route.get(tripid));
 				int color = this.color(mRoutes[rid].red, mRoutes[rid].green,
@@ -486,7 +509,8 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				ArrayList<Float> ay = new ArrayList<Float>(); // y
 				ay.add(new Float(xy[1]));
 				ArrayList<Float> ad = new ArrayList<Float>(); // diameter
-				float diameter = random(RidershipLower, RidershipUpper); // TODO Ridership
+				float diameter = random(RidershipLower, RidershipUpper); // TODO
+																			// Ridership
 				ad.add(new Float(diameter));
 				ArrayList<Float> astopx = new ArrayList<Float>();
 				ArrayList<Float> astopy = new ArrayList<Float>();
@@ -528,7 +552,8 @@ public class TopoMapStage extends PApplet implements FilterListener {
 					pret = curt;
 					prex = curx;
 					prey = cury;
-					diameter = random(RidershipLower, RidershipUpper); // TODO Ridership
+					diameter = random(RidershipLower, RidershipUpper); // TODO
+																		// Ridership
 					++total;
 					++kk;
 				}
@@ -544,14 +569,14 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				Trip trip = new Trip(tripid, rid, sx, sy, color, sd, mtimer);
 				int stopsize = astopx.size();
 				float[][] stops = new float[stopsize][2];
-				for (int i=0; i<stopsize; ++i) {
-				    stops[i][0] = astopx.get(i);
-				    stops[i][1] = astopy.get(i);
+				for (int i = 0; i < stopsize; ++i) {
+					stops[i][0] = astopx.get(i);
+					stops[i][1] = astopy.get(i);
 				}
-				if (mPaths[rid] == null) 
-				    mPaths[rid] = new Path(rid, stops);
-				else 
-				    mPaths[rid].insert(stops);
+				if (mPaths[rid] == null)
+					mPaths[rid] = new Path(rid, stops);
+				else
+					mPaths[rid].insert(stops);
 				if (mTrips[mtimer] == null) {
 					mTrips[mtimer] = new ArrayList<Trip>();
 				}
@@ -568,11 +593,11 @@ public class TopoMapStage extends PApplet implements FilterListener {
 
 	public void loadStop2Station() {
 		try {
-		    String[] lines = loadStrings(Stopstationfilename);
-		    int linelength = lines.length;
+			String[] lines = loadStrings(Stopstationfilename);
+			int linelength = lines.length;
 			int total = 0;
 			stop2station = new HashMap<String, String>();
-			for (int i=0; i<linelength; ++i) {
+			for (int i = 0; i < linelength; ++i) {
 				String[] split = lines[i].split(";");
 				stop2station.put(split[0], split[1]);
 				++total;
@@ -592,13 +617,13 @@ public class TopoMapStage extends PApplet implements FilterListener {
 			ArrayList<String> lines = new ArrayList<String>();
 			String[] line = loadStrings(stopsfilename);
 			int linelength = line.length;
-			for (int i=0; i<linelength; ++i) {
+			for (int i = 0; i < linelength; ++i) {
 				lines.add(line[i]);
 			}
 			NumOfStops = lines.size();
 			mStops = new Stop[NumOfStops];
 
-			for (int i=0; i<NumOfStops; ++i) {
+			for (int i = 0; i < NumOfStops; ++i) {
 				String[] split = lines.get(i).split(";");
 				stop2int.put(split[0], new Integer(i));
 				String name = split[1].substring(1, split[1].length() - 1);
@@ -618,14 +643,14 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		try {
 			String[] lines = loadStrings(stopdelayfilename);
 			int linelength = lines.length;
-			for (int kk=0; kk<linelength; ++kk) {
+			for (int kk = 0; kk < linelength; ++kk) {
 				String[] split = lines[kk].split(";");
 				int stopid = stop2int.get(split[0]).intValue();
 				int size = split.length - 1;
 				float[] diameters = new float[HoursPerDay + 1];
-				int[]   delay = new int[HoursPerDay + 1];
+				int[] delay = new int[HoursPerDay + 1];
 				for (int i = 1; i < size; ++i) {
-				    int del = Integer.parseInt(split[i]);
+					int del = Integer.parseInt(split[i]);
 					diameters[i + 4] = del * 10.f / 150;
 					delay[i + 4] = del;
 				}
