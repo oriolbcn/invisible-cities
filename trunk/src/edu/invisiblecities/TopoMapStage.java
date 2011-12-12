@@ -75,14 +75,14 @@ public class TopoMapStage extends PApplet implements FilterListener {
         loadStop();
         loadTrip();
         loadStopDelays();
-		//DisplayRoutes = Dashboard.getSelectedRoutes();
-		DisplayRoutes = new boolean[NumOfRoutes];
-        for (int i=0; i<NumOfRoutes; ++i) {
-            DisplayRoutes[i] = true;
-        }
+		DisplayRoutes = Dashboard.getSelectedRoutes();
+		//DisplayRoutes = new boolean[NumOfRoutes];
+        //for (int i=0; i<NumOfRoutes; ++i) {
+        //    DisplayRoutes[i] = true;
+        //}
 		MapImage = loadImage(Mapfilename);
 		initUI();
-		//Dashboard.registerAsFilterListener(this);
+		Dashboard.registerAsFilterListener(this);
 		System.out.println("TopoMap setup done");
 	}
 
@@ -221,8 +221,10 @@ public class TopoMapStage extends PApplet implements FilterListener {
 	@Override
 	public void mousePressed() {
 		for (int i = 0; i < NumOfStops; ++i) {
-			if (mStops[i].isClicked())
-				return;
+			if (mStops[i].isClicked()) {
+			    Dashboard.noitifyStationSelection(mStops[i].ori_stop_id, mStops[i].name);
+			    return;
+			}
 		}
 		StopClicked = -1;
 	}
@@ -260,13 +262,15 @@ public class TopoMapStage extends PApplet implements FilterListener {
 		public float[] diameter;
 		public String name;
 		public int stopId;
+		public int ori_stop_id; // the number starts with '3'
 		public Route route;
 		public int color;
 		public int acolor;
 		public int[] delay;
 
-		public Stop(int si, float x, float y, String n) {
-			stopId = si;
+		public Stop(int ori_si, int si, float x, float y, String n) {
+			ori_stop_id = ori_si;
+		    stopId = si;
 			float[] xy = map.getScreenPositionFromLocation(new Location(x, y));
 			screenX = xy[0];
 			screenY = xy[1];
@@ -563,7 +567,7 @@ public class TopoMapStage extends PApplet implements FilterListener {
 				String name = split[1];
 				float x = Float.parseFloat(split[2]);
 				float y = Float.parseFloat(split[3]);
-				mStops[i] = new Stop(i, x, y, name);
+				mStops[i] = new Stop(Integer.parseInt(split[0]), i, x, y, name);
                 System.out.println("testing" + lines.get(i));
 			}
 			System.out.println("Total stops " + mStops.length);

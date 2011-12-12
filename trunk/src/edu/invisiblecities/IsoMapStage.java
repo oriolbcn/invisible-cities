@@ -7,6 +7,7 @@ import processing.core.PApplet;
 import processing.core.PVector;
 import de.looksgood.ani.Ani;
 import de.looksgood.ani.easing.Easing;
+import edu.invisiblecities.dashboard.Dashboard;
 import edu.invisiblecities.dashboard.FilterListener;
 
 public class IsoMapStage extends PApplet implements FilterListener {
@@ -216,6 +217,7 @@ public class IsoMapStage extends PApplet implements FilterListener {
 			if (id >= 0) {
 				mStations[SelectedNode].isSelected = false;
 				SelectedNode = id;
+				Dashboard.noitifyStationSelection(-1, mStations[SelectedNode].name);
 				updateGraph();
 				for (int i = 0; i < NumOfStations; ++i)
 					if (mStations[i] != null && i != SelectedNode)
