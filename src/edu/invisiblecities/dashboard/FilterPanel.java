@@ -140,18 +140,22 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		c2.insets = new Insets(0, 0, 0, 30);
 		delaysSlider.setBackground(bg);
 		this.add(delaysSlider, c2);
+
 		// ridership ?
 		JLabel label3 = new JLabel("Ridership");
 		label3.setBackground(bg);
-		this.add(label3,
-				createConstraints(GridBagConstraints.HORIZONTAL, 3, 0, -1, -1));
+		GridBagConstraints c9 = createConstraints(
+				GridBagConstraints.HORIZONTAL, 3, 0, -1, -1);
+		c9.gridwidth = 2;
+		this.add(label3, c9);
 		delaysSlider.slider.addAdjustmentListener(this);
 
 		ridershipSlider = new SliderWithLabel(ICities.minRiderhsip
 				* ICities.mult, ICities.maxRidership * ICities.mult);
 		GridBagConstraints c8 = createConstraints(
 				GridBagConstraints.HORIZONTAL, 3, 1, -1, -1);
-		c8.insets = new Insets(0, 0, 0, 30);
+		c8.gridwidth = 2;
+		c8.insets = new Insets(0, 0, 20, 30);
 		ridershipSlider.setBackground(bg);
 		this.add(ridershipSlider, c8);
 		ridershipSlider.slider.addAdjustmentListener(this);
@@ -160,18 +164,18 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		JLabel label5 = new JLabel("Day:");
 		label5.setBackground(bg);
 		this.add(label5,
-				createConstraints(GridBagConstraints.HORIZONTAL, 4, 0, -1, -1));
+				createConstraints(GridBagConstraints.HORIZONTAL, 3, 2, -1, -1));
 		dayCombo = new JComboBox(ICities.days);
 		dayCombo.setSelectedIndex(0);
 		dayCombo.addActionListener(this);
 		GridBagConstraints c3 = createConstraints(
-				GridBagConstraints.HORIZONTAL, 4, 1, -1, -1);
+				GridBagConstraints.HORIZONTAL, 4, 2, -1, -1);
 		c3.insets = new Insets(0, 20, 0, 0);
 		this.add(dayCombo, c3);
 
 		JLabel label4 = new JLabel("Show frequency as:");
 		GridBagConstraints c5 = createConstraints(
-				GridBagConstraints.HORIZONTAL, 4, 2, -1, -1);
+				GridBagConstraints.HORIZONTAL, 3, 3, -1, -1);
 		label4.setBackground(bg);
 		this.add(label4, c5);
 
@@ -179,7 +183,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		dotsRadio.setSelected(true);
 		dotsRadio.addActionListener(this);
 		GridBagConstraints c6 = createConstraints(
-				GridBagConstraints.HORIZONTAL, 4, 3, -1, -1);
+				GridBagConstraints.HORIZONTAL, 3, 4, -1, -1);
 		dotsRadio.setBackground(bg);
 		this.add(dotsRadio, c6);
 
@@ -187,7 +191,7 @@ public class FilterPanel extends JPanel implements ChangeListener,
 		linesRadio.setSelected(false);
 		linesRadio.addActionListener(this);
 		GridBagConstraints c7 = createConstraints(
-				GridBagConstraints.HORIZONTAL, 4, 4, -1, -1);
+				GridBagConstraints.HORIZONTAL, 3, 5, -1, -1);
 		linesRadio.setBackground(bg);
 		this.add(linesRadio, c7);
 
