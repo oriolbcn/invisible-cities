@@ -30,5 +30,7 @@ public class ICities {
 		dashboard = new Dashboard();
 		dashboard.pack();
 		dashboard.setVisible(true);
+		dashboard.setResizable(false);
+
 	}
 }
