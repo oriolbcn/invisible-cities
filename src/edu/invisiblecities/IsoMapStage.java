@@ -232,7 +232,7 @@ public class IsoMapStage extends PApplet implements SelectionListener {
 			drawIntent();
 			drawStations();
 
-			text("FPS: " + frameRate, 20, 20);
+			//text("FPS: " + frameRate, 20, 20);
 		}
 	}
 
