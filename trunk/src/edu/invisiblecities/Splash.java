@@ -72,6 +72,7 @@ public class Splash extends PApplet implements FilterListener {
             pg[i] = createGraphics(PictureWidth, PictureHeight, P2D);
         }
         Dashboard.registerAsFilterListener(this);
+        //drawBackgroundClock();
     }
     public boolean pause = false;
     
@@ -88,6 +89,7 @@ public class Splash extends PApplet implements FilterListener {
         fill(0);
         text("FPS " + frameRate, 20, 20);
         text(hour + ":" + minute, 20, 40);
+        text("Clicktime " + (ClickedTime / Interval), 20, 60);
         stroke(0);
         line(PictureWidth, 0, PictureWidth, PictureHeight);
     }
@@ -121,10 +123,10 @@ public class Splash extends PApplet implements FilterListener {
         for (int i=0; i<12; ++i) {
             int diameter = 2 * slice * i + ClockInnerDiameter;
             ellipse(PictureCenterX, PictureCenterY, diameter, diameter);
-            text("" + (i * 2), PictureCenterX + diameter / 2, PictureCenterY);
+            text("" + (24 - i * 2), PictureCenterX + diameter / 2, PictureCenterY);
         }
         textAlign(LEFT);
-        //save("clock.png");
+        save("clock.png");
 
     }
     
@@ -154,7 +156,6 @@ public class Splash extends PApplet implements FilterListener {
             image(clockImg, 0, 0);
             for (int i=0; i<NumOfRoutes; ++i) if (DisplayRoutes[i])
                 image(pg[i], 0, 0);
-            text(mTimer, 20, 80);
         }
         if (ICities.IsPlaying) {
             if (mTimer == TotalTimeStamps) {
@@ -190,10 +191,18 @@ public class Splash extends PApplet implements FilterListener {
                     pointer = pointer.nextdot;
                 }
             }
-            drawLayout();
+            //drawLayout();
         }   
     }
+    
+    public static int ClickedTime = -1;
     public static final int HalfTotalTimeStamps = TotalTimeStamps / 2;
+    private static final int ClockDistance = ClockDiameter - ClockInnerDiameter;
+    @Override
+    public void mouseReleased() {
+        float rad = sqrt(sq(mouseX - PictureCenterX) + sq(mouseY - PictureCenterY));
+        ClickedTime = (int)((ClockDiameter - rad * 2.f) * 24) * 3600 / ClockDistance;
+    }
     
     @Override
     public void mousePressed() {
