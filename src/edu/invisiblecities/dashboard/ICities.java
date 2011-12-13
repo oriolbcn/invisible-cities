@@ -5,7 +5,7 @@ public class ICities {
 
 	public static Dashboard dashboard;
 	public static int timer = 0;
-	public static boolean IsPlaying = true;
+	public static boolean IsPlaying = false;
 
 	public static final int frameRate = 30;
 	public static final int Interval = 30;

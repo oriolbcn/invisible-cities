@@ -193,8 +193,6 @@ public class TopoMapStage extends PApplet implements FilterListener,
                 mTimer += INC;
             } else {
                 if (isDisplayed) {
-                    background(255);
-                    // background(0);
                     image(MapImage, 0, 0);
                     drawStops();
                     drawTrains();

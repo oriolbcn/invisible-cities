@@ -97,7 +97,7 @@ public class Dashboard extends JFrame implements ChangeListener {
 
 		final ImageIcon playIcon = new ImageIcon("img/play.png");
 		final ImageIcon pauseIcon = new ImageIcon("img/pause.png");
-		playButton = new JButton(pauseIcon);
+		playButton = new JButton(playIcon);
 		playButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -141,7 +141,7 @@ public class Dashboard extends JFrame implements ChangeListener {
 		c10.gridx = 3;
 		c10.gridy = 1;
 		c10.gridheight = 2;
-		this.getContentPane().add(sideMap, c10);
+		//this.getContentPane().add(sideMap, c10);
 
 	}
 
